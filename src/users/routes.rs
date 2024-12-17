@@ -5,6 +5,7 @@ use axum::routing::post;
 use axum::{Json, Router};
 use diesel::{prelude::*, select, sql_types::Text};
 use serde::{Deserialize, Serialize};
+use crate::users::User;
 
 // #[axum::]
 async fn create_user(
@@ -13,19 +14,20 @@ async fn create_user(
     State(pool): State<DbPool>,
     Json(payload): Json<CreateUser>,
 ) -> (StatusCode, Json<User>) {
-    let conn = &mut pool.get().unwrap();
-    let query = select("Hello world!".into_sql::<Text>());
-    let result = query.get_result::<String>(conn);
-    println!("{:?}", result);
+    let result = User::create_user(&pool, "1", "wawa");
+    // let conn = &mut pool.get().unwrap();
+    // let query = select("Hello world!".into_sql::<Text>());
+    // let result = query.get_result::<String>(conn);
+    // println!("{:?}", result.unwrap());
     // insert your application logic here
-    let user = User {
-        id: 1337,
-        username: payload.username,
-    };
+    // let user = User {
+    //     id: 1337,
+    //     username: payload.username,
+    // };
 
     // this will be converted into a JSON response
     // with a status code of `201 Created`
-    (StatusCode::CREATED, Json(user))
+    (StatusCode::CREATED, Json(result.unwrap()))
 }
 
 // the input to our `create_user` handler
@@ -35,11 +37,11 @@ struct CreateUser {
 }
 
 // the output to our `create_user` handler
-#[derive(Serialize)]
-struct User {
-    id: u64,
-    username: String,
-}
+// #[derive(Serialize)]
+// struct User {
+//     id: u64,
+//     username: String,
+// }
 
 pub fn user_routes() -> Router<DbPool> {
     Router::new().route("/users", post(create_user))
