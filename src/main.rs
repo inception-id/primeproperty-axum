@@ -17,7 +17,7 @@ async fn main() {
     };
 
     let listener = tokio::net::TcpListener::bind(host_addr).await.unwrap();
-    let pool = build_db_pool().await;
+    let pool = build_db_pool();
 
     // build our application with a route
     let app = Router::new()
