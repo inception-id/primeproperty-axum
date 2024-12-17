@@ -1,8 +1,8 @@
-use axum::http::StatusCode;
-use axum::{Json, Router};
+use crate::db::DbPool;
 use axum::extract::State;
+use axum::http::StatusCode;
 use axum::routing::post;
-use deadpool_diesel::Pool;
+use axum::{Json, Router};
 use diesel::{prelude::*, select, sql_types::Text};
 use serde::{Deserialize, Serialize};
 
@@ -10,14 +10,12 @@ use serde::{Deserialize, Serialize};
 async fn create_user(
     // this argument tells axum to parse the request body
     // as JSON into a `CreateUser` type
-    State(pool): State<deadpool_diesel::postgres::Pool>,
+    State(pool): State<DbPool>,
     Json(payload): Json<CreateUser>,
 ) -> (StatusCode, Json<User>) {
-    let pg = pool.get().await.map_err(internal_error).unwrap();
-    let result = pg.interact(|conn| {
-        let query = select("Hello world!".into_sql::<Text>());
-        query.get_result::<String>(conn)
-    }).await.unwrap().unwrap();
+    let conn = &mut pool.get().unwrap();
+    let query = select("Hello world!".into_sql::<Text>());
+    let result = query.get_result::<String>(conn);
     println!("{:?}", result);
     // insert your application logic here
     let user = User {
@@ -43,8 +41,8 @@ struct User {
     username: String,
 }
 
-pub fn user_routes() -> Router<deadpool_diesel::postgres::Pool> {
-        Router::new().route("/users", post(create_user))
+pub fn user_routes() -> Router<DbPool> {
+    Router::new().route("/users", post(create_user))
 }
 
 /// Utility function for mapping any error into a `500 Internal Server Error`

@@ -1,21 +1,12 @@
+mod db;
 mod middleware;
 mod schema;
 mod users;
-mod connection;
-
-use axum::{
-    routing::{get},
-    Router,
-};
+use crate::db::build_db_pool;
+use axum::{routing::get, Router};
 use serde::{Deserialize, Serialize};
 use std::env;
-use deadpool_diesel::Pool;
-use crate::connection::{establish_connection};
 
-#[derive(Clone)]
-pub struct AppState {
-    pool: deadpool_diesel::postgres::Pool
-}
 #[tokio::main]
 async fn main() {
     dotenvy::dotenv().ok();
@@ -26,8 +17,7 @@ async fn main() {
     };
 
     let listener = tokio::net::TcpListener::bind(host_addr).await.unwrap();
-    let pool= establish_connection();
-    // let ap = AppState { pool: pg_connection };
+    let pool = build_db_pool().await;
 
     // build our application with a route
     let app = Router::new()
@@ -44,4 +34,3 @@ async fn main() {
 async fn root() -> &'static str {
     "Hello, World!"
 }
-

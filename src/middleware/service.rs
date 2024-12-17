@@ -1,10 +1,7 @@
-use axum::{http::StatusCode, middleware::Next, response::Response, extract::Request};
+use axum::{extract::Request, http::StatusCode, middleware::Next, response::Response};
 use std::env;
 
-pub async fn api_key_middleware(
-    req: Request,
-    next: Next,
-) -> Result<Response, StatusCode> {
+pub async fn api_key_middleware(req: Request, next: Next) -> Result<Response, StatusCode> {
     let env_api_key = env::var("API_KEY").expect("Missing API_KEY");
 
     let header_api_key_option = req
