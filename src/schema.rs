@@ -3,8 +3,9 @@
 diesel::table! {
     users (id) {
         id -> Uuid,
-        created_at -> Nullable<Timestamp>,
-        updated_at -> Nullable<Timestamp>,
+        supertokens_user_id -> Nullable<Varchar>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
         email -> Varchar,
     }
 }
