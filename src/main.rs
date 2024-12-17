@@ -7,13 +7,13 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use dotenv::dotenv;
 use serde::{Deserialize, Serialize};
 use std::env;
 
 #[tokio::main]
 async fn main() {
-    dotenv().ok();
+    dotenvy::dotenv().ok();
+
     let host_addr = match env::var("HOST_ADDRESS") {
         Ok(url) => url,
         Err(_) => panic!("Please set HOST_ADDRESS"),
