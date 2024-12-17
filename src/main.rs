@@ -1,10 +1,13 @@
+mod middleware;
+mod schema;
+
 use axum::{
-    routing::{get, post},
     http::StatusCode,
+    routing::{get, post},
     Json, Router,
 };
-use serde::{Deserialize, Serialize};
 use dotenv::dotenv;
+use serde::{Deserialize, Serialize};
 use std::env;
 
 #[tokio::main]
@@ -22,7 +25,8 @@ async fn main() {
         // `GET /` goes to `root`
         .route("/", get(root))
         // `POST /users` goes to `create_user`
-        .route("/users", post(create_user));
+        .route("/users", post(create_user))
+        .layer(axum::middleware::from_fn(middleware::api_key_middleware));
 
     // run our app with hyper, listening globally on env port
     axum::serve(listener, app).await.unwrap();
