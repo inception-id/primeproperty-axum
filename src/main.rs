@@ -4,7 +4,6 @@ mod schema;
 mod users;
 use crate::db::build_db_pool;
 use axum::{routing::get, Router};
-use serde::{Deserialize, Serialize};
 use std::env;
 
 #[tokio::main]
