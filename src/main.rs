@@ -2,8 +2,9 @@ mod db;
 mod middleware;
 mod schema;
 mod users;
+
 use crate::db::build_db_pool;
-use axum::{routing::get, Router};
+use axum::{middleware::from_fn, routing::get, Router};
 use std::env;
 
 #[tokio::main]
@@ -22,8 +23,8 @@ async fn main() {
     let app = Router::new()
         .route("/", get(root))
         .nest("/users", users::user_routes())
-        .layer(axum::middleware::from_fn(middleware::api_key_middleware))
-        .with_state(pool);
+        .with_state(pool)
+        .layer(from_fn(middleware::api_key_middleware));
 
     // run our app with hyper, listening globally on env port
     axum::serve(listener, app).await.unwrap();
