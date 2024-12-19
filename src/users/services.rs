@@ -2,14 +2,13 @@ use crate::db::DbPool;
 use crate::schema::users;
 use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
-use std::time::SystemTime;
 
 #[derive(Queryable, Debug, Clone, Serialize)]
 pub(super) struct User {
     id: uuid::Uuid,
     supertokens_user_id: Option<String>,
-    created_at: SystemTime,
-    updated_at: SystemTime,
+    created_at: chrono::NaiveDateTime,
+    updated_at: chrono::NaiveDateTime,
     email: String,
 }
 

@@ -7,7 +7,7 @@ pub async fn api_key_middleware(req: Request, next: Next) -> Result<Response, St
 
     let header_api_key_option = req
         .headers()
-        .get("api_key")
+        .get("ApiKey")
         .and_then(|header| header.to_str().ok());
 
     match header_api_key_option {

@@ -13,6 +13,7 @@ async fn create_user_route(
     State(pool): State<DbPool>,
     Json(payload): Json<CreateUserPayload>,
 ) -> (StatusCode, Json<ApiResponse<User>>) {
+    println!("{:?}", payload);
     let check_user = User::find_user_by_email(&pool, &payload.email);
     match check_user {
         Ok(_) => {
