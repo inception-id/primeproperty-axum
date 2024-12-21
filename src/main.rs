@@ -2,6 +2,7 @@ mod db;
 mod middleware;
 mod schema;
 mod users;
+mod ai_system_prompt;
 
 use crate::db::build_db_pool;
 use axum::{middleware::from_fn, routing::get, Router};
@@ -23,6 +24,7 @@ async fn main() {
     let app = Router::new()
         .route("/", get(root))
         .nest("/users", users::user_routes())
+        .nest("/ai-system-prompt", ai_system_prompt::ai_system_prompt_routes())
         .with_state(pool)
         .layer(from_fn(middleware::api_key_middleware));
 
