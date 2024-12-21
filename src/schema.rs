@@ -7,6 +7,7 @@ diesel::table! {
         updated_at -> Timestamp,
         product_name -> Varchar,
         prompt -> Varchar,
+        name -> Varchar,
     }
 }
 
@@ -20,4 +21,7 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(ai_system_prompts, users,);
+diesel::allow_tables_to_appear_in_same_query!(
+    ai_system_prompts,
+    users,
+);

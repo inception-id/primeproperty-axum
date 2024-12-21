@@ -29,7 +29,7 @@ impl User {
     }
 
     pub(super) fn find_user_by_email(pool: &DbPool, email: &str) -> QueryResult<User> {
-        let conn = &mut pool.get().unwrap();
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
         users::table.filter(users::email.eq(email)).get_result(conn)
     }
 }

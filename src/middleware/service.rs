@@ -40,11 +40,10 @@ pub async fn api_key_middleware(req: Request, next: Next) -> Result<Response, St
 
 pub async fn session_middleware(req: Request, next: Next) -> Result<Response, StatusCode> {
     let path = req.uri().path();
-    
 
     let auth_path = ["/users/create-user"];
 
-    if auth_path.contains(&path) || req.method() == "GET"{
+    if auth_path.contains(&path) || req.method() == "GET" {
         Ok(next.run(req).await)
     } else {
         let header_access_token_option = req
