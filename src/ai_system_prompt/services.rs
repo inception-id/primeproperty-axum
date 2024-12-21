@@ -23,6 +23,7 @@ impl AiSystemPrompt {
         let data = (
             ai_system_prompts::product_name.eq(product_name.trim().to_lowercase()),
             ai_system_prompts::prompt.eq(prompt),
+            ai_system_prompts::name.eq(name.trim().to_lowercase()),
         );
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
         diesel::insert_into(ai_system_prompts::table)
@@ -32,11 +33,17 @@ impl AiSystemPrompt {
 
     pub(super) fn find_ai_system_prompts(
         pool: &DbPool,
-        product_name: &str,
+        product_name: &Option<String>,
     ) -> QueryResult<Vec<AiSystemPrompt>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-        ai_system_prompts::table
-            .filter(ai_system_prompts::product_name.eq(product_name))
-            .get_results(conn)
+        
+        if let Some(product_name) = product_name {
+            ai_system_prompts::table
+                .filter(ai_system_prompts::product_name.eq(product_name))
+                .get_results(conn)
+        } else {
+            ai_system_prompts::table
+                .get_results(conn)
+        }
     }
 }

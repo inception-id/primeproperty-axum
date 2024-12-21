@@ -25,7 +25,7 @@ async fn create_ai_system_prompt_route(
         Ok(ai_system_prompt) => ApiResponse::new(
             StatusCode::CREATED,
             Some(ai_system_prompt),
-            "Created ai system prompt",
+            "Created",
         )
         .send(),
         Err(error) => {
@@ -36,7 +36,7 @@ async fn create_ai_system_prompt_route(
 
 #[derive(Deserialize)]
 struct FindAiSystemPromptQuery {
-    product_name: String,
+    product_name: Option<String>,
 }
 async fn find_ai_system_prompts_route(
     State(pool): State<DbPool>,
