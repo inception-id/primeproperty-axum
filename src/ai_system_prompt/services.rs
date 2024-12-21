@@ -1,5 +1,5 @@
 use crate::db::DbPool;
-use crate::schema::{ai_system_prompts};
+use crate::schema::ai_system_prompts;
 use diesel::{ExpressionMethods, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
 
@@ -20,7 +20,7 @@ impl AiSystemPrompt {
     ) -> QueryResult<AiSystemPrompt> {
         let data = (
             ai_system_prompts::product_name.eq(product_name.trim().to_lowercase()),
-            ai_system_prompts::prompt.eq(prompt)
+            ai_system_prompts::prompt.eq(prompt),
         );
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
         diesel::insert_into(ai_system_prompts::table)
