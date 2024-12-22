@@ -1,3 +1,4 @@
+use super::routes::UpdateAiSystemPromptPayload;
 use crate::db::DbPool;
 use crate::schema::ai_system_prompts;
 use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
@@ -10,7 +11,7 @@ pub(super) struct AiSystemPrompt {
     updated_at: chrono::NaiveDateTime,
     product_name: String,
     prompt: String,
-    name: String
+    name: String,
 }
 
 impl AiSystemPrompt {
@@ -18,7 +19,7 @@ impl AiSystemPrompt {
         pool: &DbPool,
         product_name: &str,
         prompt: &str,
-        name: &str
+        name: &str,
     ) -> QueryResult<AiSystemPrompt> {
         let data = (
             ai_system_prompts::product_name.eq(product_name.trim().to_lowercase()),
@@ -36,23 +37,33 @@ impl AiSystemPrompt {
         product_name: &Option<String>,
     ) -> QueryResult<Vec<AiSystemPrompt>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-        
+
         if let Some(product_name) = product_name {
             ai_system_prompts::table
                 .filter(ai_system_prompts::product_name.eq(product_name))
                 .get_results(conn)
         } else {
-            ai_system_prompts::table
-                .get_results(conn)
+            ai_system_prompts::table.get_results(conn)
         }
     }
 
-    pub(super) fn delete_ai_system_prompts(
+    pub(super) fn delete_ai_system_prompts(pool: &DbPool, id: &i32) -> QueryResult<AiSystemPrompt> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        diesel::delete(ai_system_prompts::table.filter(ai_system_prompts::id.eq(id)))
+            .get_result(conn)
+    }
+
+    pub(super) fn update_ai_system_prompt(
         pool: &DbPool,
         id: &i32,
+        update_payload: &UpdateAiSystemPromptPayload,
     ) -> QueryResult<AiSystemPrompt> {
-       let conn = &mut pool.get().expect("Couldn't get db connection from pool"); 
-        
-        diesel::delete(ai_system_prompts::table.filter(ai_system_prompts::id.eq(id))).get_result(conn)
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        diesel::update(ai_system_prompts::table)
+            .filter(ai_system_prompts::id.eq(id))
+            .set(update_payload)
+            .get_result(conn)
     }
 }
