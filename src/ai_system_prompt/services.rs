@@ -46,4 +46,13 @@ impl AiSystemPrompt {
                 .get_results(conn)
         }
     }
+
+    pub(super) fn delete_ai_system_prompts(
+        pool: &DbPool,
+        id: &i32,
+    ) -> QueryResult<AiSystemPrompt> {
+       let conn = &mut pool.get().expect("Couldn't get db connection from pool"); 
+        
+        diesel::delete(ai_system_prompts::table.filter(ai_system_prompts::id.eq(id))).get_result(conn)
+    }
 }
