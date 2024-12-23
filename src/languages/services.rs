@@ -1,14 +1,14 @@
 use crate::db::DbPool;
 use crate::schema::languages;
 use chrono::NaiveDateTime;
-use diesel::{ExpressionMethods, QueryResult, Queryable, RunQueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
 
 #[derive(Debug, Queryable, Clone, Serialize)]
 pub(super) struct Language {
     id: i32,
-    created_date: NaiveDateTime,
-    updated_date: NaiveDateTime,
+    created_at: NaiveDateTime,
+    updated_at: NaiveDateTime,
     title: String,
     iso_639_1: String,
 }
@@ -28,5 +28,11 @@ impl Language {
         diesel::insert_into(languages::table)
             .values(data)
             .get_result(conn)
+    }
+
+    pub(super) fn find_all_languages(pool: &DbPool) -> QueryResult<Vec<Self>> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        languages::table.get_results(conn)
     }
 }
