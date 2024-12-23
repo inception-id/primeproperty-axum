@@ -57,10 +57,24 @@ async fn delete_language_route(
 }
 
 #[derive(Deserialize, AsChangeset)]
-#[diesel(table_name = "languages")]
+#[diesel(table_name = languages)]
 pub(super) struct UpdateLanguagePayload {
     title: Option<String>,
     iso_639_1: Option<String>,
+}
+
+async fn update_language_route(
+    State(pool): State<DbPool>,
+    Path(id): Path<i32>,
+    Json(payload): Json<UpdateLanguagePayload>
+) -> LanguageResponse {
+    let language_update = Language::update_language(&pool, &id, &payload);
+    match language_update { 
+        Ok(language) => ApiResponse::new(StatusCode::OK, Some(language), "Update success").send(),
+        Err(error) => {
+            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &error.to_string()).send()
+        }
+    }
 }
 
 pub fn language_routes() -> Router<DbPool> {
@@ -68,4 +82,5 @@ pub fn language_routes() -> Router<DbPool> {
         .route("/create", post(create_language_route))
         .route("/find-all", get(find_all_language_route))
         .route("/delete/:id", delete(delete_language_route))
+        .route("/update/:id", put(update_language_route))
 }
