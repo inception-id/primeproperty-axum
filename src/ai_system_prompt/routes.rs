@@ -2,7 +2,7 @@ use super::services::AiSystemPrompt;
 use crate::db::DbPool;
 use crate::middleware::ApiResponse;
 use crate::schema::ai_system_prompts;
-use axum::extract::{Query, State, Path};
+use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
@@ -94,7 +94,8 @@ async fn update_ai_system_prompt_route(
     Path(id): Path<i32>,
     Json(update_payload): Json<UpdateAiSystemPromptPayload>,
 ) -> AiSystemPromptResponse {
-    let updated_ai_system_prompt = AiSystemPrompt::update_ai_system_prompt(&pool,&id, &update_payload);
+    let updated_ai_system_prompt =
+        AiSystemPrompt::update_ai_system_prompt(&pool, &id, &update_payload);
 
     match updated_ai_system_prompt {
         Ok(ai_system_prompt) => ApiResponse::new(

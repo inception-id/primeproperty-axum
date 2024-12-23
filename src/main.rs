@@ -1,5 +1,6 @@
 mod ai_system_prompt;
 mod db;
+mod languages;
 mod middleware;
 mod schema;
 mod users;
@@ -25,6 +26,7 @@ async fn main() {
             "/ai-system-prompts",
             ai_system_prompt::ai_system_prompt_routes(),
         )
+        .nest("/languages", languages::language_routes())
         .with_state(pool)
         .layer(from_fn(middleware::api_key_middleware))
         .layer(from_fn(middleware::session_middleware));
