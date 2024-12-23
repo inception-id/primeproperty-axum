@@ -35,4 +35,10 @@ impl Language {
 
         languages::table.get_results(conn)
     }
+    
+    pub(super) fn delete_language(pool: &DbPool, id: &i32) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+        
+        diesel::delete(languages::table.filter(languages::id.eq(id))).get_result(conn)
+    }
 }
