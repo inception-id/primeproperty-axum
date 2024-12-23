@@ -5,7 +5,9 @@ use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::routing::{get, post, delete, put};
 use axum::{Json, Router};
+use diesel::AsChangeset;
 use serde::Deserialize;
+use crate::schema::languages;
 
 type LanguageResponse = (StatusCode, Json<ApiResponse<Language>>);
 
@@ -52,6 +54,13 @@ async fn delete_language_route(
             ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &error.to_string()).send()
         }
     }
+}
+
+#[derive(Deserialize, AsChangeset)]
+#[diesel(table_name = "languages")]
+pub(super) struct UpdateLanguagePayload {
+    title: Option<String>,
+    iso_639_1: Option<String>,
 }
 
 pub fn language_routes() -> Router<DbPool> {

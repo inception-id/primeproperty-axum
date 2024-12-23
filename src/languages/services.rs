@@ -3,6 +3,7 @@ use crate::schema::languages;
 use chrono::NaiveDateTime;
 use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
+use crate::languages::routes::UpdateLanguagePayload;
 
 #[derive(Debug, Queryable, Clone, Serialize)]
 pub(super) struct Language {
@@ -40,5 +41,11 @@ impl Language {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
         
         diesel::delete(languages::table.filter(languages::id.eq(id))).get_result(conn)
+    }
+    
+    pub(super) fn update_language(pool: &DbPool, id: &i32, payload: &UpdateLanguagePayload) -> QueryResult<Self> {
+
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+        diesel::update(languages::table).filter(languages::id.eq(id)).set(payload).get_result(conn)
     }
 }
