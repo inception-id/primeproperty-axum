@@ -3,6 +3,7 @@ mod db;
 mod languages;
 mod middleware;
 mod schema;
+mod translation;
 mod users;
 
 use crate::db::build_db_pool;
@@ -27,6 +28,7 @@ async fn main() {
             ai_system_prompt::ai_system_prompt_routes(),
         )
         .nest("/languages", languages::language_routes())
+        .nest("/translation", translation::translation_routes())
         .with_state(pool)
         .layer(from_fn(middleware::api_key_middleware))
         .layer(from_fn(middleware::session_middleware));

@@ -1,13 +1,13 @@
 use super::services::Language;
 use crate::db::DbPool;
 use crate::middleware::ApiResponse;
+use crate::schema::languages;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
-use axum::routing::{get, post, delete, put};
+use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
 use diesel::AsChangeset;
 use serde::Deserialize;
-use crate::schema::languages;
 
 type LanguageResponse = (StatusCode, Json<ApiResponse<Language>>);
 
@@ -45,10 +45,10 @@ async fn find_all_language_route(
 
 async fn delete_language_route(
     State(pool): State<DbPool>,
-    Path(id): Path<i32>
+    Path(id): Path<i32>,
 ) -> LanguageResponse {
     let language_removal = Language::delete_language(&pool, &id);
-    match language_removal { 
+    match language_removal {
         Ok(language) => ApiResponse::new(StatusCode::OK, Some(language), "Delete success").send(),
         Err(error) => {
             ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &error.to_string()).send()
@@ -66,10 +66,10 @@ pub(super) struct UpdateLanguagePayload {
 async fn update_language_route(
     State(pool): State<DbPool>,
     Path(id): Path<i32>,
-    Json(payload): Json<UpdateLanguagePayload>
+    Json(payload): Json<UpdateLanguagePayload>,
 ) -> LanguageResponse {
     let language_update = Language::update_language(&pool, &id, &payload);
-    match language_update { 
+    match language_update {
         Ok(language) => ApiResponse::new(StatusCode::OK, Some(language), "Update success").send(),
         Err(error) => {
             ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &error.to_string()).send()

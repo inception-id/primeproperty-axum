@@ -23,6 +23,21 @@ diesel::table! {
 }
 
 diesel::table! {
+    translation (id) {
+        id -> Int4,
+        user_id -> Uuid,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+        ai_system_prompt -> Varchar,
+        content_language -> Nullable<Varchar>,
+        target_language -> Varchar,
+        content -> Text,
+        completion -> Text,
+        updated_completion -> Text,
+    }
+}
+
+diesel::table! {
     users (id) {
         id -> Uuid,
         supertokens_user_id -> Nullable<Varchar>,
@@ -32,8 +47,6 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(
-    ai_system_prompts,
-    languages,
-    users,
-);
+diesel::joinable!(translation -> users (user_id));
+
+diesel::allow_tables_to_appear_in_same_query!(ai_system_prompts, languages, translation, users,);
