@@ -34,7 +34,7 @@ impl Language {
     pub(super) fn find_all_languages(pool: &DbPool) -> QueryResult<Vec<Self>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
-        languages::table.get_results(conn)
+        languages::table.order_by(languages::title).get_results(conn)
     }
     
     pub(super) fn delete_language(pool: &DbPool, id: &i32) -> QueryResult<Self> {
