@@ -8,6 +8,7 @@ pub(super) struct UserDataInJwt {
     pub(super) id: String,
 }
 
+#[allow(non_snake_case)]
 #[derive(Deserialize, Debug)]
 pub(super) struct VerifySessionData {
     pub(super) userDataInJWT: UserDataInJwt,
