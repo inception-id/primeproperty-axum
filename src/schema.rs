@@ -12,6 +12,20 @@ diesel::table! {
 }
 
 diesel::table! {
+    checkbot (id) {
+        id -> Int4,
+        user_id -> Uuid,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+        instruction -> Varchar,
+        ai_system_prompt -> Varchar,
+        content -> Text,
+        completion -> Text,
+        updated_completion -> Text,
+    }
+}
+
+diesel::table! {
     languages (id) {
         id -> Int4,
         created_at -> Timestamp,
@@ -47,6 +61,13 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(checkbot -> users (user_id));
 diesel::joinable!(translation -> users (user_id));
 
-diesel::allow_tables_to_appear_in_same_query!(ai_system_prompts, languages, translation, users,);
+diesel::allow_tables_to_appear_in_same_query!(
+    ai_system_prompts,
+    checkbot,
+    languages,
+    translation,
+    users,
+);
