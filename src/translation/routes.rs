@@ -1,7 +1,7 @@
-use axum::extract::{State};
+use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::{Json, Router};
-use axum::routing::{post};
+use axum::routing::{post, put};
 use crate::schema::translation;
 use diesel::Insertable;
 use serde::Deserialize;
@@ -40,7 +40,27 @@ async fn create_translation_route(
     }
 }
 
+#[derive(Deserialize)]
+pub(super) struct UpdateTranslationPayload {
+    updated_completion: String,
+}
+async fn update_translation_route(
+    State(pool): State<DbPool>,
+    Path(id): Path<i32>,
+    Json(payload): Json<UpdateTranslationPayload>,
+) -> TranslationResponse {
+     match Translation::update_translation(&pool, &id, &payload.updated_completion) {
+        Ok(translation) => {
+            ApiResponse::new(StatusCode::CREATED, Some(translation), "Created").send()
+        },
+        Err(err) => {
+            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+        }
+    }
+}
+
 pub fn translation_routes() -> Router<DbPool> {
     Router::new()
         .route("/create", post(create_translation_route))
+        .route("/update/:id", put(update_translation_route))
 }
