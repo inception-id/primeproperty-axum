@@ -51,7 +51,7 @@ async fn update_translation_route(
 ) -> TranslationResponse {
      match Translation::update_translation(&pool, &id, &payload.updated_completion) {
         Ok(translation) => {
-            ApiResponse::new(StatusCode::CREATED, Some(translation), "Created").send()
+            ApiResponse::new(StatusCode::CREATED, Some(translation), "Updated").send()
         },
         Err(err) => {
             ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
