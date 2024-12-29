@@ -1,8 +1,8 @@
 use super::session::verify_session;
-use axum::{extract::Request, http::StatusCode, middleware::Next, response::Response, Json};
-use serde::{Serialize};
-use std::env;
 use axum::http::HeaderValue;
+use axum::{extract::Request, http::StatusCode, middleware::Next, response::Response, Json};
+use serde::Serialize;
+use std::env;
 
 #[derive(Debug, Serialize, Default)]
 pub struct ApiResponse<T> {
@@ -58,10 +58,12 @@ pub async fn session_middleware(req: Request, next: Next) -> Result<Response, St
                 match session_verification {
                     Ok(session) if session.status == "OK" => {
                         let mut new_req = req;
-                        let userid_header = HeaderValue::from_str(&session.session.userDataInJWT.id).expect("Fail to convert userID header");
+                        let userid_header =
+                            HeaderValue::from_str(&session.session.userDataInJWT.id)
+                                .expect("Fail to convert userID header");
                         new_req.headers_mut().insert("user-id", userid_header);
-                        Ok( next.run(new_req).await)
-                    },
+                        Ok(next.run(new_req).await)
+                    }
                     _ => Err(StatusCode::UNAUTHORIZED),
                 }
             }

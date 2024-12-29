@@ -1,7 +1,7 @@
+use axum::http::HeaderMap;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::env;
-use axum::http::HeaderMap;
 
 #[derive(Deserialize, Debug)]
 pub(super) struct UserDataInJwt {
@@ -50,6 +50,6 @@ pub(super) async fn verify_session(
 
 pub fn extract_header_user_id(header_map: HeaderMap) -> Result<uuid::Uuid, uuid::Error> {
     let header_user_id = header_map.get("user-id").expect("Missing user id");
-    let user_id = header_user_id.to_str().expect("Invalid header user id"); 
+    let user_id = header_user_id.to_str().expect("Invalid header user id");
     uuid::Uuid::parse_str(user_id)
-} 
+}

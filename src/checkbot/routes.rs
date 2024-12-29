@@ -1,13 +1,13 @@
-use axum::extract::{State};
-use axum::http::{HeaderMap, StatusCode};
-use axum::{Json, Router};
-use axum::routing::{post};
-use crate::schema::checkbot;
-use diesel::Insertable;
-use serde::Deserialize;
 use super::services::Checkbot;
 use crate::db::DbPool;
 use crate::middleware::{extract_header_user_id, ApiResponse};
+use crate::schema::checkbot;
+use axum::extract::State;
+use axum::http::{HeaderMap, StatusCode};
+use axum::routing::post;
+use axum::{Json, Router};
+use diesel::Insertable;
+use serde::Deserialize;
 
 type CheckbotResponse = (StatusCode, Json<ApiResponse<Checkbot>>);
 #[derive(Deserialize, Insertable)]
@@ -21,18 +21,14 @@ pub(super) struct CreateCheckbotPayload {
 }
 
 async fn create_checkbot_route(
-
     State(pool): State<DbPool>,
     headers: HeaderMap,
     Json(payload): Json<CreateCheckbotPayload>,
-) -> CheckbotResponse{
-
+) -> CheckbotResponse {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
-    let checkbot_creation = Checkbot::create_checkbot(&pool,&user_id, &payload);
-    match checkbot_creation{
-        Ok(checkbot) => {
-            ApiResponse::new(StatusCode::CREATED, Some(checkbot), "Created").send()
-        },
+    let checkbot_creation = Checkbot::create_checkbot(&pool, &user_id, &payload);
+    match checkbot_creation {
+        Ok(checkbot) => ApiResponse::new(StatusCode::CREATED, Some(checkbot), "Created").send(),
         Err(err) => {
             ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
         }
@@ -40,6 +36,5 @@ async fn create_checkbot_route(
 }
 
 pub fn checkbot_routes() -> Router<DbPool> {
-    Router::new()
-        .route("/create", post(create_checkbot_route))
+    Router::new().route("/create", post(create_checkbot_route))
 }

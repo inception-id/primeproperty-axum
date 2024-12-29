@@ -1,9 +1,9 @@
-use chrono::NaiveDateTime;
-use diesel::{QueryResult, Queryable, RunQueryDsl, ExpressionMethods};
-use serde::Serialize;
 use crate::db::DbPool;
 use crate::schema::text_to_speech;
 use crate::text_to_speech::routes::CreateTtsPayload;
+use chrono::NaiveDateTime;
+use diesel::{ExpressionMethods, QueryResult, Queryable, RunQueryDsl};
+use serde::Serialize;
 
 #[derive(Debug, Queryable, Serialize)]
 pub(super) struct TextToSpeech {
@@ -21,7 +21,6 @@ impl TextToSpeech {
         user_id: &uuid::Uuid,
         payload: &CreateTtsPayload,
     ) -> QueryResult<Self> {
-
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
         diesel::insert_into(text_to_speech::table)
             .values((text_to_speech::user_id.eq(user_id), payload))

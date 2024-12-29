@@ -1,13 +1,13 @@
-use axum::extract::{Path, State};
-use axum::http::{HeaderMap, StatusCode};
-use axum::{Json, Router};
-use axum::routing::{post, put};
-use crate::schema::translation;
-use diesel::Insertable;
-use serde::Deserialize;
 use crate::db::DbPool;
 use crate::middleware::{extract_header_user_id, ApiResponse};
+use crate::schema::translation;
 use crate::translation::services::Translation;
+use axum::extract::{Path, State};
+use axum::http::{HeaderMap, StatusCode};
+use axum::routing::{post, put};
+use axum::{Json, Router};
+use diesel::Insertable;
+use serde::Deserialize;
 
 type TranslationResponse = (StatusCode, Json<ApiResponse<Translation>>);
 
@@ -23,18 +23,16 @@ pub(super) struct CreateTranslationPayload {
 }
 
 async fn create_translation_route(
-
     State(pool): State<DbPool>,
     headers: HeaderMap,
     Json(payload): Json<CreateTranslationPayload>,
 ) -> TranslationResponse {
-
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
-    let translation_creation = Translation::create_translation(&pool,&user_id, &payload);
+    let translation_creation = Translation::create_translation(&pool, &user_id, &payload);
     match translation_creation {
         Ok(translation) => {
             ApiResponse::new(StatusCode::CREATED, Some(translation), "Created").send()
-        },
+        }
         Err(err) => {
             ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
         }
@@ -50,10 +48,10 @@ async fn update_translation_route(
     Path(id): Path<i32>,
     Json(payload): Json<UpdateTranslationPayload>,
 ) -> TranslationResponse {
-     match Translation::update_translation(&pool, &id, &payload.updated_completion) {
+    match Translation::update_translation(&pool, &id, &payload.updated_completion) {
         Ok(translation) => {
             ApiResponse::new(StatusCode::CREATED, Some(translation), "Updated").send()
-        },
+        }
         Err(err) => {
             ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
         }

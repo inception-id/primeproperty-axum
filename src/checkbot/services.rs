@@ -1,9 +1,9 @@
-use chrono::NaiveDateTime;
-use diesel::{QueryResult, Queryable, RunQueryDsl, ExpressionMethods};
-use serde::Serialize;
 use super::routes::CreateCheckbotPayload;
 use crate::db::DbPool;
 use crate::schema::checkbot;
+use chrono::NaiveDateTime;
+use diesel::{ExpressionMethods, QueryResult, Queryable, RunQueryDsl};
+use serde::Serialize;
 
 #[derive(Debug, Queryable, Serialize)]
 pub(super) struct Checkbot {
@@ -19,7 +19,6 @@ pub(super) struct Checkbot {
 }
 
 impl Checkbot {
-
     pub(super) fn create_checkbot(
         pool: &DbPool,
         user_id: &uuid::Uuid,
