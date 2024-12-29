@@ -10,6 +10,7 @@ use crate::middleware::{extract_header_user_id, ApiResponse};
 use crate::translation::services::Translation;
 
 type TranslationResponse = (StatusCode, Json<ApiResponse<Translation>>);
+
 #[derive(Deserialize, Insertable)]
 #[diesel(table_name = translation)]
 pub(super) struct CreateTranslationPayload {
