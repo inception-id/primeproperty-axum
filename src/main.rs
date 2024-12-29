@@ -7,6 +7,7 @@ mod schema;
 mod text_to_speech;
 mod translation;
 mod users;
+mod speech_to_text;
 
 use crate::db::build_db_pool;
 use axum::{middleware::from_fn, routing::get, Router};
@@ -33,6 +34,7 @@ async fn main() {
         .nest("/translation", translation::translation_routes())
         .nest("/checkbot", checkbot::checkbot_routes())
         .nest("/tts", text_to_speech::tts_routes())
+        .nest("/transcription", speech_to_text::transcription_routes())
         .with_state(pool)
         .layer(from_fn(middleware::api_key_middleware))
         .layer(from_fn(middleware::session_middleware));
