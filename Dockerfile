@@ -1,7 +1,7 @@
 FROM rust:1.82-slim as builder
 
 RUN apt update && \
-    apt install -y build-essential && \
+    apt install -y libpq-dev build-essential && \
     apt clean
 
 WORKDIR /app
