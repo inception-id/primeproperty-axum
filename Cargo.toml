@@ -15,3 +15,4 @@ tokio = { version = "1.42.0", features = ["full"]}
 uuid = {version = "1.11.0", features = ["v4", "serde"]}
 log = "0.4.22"
 jsonwebtoken = "9.3.0"
+openssl = {version = "0.10.68", features = ["vendored"]}
