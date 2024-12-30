@@ -19,7 +19,7 @@ async fn main() {
 
     let host_addr = env::var("HOST_ADDRESS").expect("Missing HOST_ADDRESS");
 
-    let listener = tokio::net::TcpListener::bind(host_addr).await.unwrap();
+    let listener = tokio::net::TcpListener::bind(&host_addr).await.unwrap();
     let pool = build_db_pool();
 
     // build our application with a route
@@ -40,6 +40,7 @@ async fn main() {
         .layer(from_fn(middleware::session_middleware));
 
     // run our app with hyper, listening globally on env port
+    println!("Server started at http://{}", host_addr);
     axum::serve(listener, app).await.unwrap();
 }
 
