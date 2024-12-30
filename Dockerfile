@@ -9,7 +9,7 @@ COPY . /app
 
 RUN cargo build --release --all-features
 
-FROM rust:1.82-slim as runner
+FROM ubuntu:22.04 as runner
 
 RUN  apt update && \
      apt install -y libpq-dev && \
