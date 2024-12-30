@@ -13,7 +13,7 @@ FROM rust:1.82-slim as runner
 
 RUN apt update && \
     apt install -y libpq-dev && \
-    apt clean \
+    apt clean
 
 # Copy the build artifact from the builder stage
 COPY --from=builder /app/target/release/inception-axum /app/inception-axum
