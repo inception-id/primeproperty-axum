@@ -1,6 +1,8 @@
 FROM rust:1.82-slim as builder
 
-RUN apt update && apt clean
+RUN apt update && \
+    apt install pkg-config \
+    apt clean
 
 WORKDIR /app
 COPY . /app
