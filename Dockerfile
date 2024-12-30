@@ -13,7 +13,6 @@ FROM ubuntu:22.04 as runner
 
 RUN  apt update && \
      apt install -y libpq-dev && \
-     cargo install diesel_cli --no-default-features --features postgres && \
      apt clean
 
 # Copy the build artifact from the builder stage
