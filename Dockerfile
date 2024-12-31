@@ -17,7 +17,7 @@ RUN apt update && \
 
 # Copy the build artifact from the builder stage
 COPY --from=builder /app/target/release/inception-axum /app/
-COPY --from=builder /app/migrations /app/
+COPY --from=builder /app/migrations /app/migrations
 COPY --from=builder /app/diesel.toml /app/
 
 EXPOSE 8000
