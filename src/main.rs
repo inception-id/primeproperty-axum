@@ -4,10 +4,10 @@ mod db;
 mod languages;
 mod middleware;
 mod schema;
+mod speech_to_text;
 mod text_to_speech;
 mod translation;
 mod users;
-mod speech_to_text;
 
 use crate::db::build_db_pool;
 use axum::{middleware::from_fn, routing::get, Router};

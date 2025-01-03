@@ -2,7 +2,7 @@ use crate::db::DbPool;
 use crate::middleware::{extract_header_user_id, ApiResponse};
 use crate::schema::translation;
 use crate::translation::services::Translation;
-use axum::extract::{State};
+use axum::extract::State;
 use axum::http::{HeaderMap, StatusCode};
 use axum::routing::{get, post};
 use axum::{Json, Router};
@@ -45,9 +45,7 @@ async fn find_translation_history_route(
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
     let translation_history = Translation::find_translation_history(&pool, &user_id);
     match translation_history {
-        Ok(translations) => {
-            ApiResponse::new(StatusCode::OK, Some(translations), "success").send()
-        }
+        Ok(translations) => ApiResponse::new(StatusCode::OK, Some(translations), "success").send(),
         Err(err) => {
             ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
         }

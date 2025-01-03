@@ -1,9 +1,9 @@
-use chrono::NaiveDateTime;
-use diesel::{QueryResult, Queryable, RunQueryDsl, ExpressionMethods};
-use serde::Serialize;
+use super::routes::CreateTranscriptionPayload;
 use crate::db::DbPool;
 use crate::schema::speech_to_text;
-use super::routes::CreateTranscriptionPayload;
+use chrono::NaiveDateTime;
+use diesel::{ExpressionMethods, QueryResult, Queryable, RunQueryDsl};
+use serde::Serialize;
 
 #[derive(Debug, Queryable, Serialize)]
 pub(super) struct SpeechToText {
@@ -12,7 +12,7 @@ pub(super) struct SpeechToText {
     created_at: NaiveDateTime,
     updated_at: NaiveDateTime,
     audio_url: Option<String>,
-    transcription_text: String, 
+    transcription_text: String,
 }
 
 impl SpeechToText {

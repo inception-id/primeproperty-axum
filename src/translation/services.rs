@@ -36,6 +36,10 @@ impl Translation {
     ) -> QueryResult<Vec<Self>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
-        translation::table.filter(translation::user_id.eq(user_id)).order_by(translation::id.desc()).limit(10).get_results(conn)
+        translation::table
+            .filter(translation::user_id.eq(user_id))
+            .order_by(translation::id.desc())
+            .limit(10)
+            .get_results(conn)
     }
 }
