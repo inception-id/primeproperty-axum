@@ -21,7 +21,6 @@ diesel::table! {
         ai_system_prompt -> Varchar,
         content -> Text,
         completion -> Text,
-        updated_completion -> Text,
     }
 }
 
@@ -69,7 +68,6 @@ diesel::table! {
         target_language -> Varchar,
         content -> Text,
         completion -> Text,
-        updated_completion -> Text,
     }
 }
 

@@ -19,7 +19,6 @@ pub(super) struct CreateTranslationPayload {
     target_language: String,
     content: String,
     completion: String,
-    updated_completion: String,
 }
 
 async fn create_translation_route(
@@ -39,27 +38,8 @@ async fn create_translation_route(
     }
 }
 
-#[derive(Deserialize)]
-pub(super) struct UpdateTranslationPayload {
-    updated_completion: String,
-}
-async fn update_translation_route(
-    State(pool): State<DbPool>,
-    Path(id): Path<i32>,
-    Json(payload): Json<UpdateTranslationPayload>,
-) -> TranslationResponse {
-    match Translation::update_translation(&pool, &id, &payload.updated_completion) {
-        Ok(translation) => {
-            ApiResponse::new(StatusCode::CREATED, Some(translation), "Updated").send()
-        }
-        Err(err) => {
-            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
-        }
-    }
-}
 
 pub fn translation_routes() -> Router<DbPool> {
     Router::new()
         .route("/create", post(create_translation_route))
-        .route("/update/:id", put(update_translation_route))
 }

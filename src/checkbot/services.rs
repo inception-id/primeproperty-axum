@@ -15,7 +15,6 @@ pub(super) struct Checkbot {
     ai_system_prompt: String,
     content: String,
     completion: String,
-    updated_completion: String,
 }
 
 impl Checkbot {

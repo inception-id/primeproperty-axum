@@ -17,7 +17,6 @@ pub(super) struct CreateCheckbotPayload {
     ai_system_prompt: String,
     content: String,
     completion: String,
-    updated_completion: String,
 }
 
 async fn create_checkbot_route(

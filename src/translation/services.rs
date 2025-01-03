@@ -16,7 +16,6 @@ pub(super) struct Translation {
     target_language: String,
     content: String,
     completion: String,
-    updated_completion: String,
 }
 
 impl Translation {
@@ -28,18 +27,6 @@ impl Translation {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
         diesel::insert_into(translation::table)
             .values((translation::user_id.eq(user_id), payload))
-            .get_result(conn)
-    }
-
-    pub(super) fn update_translation(
-        pool: &DbPool,
-        id: &i32,
-        updated_completion: &str,
-    ) -> QueryResult<Self> {
-        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-        diesel::update(translation::table)
-            .filter(translation::id.eq(id))
-            .set(translation::updated_completion.eq(updated_completion))
             .get_result(conn)
     }
 }
