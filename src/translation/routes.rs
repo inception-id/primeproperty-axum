@@ -2,9 +2,9 @@ use crate::db::DbPool;
 use crate::middleware::{extract_header_user_id, ApiResponse};
 use crate::schema::translation;
 use crate::translation::services::Translation;
-use axum::extract::{Path, State};
+use axum::extract::{State};
 use axum::http::{HeaderMap, StatusCode};
-use axum::routing::{post, put};
+use axum::routing::{get, post};
 use axum::{Json, Router};
 use diesel::Insertable;
 use serde::Deserialize;
@@ -38,8 +38,24 @@ async fn create_translation_route(
     }
 }
 
+async fn find_translation_history_route(
+    State(pool): State<DbPool>,
+    headers: HeaderMap,
+) -> (StatusCode, Json<ApiResponse<Vec<Translation>>>) {
+    let user_id = extract_header_user_id(headers).expect("Could not extract user id");
+    let translation_history = Translation::find_translation_history(&pool, &user_id);
+    match translation_history {
+        Ok(translations) => {
+            ApiResponse::new(StatusCode::OK, Some(translations), "success").send()
+        }
+        Err(err) => {
+            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+        }
+    }
+}
 
 pub fn translation_routes() -> Router<DbPool> {
     Router::new()
         .route("/create", post(create_translation_route))
+        .route("/history", get(find_translation_history_route))
 }

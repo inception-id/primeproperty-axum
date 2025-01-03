@@ -2,7 +2,7 @@ use super::routes::CreateTranslationPayload;
 use crate::db::DbPool;
 use crate::schema::translation;
 use chrono::NaiveDateTime;
-use diesel::{ExpressionMethods, QueryResult, Queryable, RunQueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
 
 #[derive(Debug, Queryable, Serialize)]
@@ -28,5 +28,14 @@ impl Translation {
         diesel::insert_into(translation::table)
             .values((translation::user_id.eq(user_id), payload))
             .get_result(conn)
+    }
+
+    pub(super) fn find_translation_history(
+        pool: &DbPool,
+        user_id: &uuid::Uuid,
+    ) -> QueryResult<Vec<Self>> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        translation::table.filter(translation::user_id.eq(user_id)).order_by(translation::id.desc()).limit(10).get_results(conn)
     }
 }
