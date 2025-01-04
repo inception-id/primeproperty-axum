@@ -54,6 +54,7 @@ diesel::table! {
         updated_at -> Timestamp,
         input_content -> Text,
         audio_url -> Varchar,
+        voice -> Varchar,
     }
 }
 
