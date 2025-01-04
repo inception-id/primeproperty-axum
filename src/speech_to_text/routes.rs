@@ -4,7 +4,7 @@ use crate::middleware::{extract_header_user_id, ApiResponse};
 use crate::schema::speech_to_text;
 use axum::extract::State;
 use axum::http::{HeaderMap, StatusCode};
-use axum::routing::post;
+use axum::routing::{get, post};
 use axum::{Json, Router};
 use diesel::Insertable;
 use serde::Deserialize;
@@ -33,6 +33,21 @@ async fn create_transcription_route(
     }
 }
 
+async fn find_transcription_history_route(
+    State(pool): State<DbPool>,
+    headers: HeaderMap,
+) -> (StatusCode, Json<ApiResponse<Vec<SpeechToText>>>) {
+    let user_id = extract_header_user_id(headers).expect("Could not extract user id");
+    match SpeechToText::find_transcription_history(&pool, &user_id) {
+        Ok(transcription_history) => {
+            ApiResponse::new(StatusCode::OK, Some(transcription_history), "OK").send()
+        }
+        Err(e) => ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &e.to_string()).send(),
+    }
+}
+
 pub fn transcription_routes() -> Router<DbPool> {
-    Router::new().route("/create", post(create_transcription_route))
+    Router::new()
+        .route("/create", post(create_transcription_route))
+        .route("/history", get(find_transcription_history_route))
 }
