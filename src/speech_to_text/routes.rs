@@ -14,8 +14,9 @@ type TranscriptionResponse = (StatusCode, Json<ApiResponse<SpeechToText>>);
 #[derive(Deserialize, Insertable)]
 #[diesel(table_name = speech_to_text)]
 pub(super) struct CreateTranscriptionPayload {
-    audio_url: Option<String>,
+    audio_url: String,
     transcription_text: String,
+    language: String,
 }
 
 async fn create_transcription_route(

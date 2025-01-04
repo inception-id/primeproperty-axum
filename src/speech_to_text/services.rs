@@ -11,8 +11,9 @@ pub(super) struct SpeechToText {
     user_id: uuid::Uuid,
     created_at: NaiveDateTime,
     updated_at: NaiveDateTime,
-    audio_url: Option<String>,
+    audio_url: String,
     transcription_text: String,
+    language: Option<String>,
 }
 
 impl SpeechToText {

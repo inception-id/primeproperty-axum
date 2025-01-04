@@ -41,8 +41,9 @@ diesel::table! {
         user_id -> Uuid,
         created_at -> Timestamp,
         updated_at -> Timestamp,
-        audio_url -> Nullable<Varchar>,
+        audio_url -> Varchar,
         transcription_text -> Text,
+        language -> Nullable<Varchar>,
     }
 }
 
