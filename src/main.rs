@@ -8,7 +8,6 @@ mod speech_to_text;
 mod text_to_speech;
 mod translation;
 mod users;
-
 use crate::db::build_db_pool;
 use axum::{middleware::from_fn, routing::get, Router};
 use std::env;

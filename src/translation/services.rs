@@ -7,14 +7,14 @@ use serde::Serialize;
 
 #[derive(Debug, Queryable, Serialize)]
 pub(super) struct Translation {
-    id: i32,
-    user_id: uuid::Uuid,
+    pub id: i32,
+    pub user_id: uuid::Uuid,
     created_at: NaiveDateTime,
     updated_at: NaiveDateTime,
     ai_system_prompt: String,
-    content_language: Option<String>,
-    target_language: String,
-    content: String,
+    pub content_language: Option<String>,
+    pub target_language: String,
+    pub content: String,
     completion: String,
 }
 
@@ -41,5 +41,14 @@ impl Translation {
             .order_by(translation::id.desc())
             .limit(10)
             .get_results(conn)
+    }
+
+    pub(super) fn find_translation(
+        pool: &DbPool,
+        translation_id: &i32,
+    ) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        translation::table.filter(translation::id.eq(translation_id)).first(conn)
     }
 }

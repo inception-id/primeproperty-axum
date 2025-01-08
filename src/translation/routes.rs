@@ -55,5 +55,5 @@ async fn find_translation_history_route(
 pub fn translation_routes() -> Router<DbPool> {
     Router::new()
         .route("/create", post(create_translation_route))
-        .route("/history", get(find_translation_history_route))
+        .route("/history", get(find_translation_history_route)).route("/create-storage", post(super::storage::create_translation_storage))
 }
