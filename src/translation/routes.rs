@@ -4,7 +4,7 @@ use crate::schema::translation;
 use crate::translation::services::Translation;
 use axum::extract::State;
 use axum::http::{HeaderMap, StatusCode};
-use axum::routing::{get, post};
+use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use diesel::Insertable;
 use serde::Deserialize;
@@ -55,5 +55,16 @@ async fn find_translation_history_route(
 pub fn translation_routes() -> Router<DbPool> {
     Router::new()
         .route("/create", post(create_translation_route))
-        .route("/history", get(find_translation_history_route)).route("/create-storage", post(super::storage::create_translation_storage))
+        .route("/history", get(find_translation_history_route))
+        .route(
+            "/create-storage",
+            post(super::storage::create_translation_storage_route),
+        )
+        .route(
+            "/find-storage",
+            get(super::storage::find_translation_storage_route),
+        ).route(
+        "/delete-storage/:id",
+        delete(super::storage::delete_translation_storage_route)
+    )
 }

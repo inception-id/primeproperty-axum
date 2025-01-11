@@ -1,9 +1,9 @@
-use chrono::NaiveDateTime;
-use diesel::{ExpressionMethods, Queryable, RunQueryDsl, QueryResult};
-use serde::Serialize;
 use crate::db::DbPool;
-use crate::translation::services::Translation;
 use crate::schema::translation_storage;
+use crate::translation::services::Translation;
+use chrono::NaiveDateTime;
+use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
+use serde::Serialize;
 
 #[derive(Debug, Queryable, Serialize)]
 pub(crate) struct TranslationStorage {
@@ -23,7 +23,7 @@ impl TranslationStorage {
         pool: &DbPool,
         translation: &Translation,
         updated_completion: &str,
-    ) -> QueryResult<Self>{
+    ) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         let values = (
@@ -35,7 +35,26 @@ impl TranslationStorage {
             (translation_storage::updated_completion.eq(&updated_completion)),
         );
 
-        diesel::insert_into(translation_storage::table).values(values).get_result(conn)
+        diesel::insert_into(translation_storage::table)
+            .values(values)
+            .get_result(conn)
+    }
+
+    pub(super) fn find_user_translation_storage(
+        pool: &DbPool,
+        user_id: &uuid::Uuid,
+    ) -> QueryResult<Vec<Self>> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        translation_storage::table
+            .filter(translation_storage::user_id.eq(user_id))
+            .limit(10)
+            .order_by(translation_storage::id.desc())
+            .get_results(conn)
+    }
+    
+    pub(super) fn delete_translation_storage(pool: &DbPool, translation_id: &i32) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+        diesel::delete(translation_storage::table.filter(translation_storage::id.eq(translation_id))).get_result(conn)
     }
 }
-

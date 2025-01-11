@@ -43,12 +43,11 @@ impl Translation {
             .get_results(conn)
     }
 
-    pub(super) fn find_translation(
-        pool: &DbPool,
-        translation_id: &i32,
-    ) -> QueryResult<Self> {
+    pub(super) fn find_translation(pool: &DbPool, translation_id: &i32) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
-        translation::table.filter(translation::id.eq(translation_id)).first(conn)
+        translation::table
+            .filter(translation::id.eq(translation_id))
+            .first(conn)
     }
 }
