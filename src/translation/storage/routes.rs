@@ -62,8 +62,32 @@ pub(crate) async fn delete_translation_storage_route(
     State(pool): State<DbPool>,
     Path(id): Path<i32>,
 ) -> TranslationStorageResponse {
-    match TranslationStorage::delete_translation_storage(&pool, &id) { 
-        Ok(translation_storage) => ApiResponse::new(StatusCode::OK, Some(translation_storage), "success").send(),
-        Err(err) => ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+    match TranslationStorage::delete_translation_storage(&pool, &id) {
+        Ok(translation_storage) => {
+            ApiResponse::new(StatusCode::OK, Some(translation_storage), "success").send()
+        }
+        Err(err) => {
+            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+        }
+    }
+}
+
+#[derive(Deserialize)]
+pub(crate) struct UpdateTranslationPayload {
+    updated_completion: String,
+}
+
+pub(crate) async fn update_translation_storage_route(
+    State(pool): State<DbPool>,
+    Path(id): Path<i32>,
+    Json(payload): Json<UpdateTranslationPayload>,
+) -> TranslationStorageResponse {
+    match TranslationStorage::update_translation_storage(&pool, &id, &payload.updated_completion) {
+        Ok(translation_storage) => {
+            ApiResponse::new(StatusCode::OK, Some(translation_storage), "success").send()
+        }
+        Err(err) => {
+            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+        }
     }
 }

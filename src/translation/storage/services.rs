@@ -52,9 +52,28 @@ impl TranslationStorage {
             .order_by(translation_storage::id.desc())
             .get_results(conn)
     }
-    
-    pub(super) fn delete_translation_storage(pool: &DbPool, translation_id: &i32) -> QueryResult<Self> {
+
+    pub(super) fn delete_translation_storage(
+        pool: &DbPool,
+        translation_id: &i32,
+    ) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-        diesel::delete(translation_storage::table.filter(translation_storage::id.eq(translation_id))).get_result(conn)
+        diesel::delete(
+            translation_storage::table.filter(translation_storage::id.eq(translation_id)),
+        )
+        .get_result(conn)
+    }
+
+    pub(super) fn update_translation_storage(
+        pool: &DbPool,
+        translation_id: &i32,
+        updated_completion: &str,
+    ) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        diesel::update(translation_storage::table)
+            .filter(translation_storage::id.eq(translation_id))
+            .set(translation_storage::updated_completion.eq(&updated_completion))
+            .get_result(conn)
     }
 }
