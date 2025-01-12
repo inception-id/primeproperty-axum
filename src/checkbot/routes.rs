@@ -1,11 +1,14 @@
 use super::services::Checkbot;
-use crate::checkbot::storage::{create_checkbot_storage_route, delete_checkbot_storage_route, find_many_checkbot_storage_route, update_checkbot_storage_route};
+use crate::checkbot::storage::{
+    create_checkbot_storage_route, delete_checkbot_storage_route, find_many_checkbot_storage_route,
+    update_checkbot_storage_route,
+};
 use crate::db::DbPool;
 use crate::middleware::{extract_header_user_id, ApiResponse};
 use crate::schema::checkbot;
 use axum::extract::State;
 use axum::http::{HeaderMap, StatusCode};
-use axum::routing::{get, post, delete, put};
+use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
 use diesel::Insertable;
 use serde::Deserialize;

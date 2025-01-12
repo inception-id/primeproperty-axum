@@ -47,12 +47,15 @@ pub(crate) async fn find_many_checkbot_storage_route(
     State(pool): State<DbPool>,
     headers: HeaderMap,
 ) -> (StatusCode, Json<ApiResponse<Vec<CheckbotStorage>>>) {
-
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
-    
+
     match CheckbotStorage::find_many_checkbot_storage(&pool, &user_id) {
-        Ok(checkbot_storage) => ApiResponse::new(StatusCode::OK, Some(checkbot_storage), "success").send(),
-        Err(err) => ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send(),
+        Ok(checkbot_storage) => {
+            ApiResponse::new(StatusCode::OK, Some(checkbot_storage), "success").send()
+        }
+        Err(err) => {
+            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+        }
     }
 }
 
@@ -62,8 +65,12 @@ pub(crate) async fn delete_checkbot_storage_route(
     Path(id): Path<i32>,
 ) -> CheckbotStorageResponse {
     match CheckbotStorage::delete_checkbot_storage(&pool, &id) {
-        Ok(checkbot_storage) => ApiResponse::new(StatusCode::OK, Some(checkbot_storage), "success").send(),
-        Err(err) => ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send(),
+        Ok(checkbot_storage) => {
+            ApiResponse::new(StatusCode::OK, Some(checkbot_storage), "success").send()
+        }
+        Err(err) => {
+            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+        }
     }
 }
 
@@ -75,10 +82,14 @@ pub(crate) struct UpdateCheckbotPayload {
 pub(crate) async fn update_checkbot_storage_route(
     State(pool): State<DbPool>,
     Path(id): Path<i32>,
-    Json(payload): Json<UpdateCheckbotPayload>
+    Json(payload): Json<UpdateCheckbotPayload>,
 ) -> CheckbotStorageResponse {
-    match CheckbotStorage::update_checkbot_storage(&pool, &id, &payload.updated_completion) { 
-        Ok(checkbot_storage) => ApiResponse::new(StatusCode::OK, Some(checkbot_storage), "success").send(),
-        Err(err) => ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send(),
+    match CheckbotStorage::update_checkbot_storage(&pool, &id, &payload.updated_completion) {
+        Ok(checkbot_storage) => {
+            ApiResponse::new(StatusCode::OK, Some(checkbot_storage), "success").send()
+        }
+        Err(err) => {
+            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+        }
     }
 }

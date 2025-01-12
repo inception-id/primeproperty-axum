@@ -37,25 +37,41 @@ impl CheckbotStorage {
             .values(values)
             .get_result(conn)
     }
-    
+
     pub(super) fn find_many_checkbot_storage(
         pool: &DbPool,
         user_id: &uuid::Uuid,
     ) -> QueryResult<Vec<Self>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-        
-        checkbot_storage::table.filter(checkbot_storage::user_id.eq(user_id)).limit(10).order_by(checkbot_storage::id.desc()).get_results(conn)
+
+        checkbot_storage::table
+            .filter(checkbot_storage::user_id.eq(user_id))
+            .limit(10)
+            .order_by(checkbot_storage::id.desc())
+            .get_results(conn)
     }
-    
-    pub(super) fn delete_checkbot_storage(pool: &DbPool, checkbot_storage_id: &i32) -> QueryResult<Self> {
+
+    pub(super) fn delete_checkbot_storage(
+        pool: &DbPool,
+        checkbot_storage_id: &i32,
+    ) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-        
-        diesel::delete(checkbot_storage::table).filter(checkbot_storage::id.eq(checkbot_storage_id)).get_result(conn)
+
+        diesel::delete(checkbot_storage::table)
+            .filter(checkbot_storage::id.eq(checkbot_storage_id))
+            .get_result(conn)
     }
-    
-    pub(super) fn update_checkbot_storage(pool: &DbPool, checkbot_storage_id: &i32, updated_completion: &str) -> QueryResult<Self> {
+
+    pub(super) fn update_checkbot_storage(
+        pool: &DbPool,
+        checkbot_storage_id: &i32,
+        updated_completion: &str,
+    ) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-        
-        diesel::update(checkbot_storage::table).filter(checkbot_storage::id.eq(checkbot_storage_id)).set(checkbot_storage::updated_completion.eq(updated_completion)).get_result(conn)
+
+        diesel::update(checkbot_storage::table)
+            .filter(checkbot_storage::id.eq(checkbot_storage_id))
+            .set(checkbot_storage::updated_completion.eq(updated_completion))
+            .get_result(conn)
     }
 }
