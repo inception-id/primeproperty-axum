@@ -1,4 +1,5 @@
 use super::services::Checkbot;
+use crate::checkbot::storage::create_checkbot_storage_route;
 use crate::db::DbPool;
 use crate::middleware::{extract_header_user_id, ApiResponse};
 use crate::schema::checkbot;
@@ -8,7 +9,6 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use diesel::Insertable;
 use serde::Deserialize;
-use crate::checkbot::storage::create_checkbot_storage_route;
 
 type CheckbotResponse = (StatusCode, Json<ApiResponse<Checkbot>>);
 

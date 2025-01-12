@@ -41,13 +41,12 @@ impl Checkbot {
             .limit(10)
             .get_results(conn)
     }
-    
-    pub(super) fn find_checkbot_by_id(
-        pool: &DbPool,
-        checkbot_id: &i32,
-    ) -> QueryResult<Self> {
+
+    pub(super) fn find_checkbot_by_id(pool: &DbPool, checkbot_id: &i32) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-        
-        checkbot::table.filter(checkbot::id.eq(&checkbot_id)).first(conn)
+
+        checkbot::table
+            .filter(checkbot::id.eq(&checkbot_id))
+            .first(conn)
     }
 }
