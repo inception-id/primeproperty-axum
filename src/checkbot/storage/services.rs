@@ -2,7 +2,7 @@ use crate::checkbot::services::Checkbot;
 use crate::db::DbPool;
 use crate::schema::checkbot_storage;
 use chrono::NaiveDateTime;
-use diesel::{ExpressionMethods, QueryResult, Queryable, RunQueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
 
 #[derive(Debug, Queryable, Serialize)]
@@ -36,5 +36,20 @@ impl CheckbotStorage {
         diesel::insert_into(checkbot_storage::table)
             .values(values)
             .get_result(conn)
+    }
+    
+    pub(super) fn find_many_checkbot_storage(
+        pool: &DbPool,
+        user_id: &uuid::Uuid,
+    ) -> QueryResult<Vec<Self>> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+        
+        checkbot_storage::table.filter(checkbot_storage::user_id.eq(user_id)).limit(10).order_by(checkbot_storage::id.desc()).get_results(conn)
+    }
+    
+    pub(super) fn delete_checkbot_storage(pool: &DbPool, checkbot_storage_id: &i32) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+        
+        diesel::delete(checkbot_storage::table).filter(checkbot_storage::id.eq(checkbot_storage_id)).get_result(conn)
     }
 }
