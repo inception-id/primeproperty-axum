@@ -25,6 +25,19 @@ diesel::table! {
 }
 
 diesel::table! {
+    checkbot_storage (id) {
+        id -> Int4,
+        user_id -> Uuid,
+        checkbot_id -> Int4,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+        instruction -> Varchar,
+        content -> Text,
+        updated_completion -> Text,
+    }
+}
+
+diesel::table! {
     languages (id) {
         id -> Int4,
         created_at -> Timestamp,
@@ -98,6 +111,8 @@ diesel::table! {
 }
 
 diesel::joinable!(checkbot -> users (user_id));
+diesel::joinable!(checkbot_storage -> checkbot (checkbot_id));
+diesel::joinable!(checkbot_storage -> users (user_id));
 diesel::joinable!(speech_to_text -> users (user_id));
 diesel::joinable!(text_to_speech -> users (user_id));
 diesel::joinable!(translation -> users (user_id));
@@ -107,6 +122,7 @@ diesel::joinable!(translation_storage -> users (user_id));
 diesel::allow_tables_to_appear_in_same_query!(
     ai_system_prompts,
     checkbot,
+    checkbot_storage,
     languages,
     speech_to_text,
     text_to_speech,

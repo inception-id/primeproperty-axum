@@ -8,6 +8,7 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use diesel::Insertable;
 use serde::Deserialize;
+use crate::checkbot::storage::create_checkbot_storage_route;
 
 type CheckbotResponse = (StatusCode, Json<ApiResponse<Checkbot>>);
 
@@ -52,4 +53,5 @@ pub fn checkbot_routes() -> Router<DbPool> {
     Router::new()
         .route("/create", post(create_checkbot_route))
         .route("/history", get(find_checkbot_history_route))
+        .route("/create-storage", post(create_checkbot_storage_route))
 }

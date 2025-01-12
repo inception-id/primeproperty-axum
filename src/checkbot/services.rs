@@ -7,14 +7,14 @@ use serde::Serialize;
 
 #[derive(Debug, Queryable, Serialize)]
 pub(super) struct Checkbot {
-    id: i32,
-    user_id: uuid::Uuid,
+    pub id: i32,
+    pub user_id: uuid::Uuid,
     created_at: NaiveDateTime,
     updated_at: NaiveDateTime,
-    instruction: String,
+    pub instruction: String,
     ai_system_prompt: String,
-    content: String,
-    completion: String,
+    pub content: String,
+    pub completion: String,
 }
 
 impl Checkbot {
@@ -40,5 +40,14 @@ impl Checkbot {
             .order_by(checkbot::created_at.desc())
             .limit(10)
             .get_results(conn)
+    }
+    
+    pub(super) fn find_checkbot_by_id(
+        pool: &DbPool,
+        checkbot_id: &i32,
+    ) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+        
+        checkbot::table.filter(checkbot::id.eq(&checkbot_id)).first(conn)
     }
 }

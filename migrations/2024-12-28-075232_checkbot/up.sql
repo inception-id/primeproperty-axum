@@ -5,7 +5,7 @@ CREATE TABLE checkbot (
                              user_id uuid NOT NULL REFERENCES users(id),
                              created_at TIMESTAMP NOT NULL DEFAULT NOW(),
                              updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    instruction VARCHAR NOT NULL,
+                            instruction VARCHAR NOT NULL,
                              ai_system_prompt VARCHAR NOT NULL,
                              content TEXT NOT NULL,
                              completion TEXT NOT NULL,
