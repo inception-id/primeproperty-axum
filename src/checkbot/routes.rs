@@ -1,11 +1,11 @@
 use super::services::Checkbot;
-use crate::checkbot::storage::{create_checkbot_storage_route, delete_checkbot_storage_route, find_many_checkbot_storage_route};
+use crate::checkbot::storage::{create_checkbot_storage_route, delete_checkbot_storage_route, find_many_checkbot_storage_route, update_checkbot_storage_route};
 use crate::db::DbPool;
 use crate::middleware::{extract_header_user_id, ApiResponse};
 use crate::schema::checkbot;
 use axum::extract::State;
 use axum::http::{HeaderMap, StatusCode};
-use axum::routing::{get, post, delete};
+use axum::routing::{get, post, delete, put};
 use axum::{Json, Router};
 use diesel::Insertable;
 use serde::Deserialize;
@@ -56,4 +56,5 @@ pub fn checkbot_routes() -> Router<DbPool> {
         .route("/create-storage", post(create_checkbot_storage_route))
         .route("/find-storage", get(find_many_checkbot_storage_route))
         .route("/delete-storage/:id", delete(delete_checkbot_storage_route))
+        .route("/update-storage/:id", put(update_checkbot_storage_route))
 }

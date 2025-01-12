@@ -52,4 +52,10 @@ impl CheckbotStorage {
         
         diesel::delete(checkbot_storage::table).filter(checkbot_storage::id.eq(checkbot_storage_id)).get_result(conn)
     }
+    
+    pub(super) fn update_checkbot_storage(pool: &DbPool, checkbot_storage_id: &i32, updated_completion: &str) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+        
+        diesel::update(checkbot_storage::table).filter(checkbot_storage::id.eq(checkbot_storage_id)).set(checkbot_storage::updated_completion.eq(updated_completion)).get_result(conn)
+    }
 }
