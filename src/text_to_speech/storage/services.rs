@@ -48,9 +48,8 @@ impl TextToSpeechStorage {
     pub(super) fn delete_tts_storage(pool: &DbPool, tts_storage_id: &i32) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
-        diesel::delete(
-            text_to_speech_storage::table.filter(text_to_speech_storage::id.eq(tts_storage_id)),
-        )
-        .get_result(conn)
+        diesel::delete(text_to_speech_storage::table)
+            .filter(text_to_speech_storage::id.eq(tts_storage_id))
+            .get_result(conn)
     }
 }
