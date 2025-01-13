@@ -73,6 +73,19 @@ diesel::table! {
 }
 
 diesel::table! {
+    text_to_speech_storage (id) {
+        id -> Int4,
+        user_id -> Uuid,
+        text_to_speech_id -> Int4,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+        input_content -> Text,
+        audio_url -> Varchar,
+        voice -> Varchar,
+    }
+}
+
+diesel::table! {
     translation (id) {
         id -> Int4,
         user_id -> Uuid,
@@ -115,6 +128,8 @@ diesel::joinable!(checkbot_storage -> checkbot (checkbot_id));
 diesel::joinable!(checkbot_storage -> users (user_id));
 diesel::joinable!(speech_to_text -> users (user_id));
 diesel::joinable!(text_to_speech -> users (user_id));
+diesel::joinable!(text_to_speech_storage -> text_to_speech (text_to_speech_id));
+diesel::joinable!(text_to_speech_storage -> users (user_id));
 diesel::joinable!(translation -> users (user_id));
 diesel::joinable!(translation_storage -> translation (translation_id));
 diesel::joinable!(translation_storage -> users (user_id));
@@ -126,6 +141,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     languages,
     speech_to_text,
     text_to_speech,
+    text_to_speech_storage,
     translation,
     translation_storage,
     users,

@@ -1,10 +1,11 @@
 use super::services::TextToSpeech;
+use super::storage::{create_tts_storage_route, delete_tts_storage_route, find_tts_storage_route};
 use crate::db::DbPool;
 use crate::middleware::{extract_header_user_id, ApiResponse};
 use crate::schema::text_to_speech;
 use axum::extract::State;
 use axum::http::{HeaderMap, StatusCode};
-use axum::routing::{get, post};
+use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use diesel::Insertable;
 use serde::Deserialize;
@@ -46,4 +47,7 @@ pub fn tts_routes() -> Router<DbPool> {
     Router::new()
         .route("/create", post(create_tts_route))
         .route("/history", get(find_tts_history_route))
+        .route("/create-storage", post(create_tts_storage_route))
+        .route("/find-storage", get(find_tts_storage_route))
+        .route("/delete-storage/:id", delete(delete_tts_storage_route))
 }
