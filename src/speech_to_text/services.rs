@@ -7,13 +7,13 @@ use serde::Serialize;
 
 #[derive(Debug, Queryable, Serialize)]
 pub(super) struct SpeechToText {
-    id: i32,
-    user_id: uuid::Uuid,
+    pub id: i32,
+    pub user_id: uuid::Uuid,
     created_at: NaiveDateTime,
     updated_at: NaiveDateTime,
-    audio_url: String,
-    transcription_text: String,
-    language: Option<String>,
+    pub audio_url: String,
+    pub transcription_text: String,
+    pub language: Option<String>,
 }
 
 impl SpeechToText {
@@ -38,5 +38,13 @@ impl SpeechToText {
             .order_by(speech_to_text::id.desc())
             .limit(10)
             .get_results(conn)
+    }
+
+    pub(super) fn find_transcription_by_id(
+        pool: &DbPool,
+        id: &i32,
+    ) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+        speech_to_text::table.filter(speech_to_text::id.eq(id)).first(conn)
     }
 }

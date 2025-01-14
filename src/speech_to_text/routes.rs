@@ -8,6 +8,7 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use diesel::Insertable;
 use serde::Deserialize;
+use crate::speech_to_text::storage::create_transcription_storage_route;
 
 type TranscriptionResponse = (StatusCode, Json<ApiResponse<SpeechToText>>);
 
@@ -50,4 +51,5 @@ pub fn transcription_routes() -> Router<DbPool> {
     Router::new()
         .route("/create", post(create_transcription_route))
         .route("/history", get(find_transcription_history_route))
+        .route("/create-storage", post(create_transcription_storage_route))
 }
