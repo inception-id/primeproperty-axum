@@ -2,13 +2,16 @@ use super::services::SpeechToText;
 use crate::db::DbPool;
 use crate::middleware::{extract_header_user_id, ApiResponse};
 use crate::schema::speech_to_text;
+use crate::speech_to_text::storage::{
+    create_transcription_storage_route, delete_transcription_storage_route,
+    find_transcription_storage_route, update_transcription_storage_route
+};
 use axum::extract::State;
 use axum::http::{HeaderMap, StatusCode};
-use axum::routing::{get, post};
+use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
 use diesel::Insertable;
 use serde::Deserialize;
-use crate::speech_to_text::storage::create_transcription_storage_route;
 
 type TranscriptionResponse = (StatusCode, Json<ApiResponse<SpeechToText>>);
 
@@ -52,4 +55,12 @@ pub fn transcription_routes() -> Router<DbPool> {
         .route("/create", post(create_transcription_route))
         .route("/history", get(find_transcription_history_route))
         .route("/create-storage", post(create_transcription_storage_route))
+        .route("/find-storage", get(find_transcription_storage_route))
+        .route(
+            "/delete-storage/:id",
+            delete(delete_transcription_storage_route),
+        ).route(
+        "/update-storage/:id",
+        put(update_transcription_storage_route),
+    )
 }

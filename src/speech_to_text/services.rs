@@ -40,11 +40,10 @@ impl SpeechToText {
             .get_results(conn)
     }
 
-    pub(super) fn find_transcription_by_id(
-        pool: &DbPool,
-        id: &i32,
-    ) -> QueryResult<Self> {
+    pub(super) fn find_transcription_by_id(pool: &DbPool, id: &i32) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-        speech_to_text::table.filter(speech_to_text::id.eq(id)).first(conn)
+        speech_to_text::table
+            .filter(speech_to_text::id.eq(id))
+            .first(conn)
     }
 }
