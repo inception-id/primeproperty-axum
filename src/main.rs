@@ -1,6 +1,7 @@
 mod ai_system_prompt;
 mod checkbot;
 mod db;
+mod languageai_subscriptions;
 mod languages;
 mod middleware;
 mod schema;
@@ -8,6 +9,7 @@ mod speech_to_text;
 mod text_to_speech;
 mod translation;
 mod users;
+
 use crate::db::build_db_pool;
 use axum::{middleware::from_fn, routing::get, Router};
 use std::env;
@@ -34,6 +36,7 @@ async fn main() {
         .nest("/checkbot", checkbot::checkbot_routes())
         .nest("/tts", text_to_speech::tts_routes())
         .nest("/transcription", speech_to_text::transcription_routes())
+        .nest("/languageai/subscriptions", languageai_subscriptions::languageai_subscription_routes())
         .with_state(pool)
         .layer(from_fn(middleware::api_key_middleware))
         .layer(from_fn(middleware::session_middleware));

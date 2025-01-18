@@ -71,9 +71,9 @@ pub(crate) struct UpdateTranscriptionStoragePayload {
 pub(crate) async fn update_transcription_storage_route(
     State(pool): State<DbPool>,
     Path(id): Path<i32>,
-    Json(payload): Json<UpdateTranscriptionStoragePayload>
+    Json(payload): Json<UpdateTranscriptionStoragePayload>,
 ) -> TranscriptionStorageResponse {
-    match SpeechToTextStorage::update_storage(&pool, &id, &payload.updated_transcription_text) { 
+    match SpeechToTextStorage::update_storage(&pool, &id, &payload.updated_transcription_text) {
         Ok(storage) => ApiResponse::new(StatusCode::OK, Some(storage), "success").send(),
         Err(e) => ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &e.to_string()).send(),
     }

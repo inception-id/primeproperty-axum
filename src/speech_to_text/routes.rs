@@ -4,7 +4,7 @@ use crate::middleware::{extract_header_user_id, ApiResponse};
 use crate::schema::speech_to_text;
 use crate::speech_to_text::storage::{
     create_transcription_storage_route, delete_transcription_storage_route,
-    find_transcription_storage_route, update_transcription_storage_route
+    find_transcription_storage_route, update_transcription_storage_route,
 };
 use axum::extract::State;
 use axum::http::{HeaderMap, StatusCode};
@@ -59,8 +59,9 @@ pub fn transcription_routes() -> Router<DbPool> {
         .route(
             "/delete-storage/:id",
             delete(delete_transcription_storage_route),
-        ).route(
-        "/update-storage/:id",
-        put(update_transcription_storage_route),
-    )
+        )
+        .route(
+            "/update-storage/:id",
+            put(update_transcription_storage_route),
+        )
 }

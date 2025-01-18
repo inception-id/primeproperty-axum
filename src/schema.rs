@@ -38,6 +38,23 @@ diesel::table! {
 }
 
 diesel::table! {
+    languageai_subscription_plans (id) {
+        id -> Int4,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+        name -> Varchar,
+        initial_price -> Numeric,
+        discounted_price -> Nullable<Numeric>,
+        history_limit -> Nullable<Int4>,
+        storage_limit -> Nullable<Int4>,
+        translation_limit -> Nullable<Int4>,
+        checkbot_limit -> Nullable<Int4>,
+        text_to_speech_limit -> Nullable<Int4>,
+        speech_to_text_limit -> Nullable<Int4>,
+    }
+}
+
+diesel::table! {
     languages (id) {
         id -> Int4,
         created_at -> Timestamp,
@@ -153,6 +170,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     ai_system_prompts,
     checkbot,
     checkbot_storage,
+    languageai_subscription_plans,
     languages,
     speech_to_text,
     speech_to_text_storage,

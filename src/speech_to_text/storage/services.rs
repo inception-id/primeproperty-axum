@@ -1,7 +1,7 @@
 use crate::db::DbPool;
 use crate::schema::speech_to_text_storage;
 use crate::speech_to_text::services::SpeechToText;
-use chrono::{NaiveDateTime};
+use chrono::NaiveDateTime;
 use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
 

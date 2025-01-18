@@ -42,9 +42,9 @@ pub async fn api_key_middleware(req: Request, next: Next) -> Result<Response, St
 pub async fn session_middleware(req: Request, next: Next) -> Result<Response, StatusCode> {
     let path = req.uri().path();
 
-    let auth_path = ["/users/create-user", "/users/find-user"];
+    let no_auth_path = ["/users/create-user", "/users/find-user", "/languageai/subscriptions/plans"];
 
-    if auth_path.contains(&path) {
+    if no_auth_path.contains(&path) {
         Ok(next.run(req).await)
     } else {
         let header_access_token_option = req
