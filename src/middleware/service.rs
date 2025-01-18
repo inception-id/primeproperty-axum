@@ -42,7 +42,11 @@ pub async fn api_key_middleware(req: Request, next: Next) -> Result<Response, St
 pub async fn session_middleware(req: Request, next: Next) -> Result<Response, StatusCode> {
     let path = req.uri().path();
 
-    let no_auth_path = ["/users/create-user", "/users/find-user", "/languageai/subscriptions/plans"];
+    let no_auth_path = [
+        "/users/create-user",
+        "/users/find-user",
+        "/languageai/subscriptions/plans",
+    ];
 
     if no_auth_path.contains(&path) {
         Ok(next.run(req).await)

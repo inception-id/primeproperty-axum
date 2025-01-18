@@ -1,12 +1,12 @@
 use crate::db::DbPool;
+use crate::languageai_subscriptions::routes::CreateLanguageaiSubscriptionPlansPayload;
 use crate::schema::languageai_subscription_plans;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
-use diesel::{QueryResult, Queryable, RunQueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
 
 #[derive(Queryable, Serialize)]
-#[diesel(table_name = languageai_subscription_plans)]
 pub(crate) struct LanguageaiSubscriptionPlan {
     id: i32,
     created_at: NaiveDateTime,
@@ -26,5 +26,25 @@ impl LanguageaiSubscriptionPlan {
     pub(crate) fn find_all_subscription_plans(pool: &DbPool) -> QueryResult<Vec<Self>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
         languageai_subscription_plans::table.get_results(conn)
+    }
+
+    pub(crate) fn create_subscription_plan(
+        pool: &DbPool,
+        payload: &CreateLanguageaiSubscriptionPlansPayload,
+    ) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        diesel::insert_into(languageai_subscription_plans::table)
+            .values(payload)
+            .get_result(conn)
+    }
+    
+    pub(crate) fn find_subscription_plan_by_id(
+        pool: &DbPool,
+        id: &i32,
+    ) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+        
+        languageai_subscription_plans::table.filter(languageai_subscription_plans::id.eq(id)).first(conn)
     }
 }

@@ -36,7 +36,10 @@ async fn main() {
         .nest("/checkbot", checkbot::checkbot_routes())
         .nest("/tts", text_to_speech::tts_routes())
         .nest("/transcription", speech_to_text::transcription_routes())
-        .nest("/languageai/subscriptions", languageai_subscriptions::languageai_subscription_routes())
+        .nest(
+            "/languageai/subscriptions",
+            languageai_subscriptions::languageai_subscription_routes(),
+        )
         .with_state(pool)
         .layer(from_fn(middleware::api_key_middleware))
         .layer(from_fn(middleware::session_middleware));
