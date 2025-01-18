@@ -54,9 +54,11 @@ diesel::table! {
 
     languageai_subscription_payments (id) {
         id -> Int4,
+        user_id -> Uuid,
+        languageai_subscription_plan_id -> Int4,
         created_at -> Timestamp,
         updated_at -> Timestamp,
-        languageai_subscription_plan_id -> Int4,
+        expired_at -> Timestamp,
         amount -> Numeric,
         period -> SubscriptionPeriod,
         status -> PaymentStatus,
@@ -184,6 +186,7 @@ diesel::joinable!(checkbot -> users (user_id));
 diesel::joinable!(checkbot_storage -> checkbot (checkbot_id));
 diesel::joinable!(checkbot_storage -> users (user_id));
 diesel::joinable!(languageai_subscription_payments -> languageai_subscription_plans (languageai_subscription_plan_id));
+diesel::joinable!(languageai_subscription_payments -> users (user_id));
 diesel::joinable!(speech_to_text -> users (user_id));
 diesel::joinable!(speech_to_text_storage -> speech_to_text (speech_to_text_id));
 diesel::joinable!(speech_to_text_storage -> users (user_id));
