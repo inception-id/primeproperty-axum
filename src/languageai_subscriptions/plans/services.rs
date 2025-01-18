@@ -25,7 +25,7 @@ pub(crate) struct LanguageaiSubscriptionPlan {
 impl LanguageaiSubscriptionPlan {
     pub(crate) fn find_all_subscription_plans(pool: &DbPool) -> QueryResult<Vec<Self>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-        languageai_subscription_plans::table.get_results(conn)
+        languageai_subscription_plans::table.order_by(languageai_subscription_plans::initial_price.asc()).get_results(conn)
     }
 
     pub(crate) fn create_subscription_plan(

@@ -1,5 +1,15 @@
 // @generated automatically by Diesel CLI.
 
+pub mod sql_types {
+    #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "payment_status"))]
+    pub struct PaymentStatus;
+
+    #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "subscription_period"))]
+    pub struct SubscriptionPeriod;
+}
+
 diesel::table! {
     ai_system_prompts (id) {
         id -> Int4,
@@ -34,6 +44,23 @@ diesel::table! {
         instruction -> Varchar,
         content -> Text,
         updated_completion -> Text,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::SubscriptionPeriod;
+    use super::sql_types::PaymentStatus;
+
+    languageai_subscription_payments (id) {
+        id -> Int4,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+        languageai_subscription_plan_id -> Int4,
+        amount -> Numeric,
+        period -> SubscriptionPeriod,
+        status -> PaymentStatus,
+        doku_response -> Nullable<Jsonb>,
     }
 }
 
@@ -156,6 +183,7 @@ diesel::table! {
 diesel::joinable!(checkbot -> users (user_id));
 diesel::joinable!(checkbot_storage -> checkbot (checkbot_id));
 diesel::joinable!(checkbot_storage -> users (user_id));
+diesel::joinable!(languageai_subscription_payments -> languageai_subscription_plans (languageai_subscription_plan_id));
 diesel::joinable!(speech_to_text -> users (user_id));
 diesel::joinable!(speech_to_text_storage -> speech_to_text (speech_to_text_id));
 diesel::joinable!(speech_to_text_storage -> users (user_id));
@@ -170,6 +198,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     ai_system_prompts,
     checkbot,
     checkbot_storage,
+    languageai_subscription_payments,
     languageai_subscription_plans,
     languages,
     speech_to_text,
