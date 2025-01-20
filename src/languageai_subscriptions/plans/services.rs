@@ -8,12 +8,12 @@ use serde::Serialize;
 
 #[derive(Queryable, Serialize)]
 pub(crate) struct LanguageaiSubscriptionPlan {
-    id: i32,
+    pub id: i32,
     created_at: NaiveDateTime,
     updated_at: NaiveDateTime,
     name: String,
     initial_price: BigDecimal,
-    discounted_price: Option<BigDecimal>,
+    pub discounted_price: Option<BigDecimal>,
     history_limit: Option<i32>,
     storage_limit: Option<i32>,
     translation_limit: Option<i32>,
