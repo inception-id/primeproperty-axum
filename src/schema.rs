@@ -64,6 +64,7 @@ diesel::table! {
         status -> PaymentStatus,
         doku_request -> Nullable<Jsonb>,
         doku_response -> Nullable<Jsonb>,
+        doku_notification -> Nullable<Jsonb>,
     }
 }
 

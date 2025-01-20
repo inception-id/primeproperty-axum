@@ -20,6 +20,7 @@ pub(crate) struct LanguageaiSubscriptionPayment {
     status: PaymentStatus,
     doku_request: Option<serde_json::Value>,
     doku_response: Option<serde_json::Value>,
+    doku_notification: Option<serde_json::Value>,
 }
 
 impl LanguageaiSubscriptionPayment {

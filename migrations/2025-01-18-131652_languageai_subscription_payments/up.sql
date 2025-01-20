@@ -12,6 +12,7 @@ CREATE TABLE languageai_subscription_payments (
                                             period subscription_period NOT NULL,
                                             status payment_status NOT NULL DEFAULT 'pending',
                                             doku_request JSONB,
-                                            doku_response JSONB
+                                            doku_response JSONB,
+                                            doku_notification JSONB
 );
 SELECT diesel_manage_updated_at('languageai_subscription_payments');
