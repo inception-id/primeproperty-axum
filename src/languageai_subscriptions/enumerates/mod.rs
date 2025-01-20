@@ -1,5 +1,5 @@
-mod subscription_period;
 mod payment_status;
+mod subscription_period;
 
-pub use subscription_period::SubscriptionPeriod;
 pub use payment_status::PaymentStatus;
+pub use subscription_period::SubscriptionPeriod;

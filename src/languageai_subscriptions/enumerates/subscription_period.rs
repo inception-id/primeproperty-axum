@@ -1,9 +1,9 @@
+use crate::schema::sql_types;
 use diesel::deserialize::{self, FromSql, FromSqlRow};
 use diesel::expression::AsExpression;
 use diesel::pg::{Pg, PgValue};
 use diesel::serialize::{self, IsNull, Output, ToSql};
 use serde::{Deserialize, Serialize};
-use crate::schema::sql_types;
 use std::io::Write;
 
 #[derive(Debug, AsExpression, FromSqlRow, Deserialize, Serialize, Clone)]
@@ -16,7 +16,7 @@ pub enum SubscriptionPeriod {
 
 impl SubscriptionPeriod {
     pub fn to_month_count(self) -> i32 {
-        match self { 
+        match self {
             SubscriptionPeriod::OneYear => 12,
             SubscriptionPeriod::ThreeMonths => 3,
             SubscriptionPeriod::OneMonth => 3,

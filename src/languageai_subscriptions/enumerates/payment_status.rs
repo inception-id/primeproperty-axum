@@ -1,31 +1,31 @@
+use crate::schema::sql_types;
 use diesel::deserialize::{self, FromSql, FromSqlRow};
 use diesel::expression::AsExpression;
 use diesel::pg::{Pg, PgValue};
 use diesel::serialize::{self, IsNull, Output, ToSql};
 use serde::{Deserialize, Serialize};
 use std::io::Write;
-use crate::schema::sql_types;
 
-#[derive(Debug, AsExpression, FromSqlRow, Deserialize, Serialize)]
-#[diesel(sql_type = crate::schema::sql_types::SubscriptionPeriod)]
+#[derive(Debug, AsExpression, FromSqlRow, Deserialize, Serialize, Clone)]
+#[diesel(sql_type = sql_types::PaymentStatus)]
 pub enum PaymentStatus {
     Success,
     Pending,
-    Fail
+    Fail,
 }
 
-impl ToSql<sql_types::PaymentStatus, Pg> for PaymentStatus{
+impl ToSql<sql_types::PaymentStatus, Pg> for PaymentStatus {
     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
         match *self {
-            PaymentStatus::Success=> out.write_all(b"success")?,
-            PaymentStatus::Pending=> out.write_all(b"pending")?,
-            PaymentStatus::Fail=> out.write_all(b"fail")?,
+            PaymentStatus::Success => out.write_all(b"success")?,
+            PaymentStatus::Pending => out.write_all(b"pending")?,
+            PaymentStatus::Fail => out.write_all(b"fail")?,
         }
         Ok(IsNull::No)
     }
 }
 
-impl FromSql<sql_types::PaymentStatus, Pg> for PaymentStatus{
+impl FromSql<sql_types::PaymentStatus, Pg> for PaymentStatus {
     fn from_sql(bytes: PgValue) -> deserialize::Result<Self> {
         match bytes.as_bytes() {
             b"success" => Ok(PaymentStatus::Success),
