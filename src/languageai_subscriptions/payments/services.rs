@@ -20,6 +20,7 @@ pub(crate) struct LanguageaiSubscriptionPayment {
     amount: BigDecimal,
     period: SubscriptionPeriod,
     status: PaymentStatus,
+    invoice_id: String,
     doku_request: Option<serde_json::Value>,
     doku_response: Option<serde_json::Value>,
     doku_notification: Option<serde_json::Value>,
@@ -42,6 +43,7 @@ impl LanguageaiSubscriptionPayment {
             languageai_subscription_payments::expired_at.eq(expired_at),
             languageai_subscription_payments::amount.eq(amount),
             languageai_subscription_payments::period.eq(&plan.period),
+            languageai_subscription_payments::invoice_id.eq(&plan.invoice_id),
             languageai_subscription_payments::doku_request.eq(&plan.doku_request),
             languageai_subscription_payments::doku_response.eq(&plan.doku_response),
         );
@@ -61,7 +63,7 @@ impl LanguageaiSubscriptionPayment {
             .filter(
                 languageai_subscription_payments::user_id
                     .eq(user_id)
-                    .and(languageai_subscription_payments::expired_at.lt(diesel::dsl::now)),
+                    .and(languageai_subscription_payments::expired_at.gt(diesel::dsl::now)),
             )
             .order_by(languageai_subscription_payments::id.desc())
             .get_result(conn)

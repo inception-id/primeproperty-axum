@@ -62,6 +62,7 @@ diesel::table! {
         amount -> Numeric,
         period -> SubscriptionPeriod,
         status -> PaymentStatus,
+        invoice_id -> Varchar,
         doku_request -> Nullable<Jsonb>,
         doku_response -> Nullable<Jsonb>,
         doku_notification -> Nullable<Jsonb>,

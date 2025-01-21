@@ -70,6 +70,7 @@ async fn find_languageai_subscription_plan_by_id_route(
 pub(super) struct CreateLanguageaiSubscriptionPaymentPayload {
     pub languageai_subscription_plan_id: i32,
     pub period: SubscriptionPeriod,
+    pub invoice_id: String,
     pub doku_request: serde_json::Value,
     pub doku_response: serde_json::Value,
 }

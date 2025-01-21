@@ -11,6 +11,7 @@ CREATE TABLE languageai_subscription_payments (
                                             amount DECIMAL NOT NULL,
                                             period subscription_period NOT NULL,
                                             status payment_status NOT NULL DEFAULT 'pending',
+                                            invoice_id VARCHAR NOT NULL,
                                             doku_request JSONB,
                                             doku_response JSONB,
                                             doku_notification JSONB
