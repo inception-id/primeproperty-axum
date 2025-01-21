@@ -7,12 +7,11 @@ use crate::languageai_subscriptions::enumerates::SubscriptionPeriod;
 use crate::languageai_subscriptions::payments::LanguageaiSubscriptionPayment;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
-use axum::routing::{get, post, put};
+use axum::routing::{get, post};
 use axum::{Json, Router};
 use bigdecimal::{BigDecimal, ToPrimitive};
 use diesel::Insertable;
 use serde::Deserialize;
-use crate::schema::languageai_subscription_payments::doku_request;
 
 async fn find_all_subscription_plans_route(
     State(pool): State<DbPool>,
@@ -128,6 +127,19 @@ pub(super) async fn create_subscription_payment_checkout_route(
     }
 }
 
+pub(super) async fn find_latest_pending_checkout_route(
+    State(pool): State<DbPool>,
+    headers: HeaderMap,
+) -> (StatusCode, Json<ApiResponse<LanguageaiSubscriptionPayment>>) {
+
+    let user_id = extract_header_user_id(headers).expect("Could not extract user id");
+    
+    match LanguageaiSubscriptionPayment::find_latest_pending_checkout(&pool, &user_id) { 
+        Ok(pending_checkout) => ApiResponse::new(StatusCode::OK, Some(pending_checkout), "success").send(),
+        Err(err) => ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send(),
+    }
+}
+
 pub fn languageai_subscription_routes() -> Router<DbPool> {
     Router::new()
         .route("/plans", get(find_all_subscription_plans_route))
@@ -139,5 +151,8 @@ pub fn languageai_subscription_routes() -> Router<DbPool> {
         .route(
             "/payment/checkout",
             post(create_subscription_payment_checkout_route),
-        )
+        ).route(
+        "/payment/pending",
+        get(find_latest_pending_checkout_route)
+    )
 }

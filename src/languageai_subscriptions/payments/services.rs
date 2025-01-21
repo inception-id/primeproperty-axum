@@ -4,7 +4,9 @@ use crate::languageai_subscriptions::routes::CreateLanguageaiSubscriptionPayment
 use crate::schema::languageai_subscription_payments;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
-use diesel::{ExpressionMethods, QueryResult, Queryable, RunQueryDsl};
+use diesel::{
+    BoolExpressionMethods, ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl,
+};
 use serde::Serialize;
 
 #[derive(Debug, Queryable, Serialize)]
@@ -46,6 +48,22 @@ impl LanguageaiSubscriptionPayment {
 
         diesel::insert_into(languageai_subscription_payments::table)
             .values(insert_values)
+            .get_result(conn)
+    }
+
+    pub(crate) fn find_latest_pending_checkout(
+        pool: &DbPool,
+        user_id: &uuid::Uuid,
+    ) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        languageai_subscription_payments::table
+            .filter(
+                languageai_subscription_payments::user_id
+                    .eq(user_id)
+                    .and(languageai_subscription_payments::expired_at.lt(diesel::dsl::now)),
+            )
+            .order_by(languageai_subscription_payments::id.desc())
             .get_result(conn)
     }
 }
