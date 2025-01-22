@@ -15,7 +15,7 @@ pub enum SubscriptionPeriod {
 }
 
 impl SubscriptionPeriod {
-    pub fn to_month_count(self) -> i32 {
+    pub fn to_month_count(self) -> u32 {
         match self {
             SubscriptionPeriod::OneYear => 12,
             SubscriptionPeriod::ThreeMonths => 3,

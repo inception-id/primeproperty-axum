@@ -13,14 +13,14 @@ use serde_json::json;
 
 #[derive(Debug, Queryable, Serialize)]
 pub(crate) struct LanguageaiSubscriptionPayment {
-    id: i32,
-    user_id: uuid::Uuid,
-    languageai_subscription_plan_id: i32,
+    pub id: i32,
+    pub user_id: uuid::Uuid,
+    pub languageai_subscription_plan_id: i32,
     created_at: NaiveDateTime,
     updated_at: NaiveDateTime,
     expired_at: NaiveDateTime,
     amount: BigDecimal,
-    period: SubscriptionPeriod,
+    pub period: SubscriptionPeriod,
     pub status: PaymentStatus,
     invoice_id: String,
     doku_request: Option<serde_json::Value>,

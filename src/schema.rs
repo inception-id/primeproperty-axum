@@ -87,6 +87,24 @@ diesel::table! {
 }
 
 diesel::table! {
+    languageai_subscriptions (id) {
+        id -> Int4,
+        user_id -> Uuid,
+        languageai_subscription_plan_id -> Int4,
+        languageai_subscription_payment_id -> Int4,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+        expired_at -> Timestamp,
+        history_limit -> Nullable<Int4>,
+        storage_limit -> Nullable<Int4>,
+        translation_limit -> Nullable<Int4>,
+        checkbot_limit -> Nullable<Int4>,
+        text_to_speech_limit -> Nullable<Int4>,
+        speech_to_text_limit -> Nullable<Int4>,
+    }
+}
+
+diesel::table! {
     languages (id) {
         id -> Int4,
         created_at -> Timestamp,
@@ -190,6 +208,9 @@ diesel::joinable!(checkbot_storage -> checkbot (checkbot_id));
 diesel::joinable!(checkbot_storage -> users (user_id));
 diesel::joinable!(languageai_subscription_payments -> languageai_subscription_plans (languageai_subscription_plan_id));
 diesel::joinable!(languageai_subscription_payments -> users (user_id));
+diesel::joinable!(languageai_subscriptions -> languageai_subscription_payments (languageai_subscription_payment_id));
+diesel::joinable!(languageai_subscriptions -> languageai_subscription_plans (languageai_subscription_plan_id));
+diesel::joinable!(languageai_subscriptions -> users (user_id));
 diesel::joinable!(speech_to_text -> users (user_id));
 diesel::joinable!(speech_to_text_storage -> speech_to_text (speech_to_text_id));
 diesel::joinable!(speech_to_text_storage -> users (user_id));
@@ -206,6 +227,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     checkbot_storage,
     languageai_subscription_payments,
     languageai_subscription_plans,
+    languageai_subscriptions,
     languages,
     speech_to_text,
     speech_to_text_storage,

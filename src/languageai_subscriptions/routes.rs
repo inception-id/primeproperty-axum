@@ -5,11 +5,13 @@ use crate::schema::{languageai_subscription_payments, languageai_subscription_pl
 
 use crate::languageai_subscriptions::enumerates::{PaymentStatus, SubscriptionPeriod};
 use crate::languageai_subscriptions::payments::{DokuNotification, LanguageaiSubscriptionPayment};
+use crate::languageai_subscriptions::services::LanguageaiSubscription;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use bigdecimal::{BigDecimal, ToPrimitive};
+use chrono::{Months, NaiveDate};
 use diesel::Insertable;
 use serde::Deserialize;
 
@@ -89,7 +91,7 @@ pub(super) async fn create_subscription_payment_checkout_route(
         &payload.languageai_subscription_plan_id,
     ) {
         Ok(subscription_plan) => {
-            let month_count = &payload.period.clone().to_month_count();
+            let month_count = payload.period.clone().to_month_count() as i32;
             if let Some(plan_discounted_price) = &subscription_plan.discounted_price {
                 let amount =
                     BigDecimal::from(&plan_discounted_price.to_i32().unwrap() * month_count);
@@ -150,7 +152,7 @@ pub(super) async fn update_doku_notification_success_route(
     State(pool): State<DbPool>,
     headers: HeaderMap,
     Json(payload): Json<DokuNotification>,
-) -> TPaymentResponse {
+) -> (StatusCode, Json<ApiResponse<LanguageaiSubscription>>) {
     let header_client_id = headers.get("Client-Id").expect("Missing client id");
     let doku_client_id = &std::env::var("DOKU_CLIENT_ID").expect("missing DOKU_CLIENT_ID");
     if header_client_id != doku_client_id {
@@ -171,13 +173,52 @@ pub(super) async fn update_doku_notification_success_route(
                 match LanguageaiSubscriptionPayment::update_doku_notification_success(
                     &pool, &payload,
                 ) {
-                    Ok(payment) => {
-                        ApiResponse::new(StatusCode::OK, Some(payment), "success").send()
+                    Ok(subscription_payment) => {
+                        match LanguageaiSubscriptionPlan::find_subscription_plan_by_id(
+                            &pool,
+                            &subscription_payment.languageai_subscription_plan_id,
+                        ) {
+                            Ok(subscription_plan) => {
+                                let month_count =
+                                    subscription_payment.period.clone().to_month_count();
+                                let expired_at = chrono::Utc::now()
+                                    .naive_utc()
+                                    .checked_add_months(Months::new(month_count))
+                                    .expect("Could not add months");
+                                match LanguageaiSubscription::create_new_subscription(
+                                    &pool,
+                                    &expired_at,
+                                    &subscription_payment,
+                                    &subscription_plan,
+                                ) {
+                                    Ok(subscription) => ApiResponse::new(
+                                        StatusCode::OK,
+                                        Some(subscription),
+                                        "success",
+                                    )
+                                    .send(),
+                                    Err(subscription_err) => ApiResponse::new(
+                                        StatusCode::INTERNAL_SERVER_ERROR,
+                                        None,
+                                        &subscription_err.to_string(),
+                                    )
+                                    .send(),
+                                }
+                            }
+                            Err(subscription_plan_err) => ApiResponse::new(
+                                StatusCode::INTERNAL_SERVER_ERROR,
+                                None,
+                                &subscription_plan_err.to_string(),
+                            )
+                            .send(),
+                        }
                     }
-                    Err(err) => {
-                        ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string())
-                            .send()
-                    }
+                    Err(payment_err) => ApiResponse::new(
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        None,
+                        &payment_err.to_string(),
+                    )
+                    .send(),
                 }
             }
         }

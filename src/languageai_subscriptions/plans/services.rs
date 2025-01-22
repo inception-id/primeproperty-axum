@@ -14,12 +14,12 @@ pub(crate) struct LanguageaiSubscriptionPlan {
     name: String,
     initial_price: BigDecimal,
     pub discounted_price: Option<BigDecimal>,
-    history_limit: Option<i32>,
-    storage_limit: Option<i32>,
-    translation_limit: Option<i32>,
-    checkbot_limit: Option<i32>,
-    text_to_speech_limit: Option<i32>,
-    speech_to_text_limit: Option<i32>,
+    pub history_limit: Option<i32>,
+    pub storage_limit: Option<i32>,
+    pub translation_limit: Option<i32>,
+    pub checkbot_limit: Option<i32>,
+    pub text_to_speech_limit: Option<i32>,
+    pub speech_to_text_limit: Option<i32>,
 }
 
 impl LanguageaiSubscriptionPlan {
