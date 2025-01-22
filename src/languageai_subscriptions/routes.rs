@@ -3,8 +3,8 @@ use crate::languageai_subscriptions::plans::LanguageaiSubscriptionPlan;
 use crate::middleware::{extract_header_user_id, ApiResponse};
 use crate::schema::{languageai_subscription_payments, languageai_subscription_plans};
 
-use crate::languageai_subscriptions::enumerates::SubscriptionPeriod;
-use crate::languageai_subscriptions::payments::LanguageaiSubscriptionPayment;
+use crate::languageai_subscriptions::enumerates::{PaymentStatus, SubscriptionPeriod};
+use crate::languageai_subscriptions::payments::{DokuNotification, LanguageaiSubscriptionPayment};
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::routing::{get, post};
@@ -12,6 +12,8 @@ use axum::{Json, Router};
 use bigdecimal::{BigDecimal, ToPrimitive};
 use diesel::Insertable;
 use serde::Deserialize;
+
+type TPaymentResponse = (StatusCode, Json<ApiResponse<LanguageaiSubscriptionPayment>>);
 
 async fn find_all_subscription_plans_route(
     State(pool): State<DbPool>,
@@ -79,7 +81,7 @@ pub(super) async fn create_subscription_payment_checkout_route(
     State(pool): State<DbPool>,
     headers: HeaderMap,
     Json(payload): Json<CreateLanguageaiSubscriptionPaymentPayload>,
-) -> (StatusCode, Json<ApiResponse<LanguageaiSubscriptionPayment>>) {
+) -> TPaymentResponse {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
 
     match LanguageaiSubscriptionPlan::find_subscription_plan_by_id(
@@ -131,13 +133,56 @@ pub(super) async fn create_subscription_payment_checkout_route(
 pub(super) async fn find_latest_pending_checkout_route(
     State(pool): State<DbPool>,
     headers: HeaderMap,
-) -> (StatusCode, Json<ApiResponse<LanguageaiSubscriptionPayment>>) {
-
+) -> TPaymentResponse {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
-    
-    match LanguageaiSubscriptionPayment::find_latest_pending_checkout(&pool, &user_id) { 
-        Ok(pending_checkout) => ApiResponse::new(StatusCode::OK, Some(pending_checkout), "success").send(),
-        Err(err) => ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send(),
+
+    match LanguageaiSubscriptionPayment::find_latest_pending_checkout(&pool, &user_id) {
+        Ok(pending_checkout) => {
+            ApiResponse::new(StatusCode::OK, Some(pending_checkout), "success").send()
+        }
+        Err(err) => {
+            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+        }
+    }
+}
+
+pub(super) async fn update_doku_notification_success_route(
+    State(pool): State<DbPool>,
+    headers: HeaderMap,
+    Json(payload): Json<DokuNotification>,
+) -> TPaymentResponse {
+    let header_client_id = headers.get("Client-Id").expect("Missing client id");
+    let doku_client_id = &std::env::var("DOKU_CLIENT_ID").expect("missing DOKU_CLIENT_ID");
+    if header_client_id != doku_client_id {
+        return ApiResponse::new(StatusCode::UNAUTHORIZED, None, "Invalid client id").send();
+    }
+
+    if let Ok(subscription_payment) =
+        LanguageaiSubscriptionPayment::find_subscription_payment_by_invoice_id(
+            &pool,
+            &payload.transaction.original_request_id,
+        )
+    {
+        match subscription_payment.status {
+            PaymentStatus::Success => {
+                ApiResponse::new(StatusCode::BAD_REQUEST, None, "Payment is already paid").send()
+            }
+            _ => {
+                match LanguageaiSubscriptionPayment::update_doku_notification_success(
+                    &pool, &payload,
+                ) {
+                    Ok(payment) => {
+                        ApiResponse::new(StatusCode::OK, Some(payment), "success").send()
+                    }
+                    Err(err) => {
+                        ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string())
+                            .send()
+                    }
+                }
+            }
+        }
+    } else {
+        ApiResponse::new(StatusCode::BAD_REQUEST, None, "Payment history not found").send()
     }
 }
 
@@ -152,8 +197,10 @@ pub fn languageai_subscription_routes() -> Router<DbPool> {
         .route(
             "/payment/checkout",
             post(create_subscription_payment_checkout_route),
-        ).route(
-        "/payment/pending",
-        get(find_latest_pending_checkout_route)
-    )
+        )
+        .route("/payment/pending", get(find_latest_pending_checkout_route))
+        .route(
+            "/payment/notification/doku",
+            post(update_doku_notification_success_route),
+        )
 }

@@ -1,3 +1,4 @@
+use super::DokuNotification;
 use crate::db::DbPool;
 use crate::languageai_subscriptions::enumerates::{PaymentStatus, SubscriptionPeriod};
 use crate::languageai_subscriptions::routes::CreateLanguageaiSubscriptionPaymentPayload;
@@ -8,6 +9,7 @@ use diesel::{
     BoolExpressionMethods, ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl,
 };
 use serde::Serialize;
+use serde_json::json;
 
 #[derive(Debug, Queryable, Serialize)]
 pub(crate) struct LanguageaiSubscriptionPayment {
@@ -19,7 +21,7 @@ pub(crate) struct LanguageaiSubscriptionPayment {
     expired_at: NaiveDateTime,
     amount: BigDecimal,
     period: SubscriptionPeriod,
-    status: PaymentStatus,
+    pub status: PaymentStatus,
     invoice_id: String,
     doku_request: Option<serde_json::Value>,
     doku_response: Option<serde_json::Value>,
@@ -66,6 +68,35 @@ impl LanguageaiSubscriptionPayment {
                     .and(languageai_subscription_payments::expired_at.gt(diesel::dsl::now)),
             )
             .order_by(languageai_subscription_payments::id.desc())
+            .get_result(conn)
+    }
+
+    pub(crate) fn find_subscription_payment_by_invoice_id(
+        pool: &DbPool,
+        invoice_id: &str,
+    ) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        languageai_subscription_payments::table
+            .filter(languageai_subscription_payments::invoice_id.eq(invoice_id))
+            .get_result(conn)
+    }
+
+    pub(crate) fn update_doku_notification_success(
+        pool: &DbPool,
+        notification: &DokuNotification,
+    ) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        diesel::update(languageai_subscription_payments::table)
+            .filter(
+                languageai_subscription_payments::invoice_id
+                    .eq(&notification.transaction.original_request_id),
+            )
+            .set((
+                languageai_subscription_payments::status.eq(PaymentStatus::Success),
+                languageai_subscription_payments::doku_notification.eq(json!(notification)),
+            ))
             .get_result(conn)
     }
 }
