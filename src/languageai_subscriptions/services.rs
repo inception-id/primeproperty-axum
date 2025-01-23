@@ -3,7 +3,9 @@ use crate::languageai_subscriptions::payments::LanguageaiSubscriptionPayment;
 use crate::languageai_subscriptions::plans::LanguageaiSubscriptionPlan;
 use crate::schema::languageai_subscriptions;
 use chrono::NaiveDateTime;
-use diesel::{ExpressionMethods, QueryResult, Queryable, RunQueryDsl};
+use diesel::{
+    BoolExpressionMethods, ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl,
+};
 use serde::Serialize;
 
 #[derive(Debug, Queryable, Serialize)]
@@ -51,6 +53,22 @@ impl LanguageaiSubscription {
 
         diesel::insert_into(languageai_subscriptions::table)
             .values(values)
+            .get_result(conn)
+    }
+
+    pub(super) fn find_user_active_subscription(
+        pool: &DbPool,
+        user_id: &uuid::Uuid,
+    ) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        languageai_subscriptions::table
+            .filter(
+                languageai_subscriptions::user_id
+                    .eq(user_id)
+                    .and(languageai_subscriptions::expired_at.gt(diesel::dsl::now)),
+            )
+            .order_by(languageai_subscriptions::id.desc())
             .get_result(conn)
     }
 }

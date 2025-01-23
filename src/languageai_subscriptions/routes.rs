@@ -11,9 +11,10 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use bigdecimal::{BigDecimal, ToPrimitive};
-use chrono::{Months, NaiveDate};
+use chrono::Months;
 use diesel::Insertable;
 use serde::Deserialize;
+use crate::languageai_subscriptions::raw_query_structs::UserLanguageaiStats;
 
 type TPaymentResponse = (StatusCode, Json<ApiResponse<LanguageaiSubscriptionPayment>>);
 
@@ -227,6 +228,32 @@ pub(super) async fn update_doku_notification_success_route(
     }
 }
 
+pub(super) async fn find_user_active_subscription_route(
+    State(pool): State<DbPool>,
+    headers: HeaderMap,
+) -> (StatusCode, Json<ApiResponse<LanguageaiSubscription>>) {
+    let user_id = extract_header_user_id(headers).expect("Could not extract user id");
+
+    match LanguageaiSubscription::find_user_active_subscription(&pool, &user_id) {
+        Ok(subscription) => ApiResponse::new(StatusCode::OK, Some(subscription), "success").send(),
+        Err(err) => {
+            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+        }
+    }
+}
+
+pub(super) async fn find_user_subscription_stats_route(
+    State(pool): State<DbPool>,
+    headers: HeaderMap
+) -> (StatusCode, Json<ApiResponse<Vec<UserLanguageaiStats>>>) {
+    let user_id = extract_header_user_id(headers).expect("Could not extract user id");
+    
+    match UserLanguageaiStats::find_by_user_id(&pool, &user_id) { 
+        Ok(stats) => ApiResponse::new(StatusCode::OK, Some(stats), "success").send(),
+        Err(err) => ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send(),
+    }
+}
+
 pub fn languageai_subscription_routes() -> Router<DbPool> {
     Router::new()
         .route("/plans", get(find_all_subscription_plans_route))
@@ -244,4 +271,6 @@ pub fn languageai_subscription_routes() -> Router<DbPool> {
             "/payment/notification/doku",
             post(update_doku_notification_success_route),
         )
+        .route("/active", get(find_user_active_subscription_route))
+        .route("/stats", get(find_user_subscription_stats_route))
 }
