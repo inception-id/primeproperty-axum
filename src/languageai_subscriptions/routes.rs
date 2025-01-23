@@ -5,16 +5,17 @@ use crate::schema::{languageai_subscription_payments, languageai_subscription_pl
 
 use crate::languageai_subscriptions::enumerates::{PaymentStatus, SubscriptionPeriod};
 use crate::languageai_subscriptions::payments::{DokuNotification, LanguageaiSubscriptionPayment};
+use crate::languageai_subscriptions::raw_query_structs::UserLanguageaiStats;
 use crate::languageai_subscriptions::services::LanguageaiSubscription;
-use axum::extract::{Path, State};
+use crate::languageai_subscriptions::SubcriptionLimit;
+use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use bigdecimal::{BigDecimal, ToPrimitive};
 use chrono::Months;
 use diesel::Insertable;
-use serde::Deserialize;
-use crate::languageai_subscriptions::raw_query_structs::UserLanguageaiStats;
+use serde::{Deserialize, Serialize};
 
 type TPaymentResponse = (StatusCode, Json<ApiResponse<LanguageaiSubscriptionPayment>>);
 
@@ -80,7 +81,7 @@ pub(super) struct CreateLanguageaiSubscriptionPaymentPayload {
     pub doku_response: serde_json::Value,
 }
 
-pub(super) async fn create_subscription_payment_checkout_route(
+async fn create_subscription_payment_checkout_route(
     State(pool): State<DbPool>,
     headers: HeaderMap,
     Json(payload): Json<CreateLanguageaiSubscriptionPaymentPayload>,
@@ -133,7 +134,7 @@ pub(super) async fn create_subscription_payment_checkout_route(
     }
 }
 
-pub(super) async fn find_latest_pending_checkout_route(
+async fn find_latest_pending_checkout_route(
     State(pool): State<DbPool>,
     headers: HeaderMap,
 ) -> TPaymentResponse {
@@ -149,7 +150,7 @@ pub(super) async fn find_latest_pending_checkout_route(
     }
 }
 
-pub(super) async fn update_doku_notification_success_route(
+async fn update_doku_notification_success_route(
     State(pool): State<DbPool>,
     headers: HeaderMap,
     Json(payload): Json<DokuNotification>,
@@ -228,7 +229,7 @@ pub(super) async fn update_doku_notification_success_route(
     }
 }
 
-pub(super) async fn find_user_active_subscription_route(
+async fn find_user_active_subscription_route(
     State(pool): State<DbPool>,
     headers: HeaderMap,
 ) -> (StatusCode, Json<ApiResponse<LanguageaiSubscription>>) {
@@ -242,16 +243,33 @@ pub(super) async fn find_user_active_subscription_route(
     }
 }
 
-pub(super) async fn find_user_subscription_stats_route(
+async fn find_user_subscription_stats_route(
     State(pool): State<DbPool>,
-    headers: HeaderMap
+    headers: HeaderMap,
 ) -> (StatusCode, Json<ApiResponse<Vec<UserLanguageaiStats>>>) {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
-    
-    match UserLanguageaiStats::find_by_user_id(&pool, &user_id) { 
+
+    match UserLanguageaiStats::find_by_user_id(&pool, &user_id) {
         Ok(stats) => ApiResponse::new(StatusCode::OK, Some(stats), "success").send(),
-        Err(err) => ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send(),
+        Err(err) => {
+            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+        }
     }
+}
+
+#[derive(Deserialize)]
+struct CheckUserExceedLimitQuery {
+    name: SubcriptionLimit,
+}
+
+async fn check_user_exceed_limit_route(
+    State(pool): State<DbPool>,
+    headers: HeaderMap,
+    Query(query): Query<CheckUserExceedLimitQuery>,
+) -> (StatusCode, Json<ApiResponse<bool>>) {
+    let user_id = extract_header_user_id(headers).expect("Could not extract user id");
+    let exceed_limit = SubcriptionLimit::check_user_exceed_limit(&pool, &user_id, &query.name);
+    ApiResponse::new(StatusCode::OK, Some(exceed_limit), "success").send()
 }
 
 pub fn languageai_subscription_routes() -> Router<DbPool> {
@@ -273,4 +291,5 @@ pub fn languageai_subscription_routes() -> Router<DbPool> {
         )
         .route("/active", get(find_user_active_subscription_route))
         .route("/stats", get(find_user_subscription_stats_route))
+        .route("/limit", get(check_user_exceed_limit_route))
 }

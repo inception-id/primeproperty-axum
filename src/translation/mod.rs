@@ -3,3 +3,4 @@ mod services;
 mod storage;
 
 pub use routes::translation_routes;
+pub use services::Translation;

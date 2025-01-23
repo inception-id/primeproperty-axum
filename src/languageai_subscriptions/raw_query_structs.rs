@@ -1,7 +1,7 @@
-use diesel::{QueryResult, QueryableByName, RunQueryDsl};
-use diesel::sql_types::{Uuid, BigInt, Nullable};
-use serde::{Deserialize, Serialize};
 use crate::db::DbPool;
+use diesel::sql_types::{BigInt, Nullable, Uuid};
+use diesel::{QueryResult, QueryableByName, RunQueryDsl};
+use serde::{Deserialize, Serialize};
 
 #[derive(QueryableByName, Debug, Deserialize, Serialize)]
 pub(super) struct UserLanguageaiStats {
@@ -29,8 +29,9 @@ impl UserLanguageaiStats {
     pub(super) fn find_by_user_id(pool: &DbPool, user_id: &uuid::Uuid) -> QueryResult<Vec<Self>> {
         let user_id_string = user_id.to_string();
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-        
-        let sql_query = format!("
+
+        let sql_query = format!(
+            "
 SELECT 
     users.id,
     t_counts.translation_count,
@@ -106,7 +107,8 @@ LEFT JOIN (
     WHERE created_at > date_trunc('month', now())
     GROUP BY user_id
 ) AS tts_storage_counts ON users.id = tts_storage_counts.user_id
-WHERE users.id = '{user_id_string}';");
+WHERE users.id = '{user_id_string}';"
+        );
 
         diesel::sql_query(sql_query).load::<UserLanguageaiStats>(conn)
     }
