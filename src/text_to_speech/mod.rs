@@ -3,3 +3,5 @@ mod services;
 mod storage;
 
 pub use routes::tts_routes;
+
+pub use services::TextToSpeech;

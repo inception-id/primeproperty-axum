@@ -15,7 +15,7 @@ use axum::{Json, Router};
 use bigdecimal::{BigDecimal, ToPrimitive};
 use chrono::Months;
 use diesel::Insertable;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 type TPaymentResponse = (StatusCode, Json<ApiResponse<LanguageaiSubscriptionPayment>>);
 
@@ -262,14 +262,14 @@ struct CheckUserExceedLimitQuery {
     name: SubcriptionLimit,
 }
 
-async fn check_user_exceed_limit_route(
+async fn check_user_exceed_subscription_limit_route(
     State(pool): State<DbPool>,
     headers: HeaderMap,
     Query(query): Query<CheckUserExceedLimitQuery>,
 ) -> (StatusCode, Json<ApiResponse<bool>>) {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
-    let exceed_limit = SubcriptionLimit::check_user_exceed_limit(&pool, &user_id, &query.name);
-    ApiResponse::new(StatusCode::OK, Some(exceed_limit), "success").send()
+    let has_exceed_limit = SubcriptionLimit::check_user_exceed_limit(&pool, &user_id, &query.name);
+    ApiResponse::new(StatusCode::OK, Some(has_exceed_limit), "success").send()
 }
 
 pub fn languageai_subscription_routes() -> Router<DbPool> {
@@ -291,5 +291,5 @@ pub fn languageai_subscription_routes() -> Router<DbPool> {
         )
         .route("/active", get(find_user_active_subscription_route))
         .route("/stats", get(find_user_subscription_stats_route))
-        .route("/limit", get(check_user_exceed_limit_route))
+        .route("/limit", get(check_user_exceed_subscription_limit_route))
 }

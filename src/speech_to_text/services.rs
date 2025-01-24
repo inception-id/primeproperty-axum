@@ -1,12 +1,15 @@
 use super::routes::CreateTranscriptionPayload;
 use crate::db::DbPool;
 use crate::schema::speech_to_text;
+use crate::utils::get_start_of_month;
 use chrono::NaiveDateTime;
-use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
+use diesel::{
+    BoolExpressionMethods, ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl,
+};
 use serde::Serialize;
 
 #[derive(Debug, Queryable, Serialize)]
-pub(super) struct SpeechToText {
+pub struct SpeechToText {
     pub id: i32,
     pub user_id: uuid::Uuid,
     created_at: NaiveDateTime,
@@ -45,5 +48,22 @@ impl SpeechToText {
         speech_to_text::table
             .filter(speech_to_text::id.eq(id))
             .first(conn)
+    }
+
+    pub fn count_current_month_speech_to_text(
+        pool: &DbPool,
+        user_id: &uuid::Uuid,
+    ) -> QueryResult<i64> {
+        let start_of_month = get_start_of_month();
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        speech_to_text::table
+            .count()
+            .filter(
+                speech_to_text::user_id
+                    .eq(user_id)
+                    .and(speech_to_text::created_at.gt(start_of_month)),
+            )
+            .get_result::<i64>(conn)
     }
 }

@@ -1,12 +1,15 @@
 use super::routes::CreateCheckbotPayload;
 use crate::db::DbPool;
 use crate::schema::checkbot;
+use crate::utils::get_start_of_month;
 use chrono::NaiveDateTime;
-use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
+use diesel::{
+    BoolExpressionMethods, ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl,
+};
 use serde::Serialize;
 
 #[derive(Debug, Queryable, Serialize)]
-pub(super) struct Checkbot {
+pub struct Checkbot {
     pub id: i32,
     pub user_id: uuid::Uuid,
     created_at: NaiveDateTime,
@@ -48,5 +51,19 @@ impl Checkbot {
         checkbot::table
             .filter(checkbot::id.eq(&checkbot_id))
             .first(conn)
+    }
+
+    pub fn count_current_month_checkbot(pool: &DbPool, user_id: &uuid::Uuid) -> QueryResult<i64> {
+        let start_of_month = get_start_of_month();
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        checkbot::table
+            .count()
+            .filter(
+                checkbot::user_id
+                    .eq(user_id)
+                    .and(checkbot::created_at.gt(start_of_month)),
+            )
+            .get_result::<i64>(conn)
     }
 }
