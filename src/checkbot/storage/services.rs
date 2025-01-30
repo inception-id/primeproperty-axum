@@ -6,7 +6,7 @@ use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
 
 #[derive(Debug, Queryable, Serialize)]
-pub(crate) struct CheckbotStorage {
+pub struct CheckbotStorage {
     id: i32,
     user_id: uuid::Uuid,
     checkbot_id: i32,
@@ -73,5 +73,14 @@ impl CheckbotStorage {
             .filter(checkbot_storage::id.eq(checkbot_storage_id))
             .set(checkbot_storage::updated_completion.eq(updated_completion))
             .get_result(conn)
+    }
+    
+    pub fn count_checkbot_storage(
+        pool: &DbPool,
+        user_id: &uuid::Uuid
+    ) -> QueryResult<i64> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+        
+        checkbot_storage::table.count().filter(checkbot_storage::user_id.eq(user_id)).get_result(conn)
     }
 }

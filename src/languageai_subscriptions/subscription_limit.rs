@@ -1,4 +1,4 @@
-use crate::checkbot::Checkbot;
+use crate::checkbot::{Checkbot, CheckbotStorage};
 use crate::db::DbPool;
 use crate::languageai_subscriptions::plans::LanguageaiSubscriptionPlan;
 use crate::languageai_subscriptions::LanguageaiSubscription;
@@ -83,6 +83,7 @@ impl SubcriptionLimit {
             Some(storage_type) => {
                 match storage_type {
                     SubcriptionStorageLimit::Translation => TranslationStorage::count_user_translation_storage(pool, user_id),
+                    SubcriptionStorageLimit::Checkbot => CheckbotStorage::count_checkbot_storage(pool, user_id),
                     _ => Ok(0)
                 }
             }

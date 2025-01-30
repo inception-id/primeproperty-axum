@@ -6,6 +6,7 @@ use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::Json;
 use serde::Deserialize;
+use crate::languageai_subscriptions::{SubcriptionLimit, SubcriptionStorageLimit};
 
 type CheckbotStorageResponse = (StatusCode, Json<ApiResponse<CheckbotStorage>>);
 
@@ -17,28 +18,36 @@ pub(crate) struct CreateCheckbotStoragePayload {
 
 pub(crate) async fn create_checkbot_storage_route(
     State(pool): State<DbPool>,
+    headers: HeaderMap,
     Json(payload): Json<CreateCheckbotStoragePayload>,
 ) -> CheckbotStorageResponse {
-    match Checkbot::find_checkbot_by_id(&pool, &payload.checkbot_id) {
-        Ok(checkbot) => {
-            match CheckbotStorage::create_checkbot_storage(
-                &pool,
-                &checkbot,
-                &payload.updated_completion,
-            ) {
-                Ok(checkbot_storage) => {
-                    ApiResponse::new(StatusCode::CREATED, Some(checkbot_storage), "Created").send()
+    let user_id = extract_header_user_id(headers).expect("Could not extract user id");
+    
+    match SubcriptionLimit::check_user_exceed_limit(&pool, &user_id, &SubcriptionLimit::Storage, &Some(SubcriptionStorageLimit::Checkbot)) { 
+        true => ApiResponse::new(StatusCode::PAYMENT_REQUIRED, None, &StatusCode::PAYMENT_REQUIRED.to_string()).send(),
+        false => {
+            match Checkbot::find_checkbot_by_id(&pool, &payload.checkbot_id) {
+                Ok(checkbot) => {
+                    match CheckbotStorage::create_checkbot_storage(
+                        &pool,
+                        &checkbot,
+                        &payload.updated_completion,
+                    ) {
+                        Ok(checkbot_storage) => {
+                            ApiResponse::new(StatusCode::CREATED, Some(checkbot_storage), "Created").send()
+                        }
+                        Err(storage_err) => ApiResponse::new(
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            None,
+                            &storage_err.to_string(),
+                        )
+                            .send(),
+                    }
                 }
-                Err(storage_err) => ApiResponse::new(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    None,
-                    &storage_err.to_string(),
-                )
-                .send(),
+                Err(err) => {
+                    ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+                }
             }
-        }
-        Err(err) => {
-            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
         }
     }
 }
