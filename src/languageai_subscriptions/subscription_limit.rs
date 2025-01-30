@@ -3,7 +3,7 @@ use crate::db::DbPool;
 use crate::languageai_subscriptions::plans::LanguageaiSubscriptionPlan;
 use crate::languageai_subscriptions::LanguageaiSubscription;
 use crate::speech_to_text::SpeechToText;
-use crate::text_to_speech::TextToSpeech;
+use crate::text_to_speech::{TextToSpeech, TextToSpeechStorage};
 use crate::translation::{Translation, TranslationStorage};
 use diesel::QueryResult;
 use serde::Deserialize;
@@ -84,6 +84,7 @@ impl SubcriptionLimit {
                 match storage_type {
                     SubcriptionStorageLimit::Translation => TranslationStorage::count_user_translation_storage(pool, user_id),
                     SubcriptionStorageLimit::Checkbot => CheckbotStorage::count_checkbot_storage(pool, user_id),
+                    SubcriptionStorageLimit::TextToSpeech => TextToSpeechStorage::count_tts_storage(pool, user_id),
                     _ => Ok(0)
                 }
             }

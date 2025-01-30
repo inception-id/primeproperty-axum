@@ -6,7 +6,7 @@ use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
 
 #[derive(Debug, Queryable, Serialize)]
-pub(crate) struct TextToSpeechStorage {
+pub struct TextToSpeechStorage {
     id: i32,
     user_id: uuid::Uuid,
     text_to_speech_id: i32,
@@ -51,5 +51,11 @@ impl TextToSpeechStorage {
         diesel::delete(text_to_speech_storage::table)
             .filter(text_to_speech_storage::id.eq(tts_storage_id))
             .get_result(conn)
+    }
+    
+    pub fn count_tts_storage(pool: &DbPool, user_id: &uuid::Uuid) -> QueryResult<i64> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+        
+        text_to_speech_storage::table.count().filter(text_to_speech_storage::user_id.eq(user_id)).get_result(conn)
     }
 }

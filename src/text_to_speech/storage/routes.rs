@@ -6,6 +6,7 @@ use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::Json;
 use serde::Deserialize;
+use crate::languageai_subscriptions::{SubcriptionLimit, SubcriptionStorageLimit};
 
 type TtsStorageResponse = (StatusCode, Json<ApiResponse<TextToSpeechStorage>>);
 
@@ -15,22 +16,30 @@ pub(crate) struct CreateTtsStoragePayload {
 }
 pub(crate) async fn create_tts_storage_route(
     State(pool): State<DbPool>,
+    headers: HeaderMap,
     Json(payload): Json<CreateTtsStoragePayload>,
 ) -> TtsStorageResponse {
-    match TextToSpeech::find_by_id(&pool, &payload.tts_id) {
-        Ok(tts) => match TextToSpeechStorage::create_tts_storage(&pool, &tts) {
-            Ok(tts_storage) => {
-                ApiResponse::new(StatusCode::CREATED, Some(tts_storage), "Created").send()
+    let user_id = extract_header_user_id(headers).expect("Could not extract user id");
+
+    match SubcriptionLimit::check_user_exceed_limit(&pool, &user_id, &SubcriptionLimit::Storage, &Some(SubcriptionStorageLimit::TextToSpeech)) {
+        true => ApiResponse::new(StatusCode::PAYMENT_REQUIRED, None, &StatusCode::PAYMENT_REQUIRED.to_string()).send(),
+        false => {
+            match TextToSpeech::find_by_id(&pool, &payload.tts_id) {
+                Ok(tts) => match TextToSpeechStorage::create_tts_storage(&pool, &tts) {
+                    Ok(tts_storage) => {
+                        ApiResponse::new(StatusCode::CREATED, Some(tts_storage), "Created").send()
+                    }
+                    Err(storage_error) => ApiResponse::new(
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        None,
+                        &storage_error.to_string(),
+                    )
+                        .send(),
+                },
+                Err(err) => {
+                    ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+                }
             }
-            Err(storage_error) => ApiResponse::new(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                None,
-                &storage_error.to_string(),
-            )
-            .send(),
-        },
-        Err(err) => {
-            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
         }
     }
 }
