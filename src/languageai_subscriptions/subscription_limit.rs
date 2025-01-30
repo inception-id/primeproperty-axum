@@ -2,7 +2,7 @@ use crate::checkbot::{Checkbot, CheckbotStorage};
 use crate::db::DbPool;
 use crate::languageai_subscriptions::plans::LanguageaiSubscriptionPlan;
 use crate::languageai_subscriptions::LanguageaiSubscription;
-use crate::speech_to_text::SpeechToText;
+use crate::speech_to_text::{SpeechToText, SpeechToTextStorage};
 use crate::text_to_speech::{TextToSpeech, TextToSpeechStorage};
 use crate::translation::{Translation, TranslationStorage};
 use diesel::QueryResult;
@@ -80,23 +80,31 @@ impl SubcriptionLimit {
         storage_limit_type: &Option<SubcriptionStorageLimit>,
     ) -> QueryResult<i64> {
         match storage_limit_type {
-            Some(storage_type) => {
-                match storage_type {
-                    SubcriptionStorageLimit::Translation => TranslationStorage::count_user_translation_storage(pool, user_id),
-                    SubcriptionStorageLimit::Checkbot => CheckbotStorage::count_checkbot_storage(pool, user_id),
-                    SubcriptionStorageLimit::TextToSpeech => TextToSpeechStorage::count_tts_storage(pool, user_id),
-                    _ => Ok(0)
+            Some(storage_type) => match storage_type {
+                SubcriptionStorageLimit::Translation => {
+                    TranslationStorage::count_user_translation_storage(pool, user_id)
                 }
-            }
-            None => {
-                match limit_type {
-                    Self::Translation => Translation::count_current_month_translation(pool, user_id),
-                    Self::Checkbot => Checkbot::count_current_month_checkbot(pool, user_id),
-                    Self::TextToSpeech => TextToSpeech::count_current_month_text_to_speech(pool, user_id),
-                    Self::SpeechToText => SpeechToText::count_current_month_speech_to_text(pool, user_id),
-                    _ => Ok(0),
+                SubcriptionStorageLimit::Checkbot => {
+                    CheckbotStorage::count_checkbot_storage(pool, user_id)
                 }
-            }
+                SubcriptionStorageLimit::TextToSpeech => {
+                    TextToSpeechStorage::count_tts_storage(pool, user_id)
+                }
+                SubcriptionStorageLimit::SpeechToText => {
+                    SpeechToTextStorage::count_storage(pool, user_id)
+                }
+            },
+            None => match limit_type {
+                Self::Translation => Translation::count_current_month_translation(pool, user_id),
+                Self::Checkbot => Checkbot::count_current_month_checkbot(pool, user_id),
+                Self::TextToSpeech => {
+                    TextToSpeech::count_current_month_text_to_speech(pool, user_id)
+                }
+                Self::SpeechToText => {
+                    SpeechToText::count_current_month_speech_to_text(pool, user_id)
+                }
+                _ => Ok(0),
+            },
         }
     }
 
@@ -108,7 +116,12 @@ impl SubcriptionLimit {
     ) -> bool {
         match Self::find_user_subscription_limit_count(pool, user_id, limit_type) {
             Some(limit_count) => {
-                match Self::find_user_subscription_usage_count(pool, user_id, limit_type, storage_limit_type) {
+                match Self::find_user_subscription_usage_count(
+                    pool,
+                    user_id,
+                    limit_type,
+                    storage_limit_type,
+                ) {
                     Ok(usage_count) => usage_count >= limit_count,
                     Err(_) => false,
                 }

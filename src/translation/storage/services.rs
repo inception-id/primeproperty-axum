@@ -76,10 +76,13 @@ impl TranslationStorage {
             .set(translation_storage::updated_completion.eq(&updated_completion))
             .get_result(conn)
     }
-    
+
     pub fn count_user_translation_storage(pool: &DbPool, user_id: &uuid::Uuid) -> QueryResult<i64> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-        
-        translation_storage::table.count().filter(translation_storage::user_id.eq(user_id)).get_result(conn)
+
+        translation_storage::table
+            .count()
+            .filter(translation_storage::user_id.eq(user_id))
+            .get_result(conn)
     }
 }

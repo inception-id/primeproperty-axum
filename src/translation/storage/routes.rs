@@ -1,12 +1,12 @@
 use super::services::TranslationStorage;
 use crate::db::DbPool;
+use crate::languageai_subscriptions::{SubcriptionLimit, SubcriptionStorageLimit};
 use crate::middleware::{extract_header_user_id, ApiResponse};
 use crate::translation::services::Translation;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::Json;
 use serde::Deserialize;
-use crate::languageai_subscriptions::{SubcriptionLimit, SubcriptionStorageLimit};
 
 type TranslationStorageResponse = (StatusCode, Json<ApiResponse<TranslationStorage>>);
 
@@ -22,31 +22,39 @@ pub(crate) async fn create_translation_storage_route(
     Json(payload): Json<CreateTranslationStoragePayload>,
 ) -> TranslationStorageResponse {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
-    match SubcriptionLimit::check_user_exceed_limit(&pool, &user_id, &SubcriptionLimit::Storage, &Some(SubcriptionStorageLimit::Translation)) { 
-        true => ApiResponse::new(StatusCode::PAYMENT_REQUIRED, None, &StatusCode::PAYMENT_REQUIRED.to_string()).send(),
-        false => {
-            match Translation::find_translation(&pool, &payload.translation_id) {
-                Ok(translation) => {
-                    match TranslationStorage::create_translation_storage(
-                        &pool,
-                        &translation,
-                        &payload.updated_completion,
-                    ) {
-                        Ok(translation_storage) => {
-                            ApiResponse::new(StatusCode::CREATED, Some(translation_storage), "Created")
-                                .send()
-                        }
-                        Err(err) => {
-                            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string())
-                                .send()
-                        }
+    match SubcriptionLimit::check_user_exceed_limit(
+        &pool,
+        &user_id,
+        &SubcriptionLimit::Storage,
+        &Some(SubcriptionStorageLimit::Translation),
+    ) {
+        true => ApiResponse::new(
+            StatusCode::PAYMENT_REQUIRED,
+            None,
+            &StatusCode::PAYMENT_REQUIRED.to_string(),
+        )
+        .send(),
+        false => match Translation::find_translation(&pool, &payload.translation_id) {
+            Ok(translation) => {
+                match TranslationStorage::create_translation_storage(
+                    &pool,
+                    &translation,
+                    &payload.updated_completion,
+                ) {
+                    Ok(translation_storage) => {
+                        ApiResponse::new(StatusCode::CREATED, Some(translation_storage), "Created")
+                            .send()
+                    }
+                    Err(err) => {
+                        ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string())
+                            .send()
                     }
                 }
-                Err(err) => {
-                    ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
-                }
             }
-        }
+            Err(err) => {
+                ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+            }
+        },
     }
 }
 

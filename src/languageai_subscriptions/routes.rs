@@ -268,7 +268,8 @@ async fn check_user_exceed_subscription_limit_route(
     Query(query): Query<CheckUserExceedLimitQuery>,
 ) -> (StatusCode, Json<ApiResponse<bool>>) {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
-    let has_exceed_limit = SubcriptionLimit::check_user_exceed_limit(&pool, &user_id, &query.name, &None);
+    let has_exceed_limit =
+        SubcriptionLimit::check_user_exceed_limit(&pool, &user_id, &query.name, &None);
     ApiResponse::new(StatusCode::OK, Some(has_exceed_limit), "success").send()
 }
 

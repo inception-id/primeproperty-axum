@@ -74,13 +74,13 @@ impl CheckbotStorage {
             .set(checkbot_storage::updated_completion.eq(updated_completion))
             .get_result(conn)
     }
-    
-    pub fn count_checkbot_storage(
-        pool: &DbPool,
-        user_id: &uuid::Uuid
-    ) -> QueryResult<i64> {
+
+    pub fn count_checkbot_storage(pool: &DbPool, user_id: &uuid::Uuid) -> QueryResult<i64> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-        
-        checkbot_storage::table.count().filter(checkbot_storage::user_id.eq(user_id)).get_result(conn)
+
+        checkbot_storage::table
+            .count()
+            .filter(checkbot_storage::user_id.eq(user_id))
+            .get_result(conn)
     }
 }
