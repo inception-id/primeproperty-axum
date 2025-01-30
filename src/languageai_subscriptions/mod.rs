@@ -9,4 +9,4 @@ mod subscription_limit;
 pub use routes::*;
 
 pub use services::LanguageaiSubscription;
-pub use subscription_limit::SubcriptionLimit;
+pub use subscription_limit::{SubcriptionLimit, SubcriptionStorageLimit};

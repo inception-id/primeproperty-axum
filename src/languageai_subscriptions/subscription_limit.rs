@@ -4,10 +4,24 @@ use crate::languageai_subscriptions::plans::LanguageaiSubscriptionPlan;
 use crate::languageai_subscriptions::LanguageaiSubscription;
 use crate::speech_to_text::SpeechToText;
 use crate::text_to_speech::TextToSpeech;
-use crate::translation::Translation;
+use crate::translation::{Translation, TranslationStorage};
 use diesel::QueryResult;
 use serde::Deserialize;
 use std::fmt;
+
+#[derive(Debug, Deserialize)]
+pub enum SubcriptionStorageLimit {
+    Translation,
+    Checkbot,
+    TextToSpeech,
+    SpeechToText,
+}
+
+impl fmt::Display for SubcriptionStorageLimit {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
 
 #[derive(Debug, Deserialize)]
 pub enum SubcriptionLimit {
@@ -63,24 +77,36 @@ impl SubcriptionLimit {
         pool: &DbPool,
         user_id: &uuid::Uuid,
         limit_type: &Self,
+        storage_limit_type: &Option<SubcriptionStorageLimit>,
     ) -> QueryResult<i64> {
-        match limit_type {
-            Self::Translation => Translation::count_current_month_translation(pool, user_id),
-            Self::Checkbot => Checkbot::count_current_month_checkbot(pool, user_id),
-            Self::TextToSpeech => TextToSpeech::count_current_month_text_to_speech(pool, user_id),
-            Self::SpeechToText => SpeechToText::count_current_month_speech_to_text(pool, user_id),
-            _ => Ok(0),
+        match storage_limit_type {
+            Some(storage_type) => {
+                match storage_type {
+                    SubcriptionStorageLimit::Translation => TranslationStorage::count_user_translation_storage(pool, user_id),
+                    _ => Ok(0)
+                }
+            }
+            None => {
+                match limit_type {
+                    Self::Translation => Translation::count_current_month_translation(pool, user_id),
+                    Self::Checkbot => Checkbot::count_current_month_checkbot(pool, user_id),
+                    Self::TextToSpeech => TextToSpeech::count_current_month_text_to_speech(pool, user_id),
+                    Self::SpeechToText => SpeechToText::count_current_month_speech_to_text(pool, user_id),
+                    _ => Ok(0),
+                }
+            }
         }
     }
 
-    pub(super) fn check_user_exceed_limit(
+    pub fn check_user_exceed_limit(
         pool: &DbPool,
         user_id: &uuid::Uuid,
         limit_type: &Self,
+        storage_limit_type: &Option<SubcriptionStorageLimit>,
     ) -> bool {
         match Self::find_user_subscription_limit_count(pool, user_id, limit_type) {
             Some(limit_count) => {
-                match Self::find_user_subscription_usage_count(pool, user_id, limit_type) {
+                match Self::find_user_subscription_usage_count(pool, user_id, limit_type, storage_limit_type) {
                     Ok(usage_count) => usage_count >= limit_count,
                     Err(_) => false,
                 }
