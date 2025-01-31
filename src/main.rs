@@ -25,10 +25,7 @@ async fn main() {
     let listener = tokio::net::TcpListener::bind(&host_addr).await.unwrap();
     let pool = build_db_pool();
 
-    let cors = CorsLayer::new()
-        .allow_methods(Any)
-        .allow_headers(Any)
-        .allow_origin(Any);
+    let cors = CorsLayer::permissive();
 
     // build our application with a route
     let app = Router::new()
