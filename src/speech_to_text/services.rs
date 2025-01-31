@@ -34,21 +34,19 @@ impl SpeechToText {
     pub(super) fn find_transcription_history(
         pool: &DbPool,
         user_id: &uuid::Uuid,
-        history_limit: &Option<i64>
+        history_limit: &Option<i64>,
     ) -> QueryResult<Vec<Self>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
         match history_limit {
-            Some(limit) =>
-                speech_to_text::table
-                    .filter(speech_to_text::user_id.eq(user_id))
-                    .order_by(speech_to_text::id.desc())
-                    .limit(*limit)
-                    .get_results(conn),
-            None =>
-                speech_to_text::table
-                    .filter(speech_to_text::user_id.eq(user_id))
-                    .order_by(speech_to_text::id.desc())
-                    .get_results(conn)
+            Some(limit) => speech_to_text::table
+                .filter(speech_to_text::user_id.eq(user_id))
+                .order_by(speech_to_text::id.desc())
+                .limit(*limit)
+                .get_results(conn),
+            None => speech_to_text::table
+                .filter(speech_to_text::user_id.eq(user_id))
+                .order_by(speech_to_text::id.desc())
+                .get_results(conn),
         }
     }
 

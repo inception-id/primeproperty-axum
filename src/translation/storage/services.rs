@@ -43,14 +43,21 @@ impl TranslationStorage {
     pub(super) fn find_user_translation_storage(
         pool: &DbPool,
         user_id: &uuid::Uuid,
+        storage_limit: &Option<i64>,
     ) -> QueryResult<Vec<Self>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
-        translation_storage::table
-            .filter(translation_storage::user_id.eq(user_id))
-            .limit(10)
-            .order_by(translation_storage::id.desc())
-            .get_results(conn)
+        match storage_limit {
+            Some(limit) => translation_storage::table
+                .filter(translation_storage::user_id.eq(user_id))
+                .limit(*limit)
+                .order_by(translation_storage::id.desc())
+                .get_results(conn),
+            None => translation_storage::table
+                .filter(translation_storage::user_id.eq(user_id))
+                .order_by(translation_storage::id.desc())
+                .get_results(conn),
+        }
     }
 
     pub(super) fn delete_translation_storage(

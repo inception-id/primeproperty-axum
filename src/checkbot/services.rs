@@ -40,17 +40,15 @@ impl Checkbot {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         match history_limit {
-            Some(limit) =>
-                checkbot::table
-                    .filter(checkbot::user_id.eq(user_id))
-                    .order_by(checkbot::created_at.desc())
-                    .limit(*limit)
-                    .get_results(conn),
-            None =>
-                checkbot::table
-                    .filter(checkbot::user_id.eq(user_id))
-                    .order_by(checkbot::created_at.desc())
-                    .get_results(conn)
+            Some(limit) => checkbot::table
+                .filter(checkbot::user_id.eq(user_id))
+                .order_by(checkbot::created_at.desc())
+                .limit(*limit)
+                .get_results(conn),
+            None => checkbot::table
+                .filter(checkbot::user_id.eq(user_id))
+                .order_by(checkbot::created_at.desc())
+                .get_results(conn),
         }
     }
 

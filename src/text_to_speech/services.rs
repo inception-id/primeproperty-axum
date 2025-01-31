@@ -31,7 +31,11 @@ impl TextToSpeech {
             .get_result(conn)
     }
 
-    pub(super) fn find_tts_history(pool: &DbPool, user_id: &uuid::Uuid, history_limit: &Option<i64>) -> QueryResult<Vec<Self>> {
+    pub(super) fn find_tts_history(
+        pool: &DbPool,
+        user_id: &uuid::Uuid,
+        history_limit: &Option<i64>,
+    ) -> QueryResult<Vec<Self>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         match history_limit {
@@ -40,11 +44,10 @@ impl TextToSpeech {
                 .order_by(text_to_speech::id.desc())
                 .limit(*limit)
                 .get_results(conn),
-            None =>
-                text_to_speech::table
-                    .filter(text_to_speech::user_id.eq(user_id))
-                    .order_by(text_to_speech::id.desc())
-                    .get_results(conn)
+            None => text_to_speech::table
+                .filter(text_to_speech::user_id.eq(user_id))
+                .order_by(text_to_speech::id.desc())
+                .get_results(conn),
         }
     }
 

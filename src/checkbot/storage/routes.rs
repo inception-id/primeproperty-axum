@@ -66,8 +66,13 @@ pub(crate) async fn find_many_checkbot_storage_route(
     headers: HeaderMap,
 ) -> (StatusCode, Json<ApiResponse<Vec<CheckbotStorage>>>) {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
+    let storage_limit = SubcriptionLimit::find_user_subscription_limit_count(
+        &pool,
+        &user_id,
+        &SubcriptionLimit::Storage,
+    );
 
-    match CheckbotStorage::find_many_checkbot_storage(&pool, &user_id) {
+    match CheckbotStorage::find_many_checkbot_storage(&pool, &user_id, &storage_limit) {
         Ok(checkbot_storage) => {
             ApiResponse::new(StatusCode::OK, Some(checkbot_storage), "success").send()
         }

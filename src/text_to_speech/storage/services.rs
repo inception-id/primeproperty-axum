@@ -36,13 +36,20 @@ impl TextToSpeechStorage {
     pub(super) fn find_many_tts_storage(
         pool: &DbPool,
         user_id: &uuid::Uuid,
+        storage_limit: &Option<i64>,
     ) -> QueryResult<Vec<Self>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-        text_to_speech_storage::table
-            .filter(text_to_speech_storage::user_id.eq(user_id))
-            .limit(10)
-            .order_by(text_to_speech_storage::id.desc())
-            .get_results(conn)
+        match storage_limit {
+            Some(limit) => text_to_speech_storage::table
+                .filter(text_to_speech_storage::user_id.eq(user_id))
+                .limit(*limit)
+                .order_by(text_to_speech_storage::id.desc())
+                .get_results(conn),
+            None => text_to_speech_storage::table
+                .filter(text_to_speech_storage::user_id.eq(user_id))
+                .order_by(text_to_speech_storage::id.desc())
+                .get_results(conn),
+        }
     }
 
     pub(super) fn delete_tts_storage(pool: &DbPool, tts_storage_id: &i32) -> QueryResult<Self> {

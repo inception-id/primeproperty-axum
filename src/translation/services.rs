@@ -36,13 +36,12 @@ impl Translation {
     pub(super) fn find_translation_history(
         pool: &DbPool,
         user_id: &uuid::Uuid,
-        history_limit: &Option<i64>
+        history_limit: &Option<i64>,
     ) -> QueryResult<Vec<Self>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         match history_limit {
-            Some(limit) =>
-                translation::table
+            Some(limit) => translation::table
                 .filter(translation::user_id.eq(user_id))
                 .order_by(translation::id.desc())
                 .limit(*limit)

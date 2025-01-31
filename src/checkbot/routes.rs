@@ -4,6 +4,7 @@ use crate::checkbot::storage::{
     update_checkbot_storage_route,
 };
 use crate::db::DbPool;
+use crate::languageai_subscriptions::SubcriptionLimit;
 use crate::middleware::{extract_header_user_id, ApiResponse};
 use crate::schema::checkbot;
 use axum::extract::State;
@@ -12,7 +13,6 @@ use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
 use diesel::Insertable;
 use serde::Deserialize;
-use crate::languageai_subscriptions::SubcriptionLimit;
 
 type CheckbotResponse = (StatusCode, Json<ApiResponse<Checkbot>>);
 
@@ -45,7 +45,11 @@ async fn find_checkbot_history_route(
     headers: HeaderMap,
 ) -> (StatusCode, Json<ApiResponse<Vec<Checkbot>>>) {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
-    let history_limit = SubcriptionLimit::find_user_subscription_limit_count(&pool, &user_id, &SubcriptionLimit::History);
+    let history_limit = SubcriptionLimit::find_user_subscription_limit_count(
+        &pool,
+        &user_id,
+        &SubcriptionLimit::History,
+    );
     match Checkbot::find_checkbot_history(&pool, &user_id, &history_limit) {
         Ok(checkbot) => ApiResponse::new(StatusCode::OK, Some(checkbot), "Created").send(),
         Err(err) => {

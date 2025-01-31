@@ -41,14 +41,21 @@ impl CheckbotStorage {
     pub(super) fn find_many_checkbot_storage(
         pool: &DbPool,
         user_id: &uuid::Uuid,
+        storage_limit: &Option<i64>,
     ) -> QueryResult<Vec<Self>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
-        checkbot_storage::table
-            .filter(checkbot_storage::user_id.eq(user_id))
-            .limit(10)
-            .order_by(checkbot_storage::id.desc())
-            .get_results(conn)
+        match storage_limit {
+            Some(limit) => checkbot_storage::table
+                .filter(checkbot_storage::user_id.eq(user_id))
+                .limit(*limit)
+                .order_by(checkbot_storage::id.desc())
+                .get_results(conn),
+            None => checkbot_storage::table
+                .filter(checkbot_storage::user_id.eq(user_id))
+                .order_by(checkbot_storage::id.desc())
+                .get_results(conn),
+        }
     }
 
     pub(super) fn delete_checkbot_storage(

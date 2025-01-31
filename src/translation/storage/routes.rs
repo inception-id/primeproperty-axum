@@ -63,8 +63,13 @@ pub(crate) async fn find_translation_storage_route(
     headers: HeaderMap,
 ) -> (StatusCode, Json<ApiResponse<Vec<TranslationStorage>>>) {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
+    let storage_limit = SubcriptionLimit::find_user_subscription_limit_count(
+        &pool,
+        &user_id,
+        &SubcriptionLimit::Storage,
+    );
 
-    match TranslationStorage::find_user_translation_storage(&pool, &user_id) {
+    match TranslationStorage::find_user_translation_storage(&pool, &user_id, &storage_limit) {
         Ok(translation_storage) => {
             ApiResponse::new(StatusCode::OK, Some(translation_storage), "success").send()
         }

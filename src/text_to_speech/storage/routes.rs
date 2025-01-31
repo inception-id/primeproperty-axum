@@ -57,7 +57,12 @@ pub(crate) async fn find_tts_storage_route(
     headers: HeaderMap,
 ) -> (StatusCode, Json<ApiResponse<Vec<TextToSpeechStorage>>>) {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
-    match TextToSpeechStorage::find_many_tts_storage(&pool, &user_id) {
+    let storage_limit = SubcriptionLimit::find_user_subscription_limit_count(
+        &pool,
+        &user_id,
+        &SubcriptionLimit::Storage,
+    );
+    match TextToSpeechStorage::find_many_tts_storage(&pool, &user_id, &storage_limit) {
         Ok(tts_storage) => ApiResponse::new(StatusCode::OK, Some(tts_storage), "Success").send(),
         Err(err) => {
             ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()

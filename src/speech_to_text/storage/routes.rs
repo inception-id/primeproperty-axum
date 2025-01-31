@@ -67,7 +67,12 @@ pub(crate) async fn find_transcription_storage_route(
     headers: HeaderMap,
 ) -> (StatusCode, Json<ApiResponse<Vec<SpeechToTextStorage>>>) {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
-    match SpeechToTextStorage::find_storage(&pool, &user_id) {
+    let storage_limit = SubcriptionLimit::find_user_subscription_limit_count(
+        &pool,
+        &user_id,
+        &SubcriptionLimit::Storage,
+    );
+    match SpeechToTextStorage::find_storage(&pool, &user_id, &storage_limit) {
         Ok(storage) => ApiResponse::new(StatusCode::OK, Some(storage), "success").send(),
         Err(e) => ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &e.to_string()).send(),
     }

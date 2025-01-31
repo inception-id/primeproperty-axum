@@ -1,5 +1,6 @@
 use super::services::SpeechToText;
 use crate::db::DbPool;
+use crate::languageai_subscriptions::SubcriptionLimit;
 use crate::middleware::{extract_header_user_id, ApiResponse};
 use crate::schema::speech_to_text;
 use crate::speech_to_text::storage::{
@@ -12,7 +13,6 @@ use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
 use diesel::Insertable;
 use serde::Deserialize;
-use crate::languageai_subscriptions::SubcriptionLimit;
 
 type TranscriptionResponse = (StatusCode, Json<ApiResponse<SpeechToText>>);
 
@@ -43,7 +43,11 @@ async fn find_transcription_history_route(
     headers: HeaderMap,
 ) -> (StatusCode, Json<ApiResponse<Vec<SpeechToText>>>) {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
-    let history_limit = SubcriptionLimit::find_user_subscription_limit_count(&pool, &user_id, &SubcriptionLimit::History);
+    let history_limit = SubcriptionLimit::find_user_subscription_limit_count(
+        &pool,
+        &user_id,
+        &SubcriptionLimit::History,
+    );
     match SpeechToText::find_transcription_history(&pool, &user_id, &history_limit) {
         Ok(transcription_history) => {
             ApiResponse::new(StatusCode::OK, Some(transcription_history), "OK").send()

@@ -37,14 +37,24 @@ impl SpeechToTextStorage {
             .get_result(conn)
     }
 
-    pub(super) fn find_storage(pool: &DbPool, user_id: &uuid::Uuid) -> QueryResult<Vec<Self>> {
+    pub(super) fn find_storage(
+        pool: &DbPool,
+        user_id: &uuid::Uuid,
+        storage_limit: &Option<i64>,
+    ) -> QueryResult<Vec<Self>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
-        speech_to_text_storage::table
-            .filter(speech_to_text_storage::user_id.eq(user_id))
-            .limit(10)
-            .order_by(speech_to_text_storage::id.desc())
-            .get_results(conn)
+        match storage_limit {
+            Some(limit) => speech_to_text_storage::table
+                .filter(speech_to_text_storage::user_id.eq(user_id))
+                .limit(*limit)
+                .order_by(speech_to_text_storage::id.desc())
+                .get_results(conn),
+            None => speech_to_text_storage::table
+                .filter(speech_to_text_storage::user_id.eq(user_id))
+                .order_by(speech_to_text_storage::id.desc())
+                .get_results(conn),
+        }
     }
 
     pub(super) fn delete_storage(
