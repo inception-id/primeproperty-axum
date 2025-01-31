@@ -36,27 +36,22 @@ impl Translation {
     pub(super) fn find_translation_history(
         pool: &DbPool,
         user_id: &uuid::Uuid,
+        history_limit: &Option<i64>
     ) -> QueryResult<Vec<Self>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
-        // match limit {
-        //     Some(limit) =>
-        //         translation::table
-        //         .filter(translation::user_id.eq(user_id))
-        //         .order_by(translation::id.desc())
-        //         .limit(*limit)
-        //         .get_results(conn),
-        //     None => translation::table
-        //         .filter(translation::user_id.eq(user_id))
-        //         .order_by(translation::id.desc())
-        //         .get_results(conn),
-        // }
-
-        translation::table
-            .filter(translation::user_id.eq(user_id))
-            .order_by(translation::id.desc())
-            .limit(10)
-            .get_results(conn)
+        match history_limit {
+            Some(limit) =>
+                translation::table
+                .filter(translation::user_id.eq(user_id))
+                .order_by(translation::id.desc())
+                .limit(*limit)
+                .get_results(conn),
+            None => translation::table
+                .filter(translation::user_id.eq(user_id))
+                .order_by(translation::id.desc())
+                .get_results(conn),
+        }
     }
 
     pub(super) fn find_translation(pool: &DbPool, translation_id: &i32) -> QueryResult<Self> {

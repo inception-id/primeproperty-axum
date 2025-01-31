@@ -35,14 +35,23 @@ impl Checkbot {
     pub(super) fn find_checkbot_history(
         pool: &DbPool,
         user_id: &uuid::Uuid,
+        history_limit: &Option<i64>,
     ) -> QueryResult<Vec<Self>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
-        checkbot::table
-            .filter(checkbot::user_id.eq(user_id))
-            .order_by(checkbot::created_at.desc())
-            .limit(10)
-            .get_results(conn)
+        match history_limit {
+            Some(limit) =>
+                checkbot::table
+                    .filter(checkbot::user_id.eq(user_id))
+                    .order_by(checkbot::created_at.desc())
+                    .limit(*limit)
+                    .get_results(conn),
+            None =>
+                checkbot::table
+                    .filter(checkbot::user_id.eq(user_id))
+                    .order_by(checkbot::created_at.desc())
+                    .get_results(conn)
+        }
     }
 
     pub(super) fn find_checkbot_by_id(pool: &DbPool, checkbot_id: &i32) -> QueryResult<Self> {

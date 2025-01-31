@@ -8,6 +8,7 @@ use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
 use diesel::Insertable;
 use serde::Deserialize;
+use crate::languageai_subscriptions::SubcriptionLimit;
 
 type TranslationResponse = (StatusCode, Json<ApiResponse<Translation>>);
 
@@ -43,7 +44,8 @@ async fn find_translation_history_route(
     headers: HeaderMap,
 ) -> (StatusCode, Json<ApiResponse<Vec<Translation>>>) {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
-    let translation_history = Translation::find_translation_history(&pool, &user_id);
+    let history_limit = SubcriptionLimit::find_user_subscription_limit_count(&pool, &user_id, &SubcriptionLimit::History);
+    let translation_history = Translation::find_translation_history(&pool, &user_id, &history_limit);
     match translation_history {
         Ok(translations) => ApiResponse::new(StatusCode::OK, Some(translations), "success").send(),
         Err(err) => {

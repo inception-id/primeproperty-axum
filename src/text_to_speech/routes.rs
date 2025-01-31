@@ -9,6 +9,7 @@ use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use diesel::Insertable;
 use serde::Deserialize;
+use crate::languageai_subscriptions::SubcriptionLimit;
 
 type TtsResponse = (StatusCode, Json<ApiResponse<TextToSpeech>>);
 
@@ -37,7 +38,8 @@ async fn find_tts_history_route(
     headers: HeaderMap,
 ) -> (StatusCode, Json<ApiResponse<Vec<TextToSpeech>>>) {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
-    match TextToSpeech::find_tts_history(&pool, &user_id) {
+    let history_limit = SubcriptionLimit::find_user_subscription_limit_count(&pool, &user_id, &SubcriptionLimit::History);
+    match TextToSpeech::find_tts_history(&pool, &user_id, &history_limit) {
         Ok(tts) => ApiResponse::new(StatusCode::OK, Some(tts), "Found").send(),
         Err(e) => ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &e.to_string()).send(),
     }
