@@ -16,3 +16,4 @@ uuid = {version = "1.11.0", features = ["v4", "serde"]}
 jsonwebtoken = "9.3.0"
 openssl = {version = "0.10.68", features = ["vendored"]}
 bigdecimal = { version = "0.4.7", features = ["serde"] }
+tower-http = {version="0.6.2", features = ["cors"]}

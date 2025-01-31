@@ -14,6 +14,7 @@ mod utils;
 use crate::db::build_db_pool;
 use axum::{middleware::from_fn, routing::get, Router};
 use std::env;
+use tower_http::cors::{CorsLayer, Any};
 
 #[tokio::main]
 async fn main() {
@@ -23,6 +24,11 @@ async fn main() {
 
     let listener = tokio::net::TcpListener::bind(&host_addr).await.unwrap();
     let pool = build_db_pool();
+
+    let cors = CorsLayer::new()
+        .allow_methods(Any)
+        .allow_headers(Any)
+        .allow_origin(Any);
 
     // build our application with a route
     let app = Router::new()
@@ -42,8 +48,9 @@ async fn main() {
             languageai_subscriptions::languageai_subscription_routes(),
         )
         .with_state(pool)
+        .layer(from_fn(middleware::session_middleware))
         .layer(from_fn(middleware::api_key_middleware))
-        .layer(from_fn(middleware::session_middleware));
+        .layer(cors);
 
     // run our app with hyper, listening globally on env port
     println!("Server started at http://{}", host_addr);
