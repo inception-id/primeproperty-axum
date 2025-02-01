@@ -13,16 +13,12 @@ mod utils;
 
 use crate::db::build_db_pool;
 use axum::{middleware::from_fn, routing::get, Router};
+use sentry_tower::{NewSentryLayer, SentryHttpLayer};
 use std::env;
-use axum::http::Request;
-use reqwest::Body;
 use tower_http::cors::CorsLayer;
-use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer};
-use tracing::Level;
 
 #[tokio::main]
 async fn main() {
-    tracing_subscriber::fmt().with_max_level(Level::DEBUG).init();
     dotenvy::dotenv().ok();
 
     let host_addr = env::var("HOST_ADDRESS").expect("Missing HOST_ADDRESS");
@@ -30,18 +26,21 @@ async fn main() {
     let listener = tokio::net::TcpListener::bind(&host_addr).await.unwrap();
     let pool = build_db_pool();
 
+    let app_environment = env::var("APP_ENVIRONMENT").expect("Missing APP_ENVIRONMENT");
+    let is_production = matches!(app_environment.as_str(), "production");
+
+    let sentry_url = env::var("SENTRY_URL").expect("Missing SENTRY_URL");
+    let _guard = sentry::init((
+        sentry_url,
+        sentry::ClientOptions {
+            release: sentry::release_name!(),
+            traces_sample_rate: 1.0,
+            debug: !is_production,
+            ..Default::default()
+        },
+    ));
+
     let cors = CorsLayer::permissive();
-
-    let trace_layer = TraceLayer::new_for_http()
-        .on_request(
-            DefaultOnRequest::new().level(Level::DEBUG)
-        )
-        .on_response(
-            DefaultOnResponse::new()
-                .level(Level::INFO)
-        );
-
-
 
     // build our application with a route
     let app = Router::new()
@@ -64,7 +63,8 @@ async fn main() {
         .layer(from_fn(middleware::session_middleware))
         .layer(from_fn(middleware::api_key_middleware))
         .layer(cors)
-        .layer(trace_layer);
+        .layer(NewSentryLayer::new_from_top())
+        .layer(SentryHttpLayer::with_transaction());
 
     // run our app with hyper, listening globally on env port
     println!("Server started at http://{}", host_addr);
