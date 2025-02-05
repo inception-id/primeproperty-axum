@@ -28,7 +28,7 @@ async fn main() {
 
     let app_environment = env::var("APP_ENVIRONMENT").expect("Missing APP_ENVIRONMENT");
     let is_production = matches!(app_environment.as_str(), "production");
-    
+
     let sentry_url = env::var("SENTRY_URL").expect("Missing SENTRY_URL");
     let _guard = sentry::init((
         sentry_url,

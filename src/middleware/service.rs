@@ -26,16 +26,25 @@ impl<T> ApiResponse<T> {
 }
 
 pub async fn api_key_middleware(req: Request, next: Next) -> Result<Response, StatusCode> {
-    let env_api_key = env::var("API_KEY").expect("Missing API_KEY");
+    let path = req.uri().path();
 
-    let header_api_key_option = req
-        .headers()
-        .get("x-api-key")
-        .and_then(|header| header.to_str().ok());
+    let no_auth_path = [
+        "/languageai/subscriptions/payment/notification/doku",
+    ];
 
-    match header_api_key_option {
-        Some(header_api_key) if header_api_key == env_api_key => Ok(next.run(req).await),
-        _ => Err(StatusCode::UNAUTHORIZED),
+    if no_auth_path.contains(&path) {
+        Ok(next.run(req).await)
+    } else {
+        let env_api_key = env::var("API_KEY").expect("Missing API_KEY");
+        let header_api_key_option = req
+            .headers()
+            .get("x-api-key")
+            .and_then(|header| header.to_str().ok());
+
+        match header_api_key_option {
+            Some(header_api_key) if header_api_key == env_api_key => Ok(next.run(req).await),
+            _ => Err(StatusCode::UNAUTHORIZED),
+        }
     }
 }
 
@@ -48,7 +57,7 @@ pub async fn session_middleware(req: Request, next: Next) -> Result<Response, St
         "/languages/find-all",
         "/ai-system-prompts/find-all",
         "/languageai/subscriptions/plans",
-        "/languageai/subscriptions/payment/notification/doku"
+        "/languageai/subscriptions/payment/notification/doku",
     ];
 
     if no_auth_path.contains(&path) {
