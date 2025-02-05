@@ -45,6 +45,7 @@ pub async fn session_middleware(req: Request, next: Next) -> Result<Response, St
     let no_auth_path = [
         "/users/create-user",
         "/users/find-user",
+        "/languageai/languages/find-all",
         "/languageai/ai-system-prompts/find-all",
         "/languageai/subscriptions/plans",
         "/languageai/subscriptions/payment/notification/doku"
