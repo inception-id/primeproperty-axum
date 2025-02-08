@@ -25,17 +25,13 @@ async fn main() {
 
     let listener = tokio::net::TcpListener::bind(&host_addr).await.unwrap();
     let pool = build_db_pool();
-
-    let app_environment = env::var("APP_ENVIRONMENT").expect("Missing APP_ENVIRONMENT");
-    let is_production = matches!(app_environment.as_str(), "production");
-
+    
     let sentry_url = env::var("SENTRY_URL").expect("Missing SENTRY_URL");
     let _guard = sentry::init((
         sentry_url,
         sentry::ClientOptions {
             release: sentry::release_name!(),
             traces_sample_rate: 1.0,
-            debug: !is_production,
             ..Default::default()
         },
     ));
