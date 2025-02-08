@@ -28,9 +28,7 @@ impl<T> ApiResponse<T> {
 pub async fn api_key_middleware(req: Request, next: Next) -> Result<Response, StatusCode> {
     let path = req.uri().path();
 
-    let no_auth_path = [
-        "/languageai/subscriptions/payment/notification/doku",
-    ];
+    let no_auth_path = ["/languageai/subscriptions/payment/notification/doku"];
 
     if no_auth_path.contains(&path) {
         Ok(next.run(req).await)
