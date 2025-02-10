@@ -46,7 +46,7 @@ pub async fn api_key_middleware(req: Request, next: Next) -> Result<Response, St
     }
 }
 
-pub async fn session_middleware(req: Request, next: Next) -> Result<Response, StatusCode> {
+pub async fn session_middleware(req: Request, next: Next) -> Result<Response, (StatusCode, Json<ApiResponse<String>>)> {
     let path = req.uri().path();
 
     let no_auth_path = [
@@ -78,10 +78,10 @@ pub async fn session_middleware(req: Request, next: Next) -> Result<Response, St
                         new_req.headers_mut().insert("user-id", userid_header);
                         Ok(next.run(new_req).await)
                     }
-                    _ => Err(StatusCode::UNAUTHORIZED),
+                    _ => Err((StatusCode::UNAUTHORIZED, Json(ApiResponse::new(StatusCode::UNAUTHORIZED, None, "Unauthorized")))),
                 }
             }
-            _ => Err(StatusCode::UNAUTHORIZED),
+            _ => Err((StatusCode::UNAUTHORIZED, Json(ApiResponse::new(StatusCode::UNAUTHORIZED, None, "Unauthorized")))),
         }
     }
 }
