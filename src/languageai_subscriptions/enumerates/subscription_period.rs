@@ -19,7 +19,7 @@ impl SubscriptionPeriod {
         match self {
             SubscriptionPeriod::OneYear => 12,
             SubscriptionPeriod::ThreeMonths => 3,
-            SubscriptionPeriod::OneMonth => 3,
+            SubscriptionPeriod::OneMonth => 1,
         }
     }
 }
