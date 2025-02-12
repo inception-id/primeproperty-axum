@@ -5,6 +5,7 @@ use chrono::NaiveDateTime;
 use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
 use crate::middleware::StorageVisibility;
+use super::routes::CreateTranslationStoragePayload;
 
 #[derive(Debug, Queryable, Serialize)]
 pub struct TranslationStorage {
@@ -25,17 +26,19 @@ impl TranslationStorage {
     pub(super) fn create_translation_storage(
         pool: &DbPool,
         translation: &Translation,
-        updated_completion: &str,
+        payload: &CreateTranslationStoragePayload
     ) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         let values = (
             (translation_storage::user_id.eq(&translation.user_id)),
-            (translation_storage::translation_id.eq(&translation.id)),
+            // (translation_storage::translation_id.eq(&translation.id)),
             (translation_storage::content_language.eq(&translation.content_language)),
             (translation_storage::target_language.eq(&translation.target_language)),
             (translation_storage::content.eq(&translation.content)),
-            (translation_storage::updated_completion.eq(&updated_completion)),
+            payload
+            // (translation_storage::updated_completion.eq(payload.title.clone().unwrap())),
+            // (translation_storage::updated_completion.eq(&payload.updated_completion)),
         );
 
         diesel::insert_into(translation_storage::table)
