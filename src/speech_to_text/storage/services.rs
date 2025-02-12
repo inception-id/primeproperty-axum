@@ -4,6 +4,7 @@ use crate::speech_to_text::services::SpeechToText;
 use chrono::NaiveDateTime;
 use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
+use crate::middleware::StorageVisibility;
 
 #[derive(Debug, Queryable, Serialize)]
 pub struct SpeechToTextStorage {
@@ -15,6 +16,8 @@ pub struct SpeechToTextStorage {
     audio_url: String,
     updated_transcription_text: String,
     language: Option<String>,
+    title: Option<String>,
+    visibility: StorageVisibility
 }
 
 impl SpeechToTextStorage {

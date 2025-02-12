@@ -4,6 +4,7 @@ use crate::schema::checkbot_storage;
 use chrono::NaiveDateTime;
 use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
+use crate::middleware::StorageVisibility;
 
 #[derive(Debug, Queryable, Serialize)]
 pub struct CheckbotStorage {
@@ -15,6 +16,8 @@ pub struct CheckbotStorage {
     instruction: String,
     content: String,
     updated_completion: String,
+    title: Option<String>,
+    visibility: StorageVisibility
 }
 
 impl CheckbotStorage {

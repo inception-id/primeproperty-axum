@@ -6,6 +6,10 @@ pub mod sql_types {
     pub struct PaymentStatus;
 
     #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "storage_visibility"))]
+    pub struct StorageVisibility;
+
+    #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
     #[diesel(postgres_type(name = "subscription_period"))]
     pub struct SubscriptionPeriod;
 }
@@ -35,6 +39,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::StorageVisibility;
+
     checkbot_storage (id) {
         id -> Int4,
         user_id -> Uuid,
@@ -44,6 +51,8 @@ diesel::table! {
         instruction -> Varchar,
         content -> Text,
         updated_completion -> Text,
+        title -> Nullable<Varchar>,
+        visibility -> StorageVisibility,
     }
 }
 
@@ -128,6 +137,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::StorageVisibility;
+
     speech_to_text_storage (id) {
         id -> Int4,
         user_id -> Uuid,
@@ -137,6 +149,8 @@ diesel::table! {
         audio_url -> Varchar,
         updated_transcription_text -> Text,
         language -> Nullable<Varchar>,
+        title -> Nullable<Varchar>,
+        visibility -> StorageVisibility,
     }
 }
 
@@ -153,6 +167,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::StorageVisibility;
+
     text_to_speech_storage (id) {
         id -> Int4,
         user_id -> Uuid,
@@ -162,6 +179,8 @@ diesel::table! {
         input_content -> Text,
         audio_url -> Varchar,
         voice -> Varchar,
+        title -> Nullable<Varchar>,
+        visibility -> StorageVisibility,
     }
 }
 
@@ -180,6 +199,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::StorageVisibility;
+
     translation_storage (id) {
         id -> Int4,
         user_id -> Uuid,
@@ -190,6 +212,8 @@ diesel::table! {
         target_language -> Varchar,
         content -> Text,
         updated_completion -> Text,
+        title -> Nullable<Varchar>,
+        visibility -> StorageVisibility,
     }
 }
 
