@@ -3,7 +3,10 @@ name: Build pipeline
 on:
   push:
     branches:
-      - main
+      - develop
+  pull_request:
+    branches:
+      - develop
 
 jobs:
   build_and_test:
@@ -34,4 +37,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/inception-axum:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/inception-axum:dev
