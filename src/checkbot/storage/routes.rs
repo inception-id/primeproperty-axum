@@ -6,7 +6,7 @@ use crate::middleware::{extract_header_user_id, ApiResponse};
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::Json;
-use diesel::Insertable;
+use diesel::{AsChangeset, Insertable};
 use serde::Deserialize;
 use crate::schema;
 
@@ -101,17 +101,19 @@ pub(crate) async fn delete_checkbot_storage_route(
     }
 }
 
-#[derive(Deserialize)]
-pub(crate) struct UpdateCheckbotPayload {
+#[derive(Deserialize, AsChangeset)]
+#[diesel(table_name = schema::checkbot_storage)]
+pub(crate) struct UpdateCheckbotStoragePayload {
+    title: Option<String>,
     updated_completion: String,
 }
 
 pub(crate) async fn update_checkbot_storage_route(
     State(pool): State<DbPool>,
     Path(id): Path<i32>,
-    Json(payload): Json<UpdateCheckbotPayload>,
+    Json(payload): Json<UpdateCheckbotStoragePayload>,
 ) -> CheckbotStorageResponse {
-    match CheckbotStorage::update_checkbot_storage(&pool, &id, &payload.updated_completion) {
+    match CheckbotStorage::update_checkbot_storage(&pool, &id, &payload) {
         Ok(checkbot_storage) => {
             ApiResponse::new(StatusCode::OK, Some(checkbot_storage), "success").send()
         }

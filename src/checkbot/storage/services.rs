@@ -5,7 +5,7 @@ use chrono::NaiveDateTime;
 use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
 use crate::middleware::StorageVisibility;
-use super::routes::CreateCheckbotStoragePayload;
+use super::routes::{CreateCheckbotStoragePayload, UpdateCheckbotStoragePayload};
 
 #[derive(Debug, Queryable, Serialize)]
 pub struct CheckbotStorage {
@@ -76,13 +76,13 @@ impl CheckbotStorage {
     pub(super) fn update_checkbot_storage(
         pool: &DbPool,
         checkbot_storage_id: &i32,
-        updated_completion: &str,
+        payload: &UpdateCheckbotStoragePayload
     ) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         diesel::update(checkbot_storage::table)
             .filter(checkbot_storage::id.eq(checkbot_storage_id))
-            .set(checkbot_storage::updated_completion.eq(updated_completion))
+            .set(payload)
             .get_result(conn)
     }
 
