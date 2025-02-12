@@ -6,13 +6,17 @@ use crate::middleware::{extract_header_user_id, ApiResponse};
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::Json;
+use diesel::Insertable;
 use serde::Deserialize;
+use crate::schema;
 
 type CheckbotStorageResponse = (StatusCode, Json<ApiResponse<CheckbotStorage>>);
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Insertable)]
+#[diesel(table_name = schema::checkbot_storage)]
 pub(crate) struct CreateCheckbotStoragePayload {
     checkbot_id: i32,
+    title: Option<String>,
     updated_completion: String,
 }
 
@@ -40,7 +44,7 @@ pub(crate) async fn create_checkbot_storage_route(
                 match CheckbotStorage::create_checkbot_storage(
                     &pool,
                     &checkbot,
-                    &payload.updated_completion,
+                    &payload,
                 ) {
                     Ok(checkbot_storage) => {
                         ApiResponse::new(StatusCode::CREATED, Some(checkbot_storage), "Created")
