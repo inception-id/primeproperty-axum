@@ -21,7 +21,7 @@ pub struct TextToSpeechStorage {
 }
 
 impl TextToSpeechStorage {
-    pub(super) fn create_tts_storage(pool: &DbPool, tts: &TextToSpeech) -> QueryResult<Self> {
+    pub(super) fn create_tts_storage(pool: &DbPool, tts: &TextToSpeech, title: &Option<String>) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
         let val = (
             text_to_speech_storage::user_id.eq(&tts.user_id),
@@ -29,6 +29,7 @@ impl TextToSpeechStorage {
             text_to_speech_storage::input_content.eq(&tts.input_content),
             text_to_speech_storage::audio_url.eq(&tts.audio_url),
             text_to_speech_storage::voice.eq(&tts.voice),
+            text_to_speech_storage::title.eq(title),
         );
 
         diesel::insert_into(text_to_speech_storage::table)

@@ -13,6 +13,7 @@ type TtsStorageResponse = (StatusCode, Json<ApiResponse<TextToSpeechStorage>>);
 #[derive(Deserialize)]
 pub(crate) struct CreateTtsStoragePayload {
     tts_id: i32,
+    title: Option<String>,
 }
 pub(crate) async fn create_tts_storage_route(
     State(pool): State<DbPool>,
@@ -34,7 +35,7 @@ pub(crate) async fn create_tts_storage_route(
         )
         .send(),
         false => match TextToSpeech::find_by_id(&pool, &payload.tts_id) {
-            Ok(tts) => match TextToSpeechStorage::create_tts_storage(&pool, &tts) {
+            Ok(tts) => match TextToSpeechStorage::create_tts_storage(&pool, &tts, &payload.title) {
                 Ok(tts_storage) => {
                     ApiResponse::new(StatusCode::CREATED, Some(tts_storage), "Created").send()
                 }
