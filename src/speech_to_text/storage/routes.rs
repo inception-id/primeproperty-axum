@@ -6,13 +6,17 @@ use crate::speech_to_text::storage::services::SpeechToTextStorage;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::Json;
+use diesel::Insertable;
 use serde::Deserialize;
+use crate::schema;
 
 type TranscriptionStorageResponse = (StatusCode, Json<ApiResponse<SpeechToTextStorage>>);
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Insertable)]
+#[diesel(table_name = schema::speech_to_text_storage)]
 pub(crate) struct CreateTranscriptionStoragePayload {
     speech_to_text_id: i32,
+    title: Option<String>,
     updated_transcription_text: String,
 }
 
@@ -39,7 +43,7 @@ pub(crate) async fn create_transcription_storage_route(
                 match SpeechToTextStorage::create_storage(
                     &pool,
                     &speech_to_text,
-                    &payload.updated_transcription_text,
+                    &payload,
                 ) {
                     Ok(transcription_storage) => ApiResponse::new(
                         StatusCode::CREATED,

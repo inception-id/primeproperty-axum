@@ -5,6 +5,7 @@ use chrono::NaiveDateTime;
 use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
 use crate::middleware::StorageVisibility;
+use super::routes::CreateTranscriptionStoragePayload;
 
 #[derive(Debug, Queryable, Serialize)]
 pub struct SpeechToTextStorage {
@@ -24,15 +25,15 @@ impl SpeechToTextStorage {
     pub(super) fn create_storage(
         pool: &DbPool,
         speech_to_text: &SpeechToText,
-        updated_transcription_text: &str,
+        payload: &CreateTranscriptionStoragePayload
     ) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
         let val = (
             (speech_to_text_storage::user_id.eq(&speech_to_text.user_id)),
-            (speech_to_text_storage::speech_to_text_id.eq(&speech_to_text.id)),
             (speech_to_text_storage::audio_url.eq(&speech_to_text.audio_url)),
-            (speech_to_text_storage::updated_transcription_text.eq(&updated_transcription_text)),
+            // (speech_to_text_storage::updated_transcription_text.eq(&updated_transcription_text)),
             (speech_to_text_storage::language.eq(&speech_to_text.language)),
+            payload,
         );
 
         diesel::insert_into(speech_to_text_storage::table)
