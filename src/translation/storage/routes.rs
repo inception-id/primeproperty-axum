@@ -6,7 +6,7 @@ use crate::translation::services::Translation;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::Json;
-use diesel::Insertable;
+use diesel::{AsChangeset, Insertable};
 use serde::Deserialize;
 use crate::schema;
 
@@ -97,17 +97,19 @@ pub(crate) async fn delete_translation_storage_route(
     }
 }
 
-#[derive(Deserialize)]
-pub(crate) struct UpdateTranslationPayload {
+#[derive(Deserialize, AsChangeset)]
+#[diesel(table_name= schema::translation_storage)]
+pub(crate) struct UpdateTranslationStoragePayload {
+    title: Option<String>,
     updated_completion: String,
 }
 
 pub(crate) async fn update_translation_storage_route(
     State(pool): State<DbPool>,
     Path(id): Path<i32>,
-    Json(payload): Json<UpdateTranslationPayload>,
+    Json(payload): Json<UpdateTranslationStoragePayload>,
 ) -> TranslationStorageResponse {
-    match TranslationStorage::update_translation_storage(&pool, &id, &payload.updated_completion) {
+    match TranslationStorage::update_translation_storage(&pool, &id, &payload) {
         Ok(translation_storage) => {
             ApiResponse::new(StatusCode::OK, Some(translation_storage), "success").send()
         }
