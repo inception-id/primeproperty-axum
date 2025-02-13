@@ -2,10 +2,12 @@ use super::services::TextToSpeechStorage;
 use crate::db::DbPool;
 use crate::languageai_subscriptions::{SubcriptionLimit, SubcriptionStorageLimit};
 use crate::middleware::{extract_header_user_id, ApiResponse};
+use crate::schema;
 use crate::text_to_speech::services::TextToSpeech;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::Json;
+use diesel::AsChangeset;
 use serde::Deserialize;
 
 type TtsStorageResponse = (StatusCode, Json<ApiResponse<TextToSpeechStorage>>);
@@ -76,6 +78,25 @@ pub(crate) async fn delete_tts_storage_route(
     Path(id): Path<i32>,
 ) -> TtsStorageResponse {
     match TextToSpeechStorage::delete_tts_storage(&pool, &id) {
+        Ok(tts_storage) => ApiResponse::new(StatusCode::OK, Some(tts_storage), "Success").send(),
+        Err(err) => {
+            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+        }
+    }
+}
+
+#[derive(Deserialize, AsChangeset)]
+#[diesel(table_name = schema::text_to_speech_storage)]
+pub(crate) struct UpdateTtsStoragePayload {
+    title: Option<String>,
+}
+
+pub(crate) async fn update_tts_storage_route(
+    State(pool): State<DbPool>,
+    Path(id): Path<i32>,
+    Json(payload): Json<UpdateTtsStoragePayload>,
+) -> TtsStorageResponse {
+    match TextToSpeechStorage::update_tts_storage(&pool, &id, &payload.title) { 
         Ok(tts_storage) => ApiResponse::new(StatusCode::OK, Some(tts_storage), "Success").send(),
         Err(err) => {
             ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()

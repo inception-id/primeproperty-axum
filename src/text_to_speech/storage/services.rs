@@ -76,4 +76,17 @@ impl TextToSpeechStorage {
             .filter(text_to_speech_storage::user_id.eq(user_id))
             .get_result(conn)
     }
+
+    pub(super) fn update_tts_storage(
+        pool: &DbPool,
+        tts_storage_id: &i32,
+        title: &Option<String>,
+    ) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        diesel::update(text_to_speech_storage::table)
+            .filter(text_to_speech_storage::id.eq(tts_storage_id))
+            .set(text_to_speech_storage::title.eq(title))
+            .get_result(conn)
+    }
 }
