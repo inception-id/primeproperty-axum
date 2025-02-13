@@ -2,13 +2,13 @@ use super::services::TranslationStorage;
 use crate::db::DbPool;
 use crate::languageai_subscriptions::{SubcriptionLimit, SubcriptionStorageLimit};
 use crate::middleware::{extract_header_user_id, ApiResponse};
+use crate::schema;
 use crate::translation::services::Translation;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::Json;
 use diesel::{AsChangeset, Insertable};
 use serde::Deserialize;
-use crate::schema;
 
 type TranslationStorageResponse = (StatusCode, Json<ApiResponse<TranslationStorage>>);
 
@@ -40,11 +40,8 @@ pub(crate) async fn create_translation_storage_route(
         .send(),
         false => match Translation::find_translation(&pool, &payload.translation_id) {
             Ok(translation) => {
-                match TranslationStorage::create_translation_storage(
-                    &pool,
-                    &translation,
-                    &payload,
-                ) {
+                match TranslationStorage::create_translation_storage(&pool, &translation, &payload)
+                {
                     Ok(translation_storage) => {
                         ApiResponse::new(StatusCode::CREATED, Some(translation_storage), "Created")
                             .send()

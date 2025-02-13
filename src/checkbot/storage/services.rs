@@ -1,11 +1,11 @@
+use super::routes::{CreateCheckbotStoragePayload, UpdateCheckbotStoragePayload};
 use crate::checkbot::services::Checkbot;
 use crate::db::DbPool;
+use crate::middleware::StorageVisibility;
 use crate::schema::checkbot_storage;
 use chrono::NaiveDateTime;
 use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
-use crate::middleware::StorageVisibility;
-use super::routes::{CreateCheckbotStoragePayload, UpdateCheckbotStoragePayload};
 
 #[derive(Debug, Queryable, Serialize)]
 pub struct CheckbotStorage {
@@ -18,14 +18,14 @@ pub struct CheckbotStorage {
     content: String,
     updated_completion: String,
     title: Option<String>,
-    visibility: StorageVisibility
+    visibility: StorageVisibility,
 }
 
 impl CheckbotStorage {
     pub(super) fn create_checkbot_storage(
         pool: &DbPool,
         checkbot: &Checkbot,
-        payload: &CreateCheckbotStoragePayload
+        payload: &CreateCheckbotStoragePayload,
     ) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
@@ -76,7 +76,7 @@ impl CheckbotStorage {
     pub(super) fn update_checkbot_storage(
         pool: &DbPool,
         checkbot_storage_id: &i32,
-        payload: &UpdateCheckbotStoragePayload
+        payload: &UpdateCheckbotStoragePayload,
     ) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 

@@ -1,11 +1,11 @@
+use super::routes::{CreateTranscriptionStoragePayload, UpdateTranscriptionStoragePayload};
 use crate::db::DbPool;
+use crate::middleware::StorageVisibility;
 use crate::schema::speech_to_text_storage;
 use crate::speech_to_text::services::SpeechToText;
 use chrono::NaiveDateTime;
 use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
-use crate::middleware::StorageVisibility;
-use super::routes::{CreateTranscriptionStoragePayload, UpdateTranscriptionStoragePayload};
 
 #[derive(Debug, Queryable, Serialize)]
 pub struct SpeechToTextStorage {
@@ -18,14 +18,14 @@ pub struct SpeechToTextStorage {
     updated_transcription_text: String,
     language: Option<String>,
     title: Option<String>,
-    visibility: StorageVisibility
+    visibility: StorageVisibility,
 }
 
 impl SpeechToTextStorage {
     pub(super) fn create_storage(
         pool: &DbPool,
         speech_to_text: &SpeechToText,
-        payload: &CreateTranscriptionStoragePayload
+        payload: &CreateTranscriptionStoragePayload,
     ) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
         let val = (
@@ -74,7 +74,7 @@ impl SpeechToTextStorage {
     pub(super) fn update_storage(
         pool: &DbPool,
         transcription_storage_id: &i32,
-        payload: &UpdateTranscriptionStoragePayload
+        payload: &UpdateTranscriptionStoragePayload,
     ) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 

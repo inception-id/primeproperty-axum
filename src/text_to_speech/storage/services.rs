@@ -1,10 +1,10 @@
 use crate::db::DbPool;
+use crate::middleware::StorageVisibility;
 use crate::schema::text_to_speech_storage;
 use crate::text_to_speech::services::TextToSpeech;
 use chrono::NaiveDateTime;
 use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
-use crate::middleware::StorageVisibility;
 
 #[derive(Debug, Queryable, Serialize)]
 pub struct TextToSpeechStorage {
@@ -17,11 +17,15 @@ pub struct TextToSpeechStorage {
     audio_url: String,
     voice: String,
     title: Option<String>,
-    visibility: StorageVisibility
+    visibility: StorageVisibility,
 }
 
 impl TextToSpeechStorage {
-    pub(super) fn create_tts_storage(pool: &DbPool, tts: &TextToSpeech, title: &Option<String>) -> QueryResult<Self> {
+    pub(super) fn create_tts_storage(
+        pool: &DbPool,
+        tts: &TextToSpeech,
+        title: &Option<String>,
+    ) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
         let val = (
             text_to_speech_storage::user_id.eq(&tts.user_id),

@@ -13,7 +13,7 @@ pub enum StorageVisibility {
     Private,
 }
 
-impl ToSql<sql_types::StorageVisibility, Pg> for StorageVisibility{
+impl ToSql<sql_types::StorageVisibility, Pg> for StorageVisibility {
     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
         match *self {
             StorageVisibility::Public => out.write_all(b"public")?,

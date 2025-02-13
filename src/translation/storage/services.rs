@@ -1,11 +1,11 @@
+use super::routes::{CreateTranslationStoragePayload, UpdateTranslationStoragePayload};
 use crate::db::DbPool;
+use crate::middleware::StorageVisibility;
 use crate::schema::translation_storage;
 use crate::translation::services::Translation;
 use chrono::NaiveDateTime;
 use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
-use crate::middleware::StorageVisibility;
-use super::routes::{CreateTranslationStoragePayload, UpdateTranslationStoragePayload};
 
 #[derive(Debug, Queryable, Serialize)]
 pub struct TranslationStorage {
@@ -19,14 +19,14 @@ pub struct TranslationStorage {
     content: String,
     updated_completion: String,
     title: Option<String>,
-    visibility: StorageVisibility
+    visibility: StorageVisibility,
 }
 
 impl TranslationStorage {
     pub(super) fn create_translation_storage(
         pool: &DbPool,
         translation: &Translation,
-        payload: &CreateTranslationStoragePayload
+        payload: &CreateTranslationStoragePayload,
     ) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
@@ -36,9 +36,8 @@ impl TranslationStorage {
             (translation_storage::content_language.eq(&translation.content_language)),
             (translation_storage::target_language.eq(&translation.target_language)),
             (translation_storage::content.eq(&translation.content)),
-            payload
-            // (translation_storage::updated_completion.eq(payload.title.clone().unwrap())),
-            // (translation_storage::updated_completion.eq(&payload.updated_completion)),
+            payload, // (translation_storage::updated_completion.eq(payload.title.clone().unwrap())),
+                     // (translation_storage::updated_completion.eq(&payload.updated_completion)),
         );
 
         diesel::insert_into(translation_storage::table)
@@ -81,7 +80,7 @@ impl TranslationStorage {
         pool: &DbPool,
         translation_id: &i32,
         // updated_completion: &str,
-        payload: &UpdateTranslationStoragePayload
+        payload: &UpdateTranslationStoragePayload,
     ) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 

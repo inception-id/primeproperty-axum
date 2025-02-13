@@ -3,12 +3,12 @@ use crate::checkbot::services::Checkbot;
 use crate::db::DbPool;
 use crate::languageai_subscriptions::{SubcriptionLimit, SubcriptionStorageLimit};
 use crate::middleware::{extract_header_user_id, ApiResponse};
+use crate::schema;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::Json;
 use diesel::{AsChangeset, Insertable};
 use serde::Deserialize;
-use crate::schema;
 
 type CheckbotStorageResponse = (StatusCode, Json<ApiResponse<CheckbotStorage>>);
 
@@ -41,11 +41,7 @@ pub(crate) async fn create_checkbot_storage_route(
         .send(),
         false => match Checkbot::find_checkbot_by_id(&pool, &payload.checkbot_id) {
             Ok(checkbot) => {
-                match CheckbotStorage::create_checkbot_storage(
-                    &pool,
-                    &checkbot,
-                    &payload,
-                ) {
+                match CheckbotStorage::create_checkbot_storage(&pool, &checkbot, &payload) {
                     Ok(checkbot_storage) => {
                         ApiResponse::new(StatusCode::CREATED, Some(checkbot_storage), "Created")
                             .send()

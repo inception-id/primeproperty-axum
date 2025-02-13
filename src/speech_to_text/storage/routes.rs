@@ -1,6 +1,7 @@
 use crate::db::DbPool;
 use crate::languageai_subscriptions::{SubcriptionLimit, SubcriptionStorageLimit};
 use crate::middleware::{extract_header_user_id, ApiResponse};
+use crate::schema;
 use crate::speech_to_text::services::SpeechToText;
 use crate::speech_to_text::storage::services::SpeechToTextStorage;
 use axum::extract::{Path, State};
@@ -8,7 +9,6 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::Json;
 use diesel::{AsChangeset, Insertable};
 use serde::Deserialize;
-use crate::schema;
 
 type TranscriptionStorageResponse = (StatusCode, Json<ApiResponse<SpeechToTextStorage>>);
 
@@ -40,11 +40,7 @@ pub(crate) async fn create_transcription_storage_route(
         .send(),
         false => match SpeechToText::find_transcription_by_id(&pool, &payload.speech_to_text_id) {
             Ok(speech_to_text) => {
-                match SpeechToTextStorage::create_storage(
-                    &pool,
-                    &speech_to_text,
-                    &payload,
-                ) {
+                match SpeechToTextStorage::create_storage(&pool, &speech_to_text, &payload) {
                     Ok(transcription_storage) => ApiResponse::new(
                         StatusCode::CREATED,
                         Some(transcription_storage),
