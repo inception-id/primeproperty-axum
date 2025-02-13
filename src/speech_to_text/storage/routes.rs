@@ -6,7 +6,7 @@ use crate::speech_to_text::storage::services::SpeechToTextStorage;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::Json;
-use diesel::Insertable;
+use diesel::{AsChangeset, Insertable};
 use serde::Deserialize;
 use crate::schema;
 
@@ -92,8 +92,10 @@ pub(crate) async fn delete_transcription_storage_route(
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, AsChangeset)]
+#[diesel(table_name = schema::speech_to_text_storage)]
 pub(crate) struct UpdateTranscriptionStoragePayload {
+    title: Option<String>,
     updated_transcription_text: String,
 }
 
@@ -102,7 +104,7 @@ pub(crate) async fn update_transcription_storage_route(
     Path(id): Path<i32>,
     Json(payload): Json<UpdateTranscriptionStoragePayload>,
 ) -> TranscriptionStorageResponse {
-    match SpeechToTextStorage::update_storage(&pool, &id, &payload.updated_transcription_text) {
+    match SpeechToTextStorage::update_storage(&pool, &id, &payload) {
         Ok(storage) => ApiResponse::new(StatusCode::OK, Some(storage), "success").send(),
         Err(e) => ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &e.to_string()).send(),
     }

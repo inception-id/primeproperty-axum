@@ -5,7 +5,7 @@ use chrono::NaiveDateTime;
 use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
 use crate::middleware::StorageVisibility;
-use super::routes::CreateTranscriptionStoragePayload;
+use super::routes::{CreateTranscriptionStoragePayload, UpdateTranscriptionStoragePayload};
 
 #[derive(Debug, Queryable, Serialize)]
 pub struct SpeechToTextStorage {
@@ -31,7 +31,6 @@ impl SpeechToTextStorage {
         let val = (
             (speech_to_text_storage::user_id.eq(&speech_to_text.user_id)),
             (speech_to_text_storage::audio_url.eq(&speech_to_text.audio_url)),
-            // (speech_to_text_storage::updated_transcription_text.eq(&updated_transcription_text)),
             (speech_to_text_storage::language.eq(&speech_to_text.language)),
             payload,
         );
@@ -75,13 +74,13 @@ impl SpeechToTextStorage {
     pub(super) fn update_storage(
         pool: &DbPool,
         transcription_storage_id: &i32,
-        updated_transcription_text: &str,
+        payload: &UpdateTranscriptionStoragePayload
     ) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         diesel::update(speech_to_text_storage::table)
             .filter(speech_to_text_storage::id.eq(transcription_storage_id))
-            .set(speech_to_text_storage::updated_transcription_text.eq(updated_transcription_text))
+            .set(payload)
             .get_result(conn)
     }
 
