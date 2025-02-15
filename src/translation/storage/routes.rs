@@ -2,17 +2,21 @@ use super::services::TranslationStorage;
 use crate::db::DbPool;
 use crate::languageai_subscriptions::{SubcriptionLimit, SubcriptionStorageLimit};
 use crate::middleware::{extract_header_user_id, ApiResponse};
+use crate::schema;
 use crate::translation::services::Translation;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::Json;
+use diesel::{AsChangeset, Insertable};
 use serde::Deserialize;
 
 type TranslationStorageResponse = (StatusCode, Json<ApiResponse<TranslationStorage>>);
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Insertable)]
+#[diesel(table_name = schema::translation_storage)]
 pub(crate) struct CreateTranslationStoragePayload {
     translation_id: i32,
+    title: Option<String>,
     updated_completion: String,
 }
 
@@ -36,11 +40,8 @@ pub(crate) async fn create_translation_storage_route(
         .send(),
         false => match Translation::find_translation(&pool, &payload.translation_id) {
             Ok(translation) => {
-                match TranslationStorage::create_translation_storage(
-                    &pool,
-                    &translation,
-                    &payload.updated_completion,
-                ) {
+                match TranslationStorage::create_translation_storage(&pool, &translation, &payload)
+                {
                     Ok(translation_storage) => {
                         ApiResponse::new(StatusCode::CREATED, Some(translation_storage), "Created")
                             .send()
@@ -93,17 +94,19 @@ pub(crate) async fn delete_translation_storage_route(
     }
 }
 
-#[derive(Deserialize)]
-pub(crate) struct UpdateTranslationPayload {
+#[derive(Deserialize, AsChangeset)]
+#[diesel(table_name= schema::translation_storage)]
+pub(crate) struct UpdateTranslationStoragePayload {
+    title: Option<String>,
     updated_completion: String,
 }
 
 pub(crate) async fn update_translation_storage_route(
     State(pool): State<DbPool>,
     Path(id): Path<i32>,
-    Json(payload): Json<UpdateTranslationPayload>,
+    Json(payload): Json<UpdateTranslationStoragePayload>,
 ) -> TranslationStorageResponse {
-    match TranslationStorage::update_translation_storage(&pool, &id, &payload.updated_completion) {
+    match TranslationStorage::update_translation_storage(&pool, &id, &payload) {
         Ok(translation_storage) => {
             ApiResponse::new(StatusCode::OK, Some(translation_storage), "success").send()
         }

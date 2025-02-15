@@ -3,16 +3,20 @@ use crate::checkbot::services::Checkbot;
 use crate::db::DbPool;
 use crate::languageai_subscriptions::{SubcriptionLimit, SubcriptionStorageLimit};
 use crate::middleware::{extract_header_user_id, ApiResponse};
+use crate::schema;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::Json;
+use diesel::{AsChangeset, Insertable};
 use serde::Deserialize;
 
 type CheckbotStorageResponse = (StatusCode, Json<ApiResponse<CheckbotStorage>>);
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Insertable)]
+#[diesel(table_name = schema::checkbot_storage)]
 pub(crate) struct CreateCheckbotStoragePayload {
     checkbot_id: i32,
+    title: Option<String>,
     updated_completion: String,
 }
 
@@ -37,11 +41,7 @@ pub(crate) async fn create_checkbot_storage_route(
         .send(),
         false => match Checkbot::find_checkbot_by_id(&pool, &payload.checkbot_id) {
             Ok(checkbot) => {
-                match CheckbotStorage::create_checkbot_storage(
-                    &pool,
-                    &checkbot,
-                    &payload.updated_completion,
-                ) {
+                match CheckbotStorage::create_checkbot_storage(&pool, &checkbot, &payload) {
                     Ok(checkbot_storage) => {
                         ApiResponse::new(StatusCode::CREATED, Some(checkbot_storage), "Created")
                             .send()
@@ -97,17 +97,19 @@ pub(crate) async fn delete_checkbot_storage_route(
     }
 }
 
-#[derive(Deserialize)]
-pub(crate) struct UpdateCheckbotPayload {
+#[derive(Deserialize, AsChangeset)]
+#[diesel(table_name = schema::checkbot_storage)]
+pub(crate) struct UpdateCheckbotStoragePayload {
+    title: Option<String>,
     updated_completion: String,
 }
 
 pub(crate) async fn update_checkbot_storage_route(
     State(pool): State<DbPool>,
     Path(id): Path<i32>,
-    Json(payload): Json<UpdateCheckbotPayload>,
+    Json(payload): Json<UpdateCheckbotStoragePayload>,
 ) -> CheckbotStorageResponse {
-    match CheckbotStorage::update_checkbot_storage(&pool, &id, &payload.updated_completion) {
+    match CheckbotStorage::update_checkbot_storage(&pool, &id, &payload) {
         Ok(checkbot_storage) => {
             ApiResponse::new(StatusCode::OK, Some(checkbot_storage), "success").send()
         }

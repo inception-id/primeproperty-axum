@@ -1,5 +1,7 @@
+use super::routes::{CreateCheckbotStoragePayload, UpdateCheckbotStoragePayload};
 use crate::checkbot::services::Checkbot;
 use crate::db::DbPool;
+use crate::middleware::StorageVisibility;
 use crate::schema::checkbot_storage;
 use chrono::NaiveDateTime;
 use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
@@ -15,22 +17,24 @@ pub struct CheckbotStorage {
     instruction: String,
     content: String,
     updated_completion: String,
+    title: Option<String>,
+    visibility: StorageVisibility,
 }
 
 impl CheckbotStorage {
     pub(super) fn create_checkbot_storage(
         pool: &DbPool,
         checkbot: &Checkbot,
-        updated_completion: &str,
+        payload: &CreateCheckbotStoragePayload,
     ) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         let values = (
             (checkbot_storage::user_id.eq(&checkbot.user_id)),
-            (checkbot_storage::checkbot_id.eq(&checkbot.id)),
             (checkbot_storage::instruction.eq(&checkbot.instruction)),
             (checkbot_storage::content.eq(&checkbot.content)),
-            (checkbot_storage::updated_completion.eq(&updated_completion)),
+            payload,
+            // (checkbot_storage::updated_completion.eq(&updated_completion)),
         );
 
         diesel::insert_into(checkbot_storage::table)
@@ -72,13 +76,13 @@ impl CheckbotStorage {
     pub(super) fn update_checkbot_storage(
         pool: &DbPool,
         checkbot_storage_id: &i32,
-        updated_completion: &str,
+        payload: &UpdateCheckbotStoragePayload,
     ) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         diesel::update(checkbot_storage::table)
             .filter(checkbot_storage::id.eq(checkbot_storage_id))
-            .set(checkbot_storage::updated_completion.eq(updated_completion))
+            .set(payload)
             .get_result(conn)
     }
 
