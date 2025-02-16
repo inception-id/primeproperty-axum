@@ -94,6 +94,7 @@ diesel::table! {
         speech_to_text_limit -> Nullable<Int4>,
         description -> Nullable<Varchar>,
         category -> Nullable<Varchar>,
+        is_active -> Nullable<Bool>,
     }
 }
 
