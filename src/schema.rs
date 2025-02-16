@@ -92,6 +92,8 @@ diesel::table! {
         checkbot_limit -> Nullable<Int4>,
         text_to_speech_limit -> Nullable<Int4>,
         speech_to_text_limit -> Nullable<Int4>,
+        description -> Nullable<Varchar>,
+        category -> Nullable<Varchar>,
     }
 }
 
@@ -133,6 +135,7 @@ diesel::table! {
         audio_url -> Varchar,
         transcription_text -> Text,
         language -> Nullable<Varchar>,
+        audio_minutes -> Nullable<Int4>,
     }
 }
 

@@ -22,6 +22,7 @@ pub(super) struct CreateTranscriptionPayload {
     audio_url: String,
     transcription_text: String,
     language: String,
+    audio_minutes: i32,
 }
 
 async fn create_transcription_route(

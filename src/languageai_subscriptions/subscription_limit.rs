@@ -101,7 +101,13 @@ impl SubcriptionLimit {
                     TextToSpeech::count_current_month_text_to_speech(pool, user_id)
                 }
                 Self::SpeechToText => {
-                    SpeechToText::count_current_month_speech_to_text(pool, user_id)
+                    match SpeechToText::count_current_month_speech_to_text_minutes(pool, user_id) {
+                        Ok(minutes_option) => match minutes_option {
+                            Some(minutes) => Ok(minutes),
+                            None => Ok(0),
+                        },
+                        Err(_) => Ok(0),
+                    }
                 }
                 _ => Ok(0),
             },

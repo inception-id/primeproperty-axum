@@ -96,7 +96,7 @@ pub(crate) async fn update_tts_storage_route(
     Path(id): Path<i32>,
     Json(payload): Json<UpdateTtsStoragePayload>,
 ) -> TtsStorageResponse {
-    match TextToSpeechStorage::update_tts_storage(&pool, &id, &payload.title) { 
+    match TextToSpeechStorage::update_tts_storage(&pool, &id, &payload.title) {
         Ok(tts_storage) => ApiResponse::new(StatusCode::OK, Some(tts_storage), "Success").send(),
         Err(err) => {
             ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
