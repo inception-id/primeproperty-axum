@@ -78,7 +78,7 @@ LEFT JOIN (
 LEFT JOIN (
     SELECT 
         user_id,
-        COUNT(id) AS transcription_count
+        SUM(audio_minutes) AS transcription_count
     FROM speech_to_text
     WHERE created_at > date_trunc('month', now())
     GROUP BY user_id

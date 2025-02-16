@@ -4,7 +4,8 @@ use crate::schema::speech_to_text;
 use crate::utils::get_start_of_month;
 use chrono::NaiveDateTime;
 use diesel::{
-    BoolExpressionMethods, ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl,
+    dsl::sum, BoolExpressionMethods, ExpressionMethods, QueryDsl, QueryResult, Queryable,
+    RunQueryDsl,
 };
 use serde::Serialize;
 
@@ -17,6 +18,7 @@ pub struct SpeechToText {
     pub audio_url: String,
     pub transcription_text: String,
     pub language: Option<String>,
+    audio_minutes: Option<i32>,
 }
 
 impl SpeechToText {
@@ -57,20 +59,20 @@ impl SpeechToText {
             .first(conn)
     }
 
-    pub fn count_current_month_speech_to_text(
+    pub fn count_current_month_speech_to_text_minutes(
         pool: &DbPool,
         user_id: &uuid::Uuid,
-    ) -> QueryResult<i64> {
+    ) -> QueryResult<Option<i64>> {
         let start_of_month = get_start_of_month();
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         speech_to_text::table
-            .count()
+            .select(sum(speech_to_text::audio_minutes))
             .filter(
                 speech_to_text::user_id
                     .eq(user_id)
                     .and(speech_to_text::created_at.gt(start_of_month)),
             )
-            .get_result::<i64>(conn)
+            .get_result::<Option<i64>>(conn)
     }
 }
