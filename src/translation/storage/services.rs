@@ -32,12 +32,10 @@ impl TranslationStorage {
 
         let values = (
             (translation_storage::user_id.eq(&translation.user_id)),
-            // (translation_storage::translation_id.eq(&translation.id)),
             (translation_storage::content_language.eq(&translation.content_language)),
             (translation_storage::target_language.eq(&translation.target_language)),
             (translation_storage::content.eq(&translation.content)),
-            payload, // (translation_storage::updated_completion.eq(payload.title.clone().unwrap())),
-                     // (translation_storage::updated_completion.eq(&payload.updated_completion)),
+            payload, 
         );
 
         diesel::insert_into(translation_storage::table)
@@ -79,7 +77,6 @@ impl TranslationStorage {
     pub(super) fn update_translation_storage(
         pool: &DbPool,
         translation_id: &i32,
-        // updated_completion: &str,
         payload: &UpdateTranslationStoragePayload,
     ) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
