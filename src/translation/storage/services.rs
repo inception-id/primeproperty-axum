@@ -35,7 +35,7 @@ impl TranslationStorage {
             (translation_storage::content_language.eq(&translation.content_language)),
             (translation_storage::target_language.eq(&translation.target_language)),
             (translation_storage::content.eq(&translation.content)),
-            payload, 
+            payload,
         );
 
         diesel::insert_into(translation_storage::table)

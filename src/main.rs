@@ -1,6 +1,7 @@
 mod ai_system_prompt;
 mod checkbot;
 mod db;
+mod language_ai;
 mod languageai_subscriptions;
 mod languages;
 mod middleware;
@@ -10,7 +11,6 @@ mod text_to_speech;
 mod translation;
 mod users;
 mod utils;
-mod language_ai;
 
 use crate::db::build_db_pool;
 use axum::{middleware::from_fn, routing::get, Router};

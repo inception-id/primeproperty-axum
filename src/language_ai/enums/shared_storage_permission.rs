@@ -1,4 +1,3 @@
-
 use crate::schema::sql_types;
 use diesel::deserialize::{self, FromSql, FromSqlRow};
 use diesel::expression::AsExpression;
@@ -14,7 +13,7 @@ pub enum SharedStoragePermission {
     Edit,
 }
 
-impl ToSql<sql_types::SharedStoragePermission, Pg> for SharedStoragePermission{
+impl ToSql<sql_types::SharedStoragePermission, Pg> for SharedStoragePermission {
     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
         match *self {
             SharedStoragePermission::View => out.write_all(b"view")?,
@@ -24,7 +23,7 @@ impl ToSql<sql_types::SharedStoragePermission, Pg> for SharedStoragePermission{
     }
 }
 
-impl FromSql<sql_types::SharedStoragePermission, Pg> for SharedStoragePermission{
+impl FromSql<sql_types::SharedStoragePermission, Pg> for SharedStoragePermission {
     fn from_sql(bytes: PgValue) -> deserialize::Result<Self> {
         match bytes.as_bytes() {
             b"view" => Ok(SharedStoragePermission::View),

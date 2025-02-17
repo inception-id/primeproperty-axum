@@ -79,4 +79,8 @@ pub fn translation_routes() -> Router<DbPool> {
             "/update-storage/:id",
             put(super::storage::update_translation_storage_route),
         )
+        .route(
+            "/storage/shared",
+            post(super::shared_storage::create_translation_shared_storage_route),
+        )
 }
