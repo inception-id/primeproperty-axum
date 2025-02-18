@@ -1,7 +1,9 @@
 use crate::db::DbPool;
 use crate::language_ai::{LanguageaiSharedUserStorageTrait, SharedStoragePermission};
 use crate::schema::shared_translation_storage;
-use crate::translation::shared_storage::routes::CreateSharedTranslationPayload;
+use crate::translation::shared_storage::routes::{
+    CreateSharedTranslationPayload, UpdateSharedTranslationPermissionPayload,
+};
 use crate::users::User;
 use chrono::NaiveDateTime;
 use diesel::{ExpressionMethods, QueryResult, Queryable, RunQueryDsl};
@@ -20,7 +22,9 @@ pub(crate) struct SharedTranslationStorage {
     permission: SharedStoragePermission,
 }
 
-impl LanguageaiSharedUserStorageTrait for SharedTranslationStorage {
+impl LanguageaiSharedUserStorageTrait<shared_translation_storage::table>
+    for SharedTranslationStorage
+{
     type Output = Self;
     type CreatePayload = CreateSharedTranslationPayload;
 
@@ -40,6 +44,19 @@ impl LanguageaiSharedUserStorageTrait for SharedTranslationStorage {
         );
         diesel::insert_into(shared_translation_storage::table)
             .values(data)
+            .get_result(conn)
+    }
+
+    fn update_permission(
+        pool: &DbPool,
+        shared_storage_id: &i32,
+        permission: &SharedStoragePermission,
+    ) -> QueryResult<Self::Output> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        diesel::update(shared_translation_storage::table)
+            .set(shared_translation_storage::permission.eq(permission))
+            .filter(shared_translation_storage::id.eq(shared_storage_id))
             .get_result(conn)
     }
 }
