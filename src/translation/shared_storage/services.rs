@@ -6,7 +6,7 @@ use crate::translation::shared_storage::routes::{
 };
 use crate::users::User;
 use chrono::NaiveDateTime;
-use diesel::{ExpressionMethods, QueryResult, Queryable, RunQueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
 
 #[derive(Debug, Queryable, Serialize)]
@@ -22,9 +22,7 @@ pub(crate) struct SharedTranslationStorage {
     permission: SharedStoragePermission,
 }
 
-impl LanguageaiStorageSharing<shared_translation_storage::table>
-    for SharedTranslationStorage
-{
+impl LanguageaiStorageSharing<shared_translation_storage::table> for SharedTranslationStorage {
     type Output = Self;
     type CreatePayload = CreateSharedTranslationPayload;
 
@@ -58,5 +56,13 @@ impl LanguageaiStorageSharing<shared_translation_storage::table>
             .set(shared_translation_storage::permission.eq(permission))
             .filter(shared_translation_storage::id.eq(shared_storage_id))
             .get_result(conn)
+    }
+
+    fn delete_shared_storage(pool: &DbPool, id: &i32) -> QueryResult<Self::Output> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+        diesel::delete(
+            shared_translation_storage::table.filter(shared_translation_storage::id.eq(id)),
+        )
+        .get_result(conn)
     }
 }

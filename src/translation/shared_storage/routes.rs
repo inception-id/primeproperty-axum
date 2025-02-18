@@ -51,7 +51,12 @@ pub async fn create_translation_shared_storage_route(
                     }
                 }
                 (Ok(owner_data), Err(_)) => {
-                    match SharedTranslationStorage::create_shared_storage(&pool, &payload, &owner_data, &None) {
+                    match SharedTranslationStorage::create_shared_storage(
+                        &pool,
+                        &payload,
+                        &owner_data,
+                        &None,
+                    ) {
                         Ok(shared_translation_storage) => ApiResponse::new(
                             StatusCode::CREATED,
                             Some(shared_translation_storage),
@@ -91,6 +96,20 @@ pub async fn update_shared_translation_permission(
     match SharedTranslationStorage::update_permission(&pool, &id, &payload.permission) {
         Ok(shared_translation) => {
             ApiResponse::new(StatusCode::OK, Some(shared_translation), "Updated").send()
+        }
+        Err(err) => {
+            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+        }
+    }
+}
+
+pub async fn delete_shared_translation_storage(
+    State(pool): State<DbPool>,
+    Path(id): Path<i32>,
+) -> SharedTranslationStorageResponse {
+    match SharedTranslationStorage::delete_shared_storage(&pool, &id) {
+        Ok(shared_translation) => {
+            ApiResponse::new(StatusCode::OK, Some(shared_translation), "Deleted").send()
         }
         Err(err) => {
             ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()

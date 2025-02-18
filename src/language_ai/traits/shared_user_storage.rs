@@ -19,4 +19,6 @@ pub trait LanguageaiStorageSharing<T: diesel::Table> {
         shared_storage_id: &i32,
         permission: &SharedStoragePermission,
     ) -> QueryResult<Self::Output>;
+
+    fn delete_shared_storage(pool: &DbPool, id: &i32) -> QueryResult<Self::Output>;
 }
