@@ -1,5 +1,5 @@
 use crate::db::DbPool;
-use crate::language_ai::{LanguageaiSharedUserStorageTrait, SharedStoragePermission};
+use crate::language_ai::{LanguageaiStorageSharing, SharedStoragePermission};
 use crate::schema::shared_translation_storage;
 use crate::translation::shared_storage::routes::{
     CreateSharedTranslationPayload, UpdateSharedTranslationPermissionPayload,
@@ -22,13 +22,13 @@ pub(crate) struct SharedTranslationStorage {
     permission: SharedStoragePermission,
 }
 
-impl LanguageaiSharedUserStorageTrait<shared_translation_storage::table>
+impl LanguageaiStorageSharing<shared_translation_storage::table>
     for SharedTranslationStorage
 {
     type Output = Self;
     type CreatePayload = CreateSharedTranslationPayload;
 
-    fn create(
+    fn create_shared_storage(
         pool: &DbPool,
         payload: &Self::CreatePayload,
         user: &User,

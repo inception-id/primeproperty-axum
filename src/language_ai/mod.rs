@@ -3,4 +3,4 @@ mod traits;
 
 pub use enums::SharedStoragePermission;
 
-pub use traits::LanguageaiSharedUserStorageTrait;
+pub use traits::LanguageaiStorageSharing;

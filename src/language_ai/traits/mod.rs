@@ -1,3 +1,3 @@
 mod shared_user_storage;
 
-pub use shared_user_storage::LanguageaiSharedUserStorageTrait;
+pub use shared_user_storage::LanguageaiStorageSharing;

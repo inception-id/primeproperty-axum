@@ -1,6 +1,6 @@
 use super::services::SharedTranslationStorage;
 use crate::db::DbPool;
-use crate::language_ai::{LanguageaiSharedUserStorageTrait, SharedStoragePermission};
+use crate::language_ai::{LanguageaiStorageSharing, SharedStoragePermission};
 use crate::middleware::{extract_header_user_id, ApiResponse};
 use crate::schema;
 use crate::users::User;
@@ -30,7 +30,7 @@ pub async fn create_translation_shared_storage_route(
             let shared_user_data = User::find_user_by_email(&pool, &payload.shared_user_email);
             match (owner_data, shared_user_data) {
                 (Ok(owner_data), Ok(shared_user_data)) => {
-                    match SharedTranslationStorage::create(
+                    match SharedTranslationStorage::create_shared_storage(
                         &pool,
                         &payload,
                         &owner_data,
@@ -51,7 +51,7 @@ pub async fn create_translation_shared_storage_route(
                     }
                 }
                 (Ok(owner_data), Err(_)) => {
-                    match SharedTranslationStorage::create(&pool, &payload, &owner_data, &None) {
+                    match SharedTranslationStorage::create_shared_storage(&pool, &payload, &owner_data, &None) {
                         Ok(shared_translation_storage) => ApiResponse::new(
                             StatusCode::CREATED,
                             Some(shared_translation_storage),

@@ -3,11 +3,11 @@ use crate::language_ai::SharedStoragePermission;
 use crate::users::User;
 use diesel::{Insertable, QueryResult};
 
-pub trait LanguageaiSharedUserStorageTrait<T: diesel::Table> {
+pub trait LanguageaiStorageSharing<T: diesel::Table> {
     type Output;
     type CreatePayload: Insertable<T>;
 
-    fn create(
+    fn create_shared_storage(
         pool: &DbPool,
         payload: &Self::CreatePayload,
         user: &User,
