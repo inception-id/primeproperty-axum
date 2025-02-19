@@ -1,7 +1,6 @@
 use super::routes::{CreateTranslationStoragePayload, UpdateTranslationStoragePayload};
 use crate::db::DbPool;
 use crate::language_ai::LanguageaiStorage;
-use crate::middleware::StorageVisibility;
 use crate::schema::translation_storage;
 use crate::translation::services::Translation;
 use chrono::NaiveDateTime;
@@ -20,7 +19,6 @@ pub struct TranslationStorage {
     content: String,
     updated_completion: String,
     title: Option<String>,
-    visibility: StorageVisibility,
 }
 
 impl LanguageaiStorage for TranslationStorage {

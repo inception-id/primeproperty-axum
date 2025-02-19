@@ -1,4 +1,10 @@
 -- Your SQL goes here
+ALTER TABLE translation_storage DROP COLUMN visibility;
+ALTER TABLE checkbot_storage DROP COLUMN visibility;
+ALTER TABLE speech_to_text_storage DROP COLUMN visibility;
+ALTER TABLE text_to_speech_storage DROP COLUMN visibility;
+DROP TYPE storage_visibility;
+
 CREATE TYPE shared_storage_permission AS ENUM('view', 'edit');
 CREATE TABLE shared_translation_storage (
     id SERIAL PRIMARY KEY NOT NULL,

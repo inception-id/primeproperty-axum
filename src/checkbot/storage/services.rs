@@ -1,7 +1,6 @@
 use super::routes::{CreateCheckbotStoragePayload, UpdateCheckbotStoragePayload};
 use crate::checkbot::services::Checkbot;
 use crate::db::DbPool;
-use crate::middleware::StorageVisibility;
 use crate::schema::checkbot_storage;
 use chrono::NaiveDateTime;
 use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
@@ -18,7 +17,6 @@ pub struct CheckbotStorage {
     content: String,
     updated_completion: String,
     title: Option<String>,
-    visibility: StorageVisibility,
 }
 
 impl CheckbotStorage {
