@@ -92,4 +92,8 @@ pub fn translation_routes() -> Router<DbPool> {
             "/storage/shared/:id",
             delete(shared_storage::delete_shared_translation_storage),
         )
+        .route(
+            "/storage/shared/users/:storage_id",
+            get(shared_storage::find_shared_users),
+        )
 }

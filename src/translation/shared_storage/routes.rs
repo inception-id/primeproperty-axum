@@ -1,12 +1,12 @@
 use super::services::SharedTranslationStorage;
 use crate::db::DbPool;
 use crate::language_ai::{LanguageaiStorage, LanguageaiStorageSharing, SharedStoragePermission};
-use crate::middleware::{ApiResponse};
+use crate::middleware::ApiResponse;
 use crate::schema;
 use crate::translation::TranslationStorage;
 use crate::users::User;
 use axum::extract::{Path, State};
-use axum::http::{StatusCode};
+use axum::http::StatusCode;
 use axum::Json;
 use diesel::Insertable;
 use serde::Deserialize;
@@ -110,6 +110,20 @@ pub async fn delete_shared_translation_storage(
     match SharedTranslationStorage::delete_shared_storage(&pool, &id) {
         Ok(shared_translation) => {
             ApiResponse::new(StatusCode::OK, Some(shared_translation), "Deleted").send()
+        }
+        Err(err) => {
+            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+        }
+    }
+}
+
+pub async fn find_shared_users(
+    State(pool): State<DbPool>,
+    Path(storage_id): Path<i32>,
+) -> (StatusCode, Json<ApiResponse<Vec<SharedTranslationStorage>>>) {
+    match SharedTranslationStorage::find_shared_users(&pool, &storage_id) {
+        Ok(shared_translation_users) => {
+            ApiResponse::new(StatusCode::OK, Some(shared_translation_users), "Ok").send()
         }
         Err(err) => {
             ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
