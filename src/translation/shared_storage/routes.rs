@@ -24,62 +24,54 @@ pub async fn create_translation_shared_storage_route(
     headers: HeaderMap,
     Json(payload): Json<CreateSharedTranslationPayload>,
 ) -> SharedTranslationStorageResponse {
-    match extract_header_user_id(headers) {
-        Ok(user_id) => {
-            let owner_data = User::find_user_by_id(&pool, &user_id);
-            let shared_user_data = User::find_user_by_email(&pool, &payload.shared_user_email);
-            match (owner_data, shared_user_data) {
-                (Ok(owner_data), Ok(shared_user_data)) => {
-                    match SharedTranslationStorage::create_shared_storage(
-                        &pool,
-                        &payload,
-                        &owner_data,
-                        &Some(shared_user_data.id),
-                    ) {
-                        Ok(shared_translation_storage) => ApiResponse::new(
-                            StatusCode::CREATED,
-                            Some(shared_translation_storage),
-                            "created",
-                        )
-                        .send(),
-                        Err(err) => ApiResponse::new(
-                            StatusCode::INTERNAL_SERVER_ERROR,
-                            None,
-                            &err.to_string(),
-                        )
-                        .send(),
-                    }
-                }
-                (Ok(owner_data), Err(_)) => {
-                    match SharedTranslationStorage::create_shared_storage(
-                        &pool,
-                        &payload,
-                        &owner_data,
-                        &None,
-                    ) {
-                        Ok(shared_translation_storage) => ApiResponse::new(
-                            StatusCode::CREATED,
-                            Some(shared_translation_storage),
-                            "created",
-                        )
-                        .send(),
-                        Err(err) => ApiResponse::new(
-                            StatusCode::INTERNAL_SERVER_ERROR,
-                            None,
-                            &err.to_string(),
-                        )
-                        .send(),
-                    }
-                }
-                _ => ApiResponse::new(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    None,
-                    "Internal server error",
+    let user_id = extract_header_user_id(headers).expect("Could not extract user id");
+    let owner_data = User::find_user_by_id(&pool, &user_id);
+    let shared_user_data = User::find_user_by_email(&pool, &payload.shared_user_email);
+    match (owner_data, shared_user_data) {
+        (Ok(owner_data), Ok(shared_user_data)) => {
+            match SharedTranslationStorage::create_shared_storage(
+                &pool,
+                &payload,
+                &owner_data,
+                &Some(shared_user_data.id),
+            ) {
+                Ok(shared_translation_storage) => ApiResponse::new(
+                    StatusCode::CREATED,
+                    Some(shared_translation_storage),
+                    "created",
                 )
                 .send(),
+                Err(err) => {
+                    ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string())
+                        .send()
+                }
             }
         }
-        Err(err) => ApiResponse::new(StatusCode::UNAUTHORIZED, None, &err.to_string()).send(),
+        (Ok(owner_data), Err(_)) => {
+            match SharedTranslationStorage::create_shared_storage(
+                &pool,
+                &payload,
+                &owner_data,
+                &None,
+            ) {
+                Ok(shared_translation_storage) => ApiResponse::new(
+                    StatusCode::CREATED,
+                    Some(shared_translation_storage),
+                    "created",
+                )
+                .send(),
+                Err(err) => {
+                    ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string())
+                        .send()
+                }
+            }
+        }
+        _ => ApiResponse::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            None,
+            "Internal server error",
+        )
+        .send(),
     }
 }
 
