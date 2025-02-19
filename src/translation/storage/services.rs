@@ -1,5 +1,6 @@
 use super::routes::{CreateTranslationStoragePayload, UpdateTranslationStoragePayload};
 use crate::db::DbPool;
+use crate::language_ai::LanguageaiStorage;
 use crate::middleware::StorageVisibility;
 use crate::schema::translation_storage;
 use crate::translation::services::Translation;
@@ -10,7 +11,7 @@ use serde::Serialize;
 #[derive(Debug, Queryable, Serialize)]
 pub struct TranslationStorage {
     id: i32,
-    user_id: uuid::Uuid,
+    pub user_id: uuid::Uuid,
     translation_id: i32,
     created_at: NaiveDateTime,
     updated_at: NaiveDateTime,
@@ -20,6 +21,16 @@ pub struct TranslationStorage {
     updated_completion: String,
     title: Option<String>,
     visibility: StorageVisibility,
+}
+
+impl LanguageaiStorage for TranslationStorage {
+    type Output = TranslationStorage;
+
+    fn find_storage_by_id(pool: &DbPool, storage_id: &i32) -> QueryResult<Self::Output> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        translation_storage::table.find(storage_id).get_result(conn)
+    }
 }
 
 impl TranslationStorage {

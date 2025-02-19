@@ -1,9 +1,7 @@
 use crate::db::DbPool;
 use crate::language_ai::{LanguageaiStorageSharing, SharedStoragePermission};
 use crate::schema::shared_translation_storage;
-use crate::translation::shared_storage::routes::{
-    CreateSharedTranslationPayload, UpdateSharedTranslationPermissionPayload,
-};
+use crate::translation::shared_storage::routes::CreateSharedTranslationPayload;
 use crate::users::User;
 use chrono::NaiveDateTime;
 use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
