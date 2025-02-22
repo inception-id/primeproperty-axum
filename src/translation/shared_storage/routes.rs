@@ -59,7 +59,7 @@ pub async fn create_translation_shared_storage_route(
 
     // Prevent self-invitation
     if owner_data.email == payload.shared_user_email {
-        return ApiResponse::new(StatusCode::BAD_REQUEST, None, "Can not invite yourself!").send();
+        return ApiResponse::new(StatusCode::BAD_REQUEST, None, "Can not share to owner!").send();
     }
 
     // Find shared user, if they exist
@@ -127,7 +127,11 @@ pub async fn find_shared_users(
     headers: HeaderMap,
 ) -> (StatusCode, Json<ApiResponse<Vec<SharedTranslationStorage>>>) {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
-    match SharedTranslationStorage::find_shared_users(&pool, &storage_id, &user_id) {
+    let user = match User::find_user_by_id(&pool, &user_id) {
+        Ok(user) => user,
+        Err(err) => return ApiResponse::new(StatusCode::UNAUTHORIZED, None, &err.to_string()).send(),
+    };
+    match SharedTranslationStorage::find_shared_users(&pool, &storage_id, &user.email) {
         Ok(shared_translation_users) => {
             ApiResponse::new(StatusCode::OK, Some(shared_translation_users), "Ok").send()
         }

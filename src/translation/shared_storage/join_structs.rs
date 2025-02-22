@@ -19,6 +19,8 @@ pub(crate) struct SharedTranslationStorageJoinTranslationStorage {
     permission: SharedStoragePermission,
     #[diesel(sql_type=Timestamp)]
     created_at: NaiveDateTime,
+    #[diesel(sql_type=Timestamp)]
+    updated_at: NaiveDateTime,
     #[diesel(sql_type=VarChar)]
     content_language: String,
     #[diesel(sql_type=VarChar)]
