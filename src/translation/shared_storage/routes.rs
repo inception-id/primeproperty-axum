@@ -124,8 +124,10 @@ pub async fn delete_shared_translation_storage(
 pub async fn find_shared_users(
     State(pool): State<DbPool>,
     Path(storage_id): Path<i32>,
+    headers: HeaderMap,
 ) -> (StatusCode, Json<ApiResponse<Vec<SharedTranslationStorage>>>) {
-    match SharedTranslationStorage::find_shared_users(&pool, &storage_id) {
+    let user_id = extract_header_user_id(headers).expect("Could not extract user id");
+    match SharedTranslationStorage::find_shared_users(&pool, &storage_id, &user_id) {
         Ok(shared_translation_users) => {
             ApiResponse::new(StatusCode::OK, Some(shared_translation_users), "Ok").send()
         }

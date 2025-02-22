@@ -1,6 +1,7 @@
+use chrono::NaiveDateTime;
 use crate::language_ai::SharedStoragePermission;
 use crate::schema::sql_types;
-use diesel::sql_types::{Integer, Text, Uuid, VarChar, Nullable};
+use diesel::sql_types::{Integer, Text, Uuid, VarChar, Nullable, Timestamp};
 use diesel::QueryableByName;
 use serde::Serialize;
 
@@ -16,6 +17,8 @@ pub(crate) struct SharedTranslationStorageJoinTranslationStorage {
     owner_email: String,
     #[diesel(sql_type= sql_types::SharedStoragePermission)]
     permission: SharedStoragePermission,
+    #[diesel(sql_type=Timestamp)]
+    created_at: NaiveDateTime,
     #[diesel(sql_type=VarChar)]
     content_language: String,
     #[diesel(sql_type=VarChar)]

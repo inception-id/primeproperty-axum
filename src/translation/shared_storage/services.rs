@@ -84,11 +84,12 @@ impl LanguageaiStorageSharing<shared_translation_storage::table> for SharedTrans
         .get_result(conn)
     }
 
-    fn find_shared_users(pool: &DbPool, storage_id: &i32) -> QueryResult<Vec<Self::Output>> {
+    fn find_shared_users(pool: &DbPool, storage_id: &i32, my_user_id: &uuid::Uuid) -> QueryResult<Vec<Self::Output>> {
+        // filter user own email from showing on the list - user should not be able to remove or update their own share storage 
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         shared_translation_storage::table
-            .filter(shared_translation_storage::translation_storage_id.eq(storage_id))
+            .filter(shared_translation_storage::translation_storage_id.eq(storage_id).and(shared_translation_storage::shared_user_id.ne(my_user_id)))
             .order_by(shared_translation_storage::created_at.desc())
             .get_results(conn)
     }
@@ -116,6 +117,7 @@ impl LanguageaiStorageSharing<shared_translation_storage::table> for SharedTrans
 	            shared_storage.owner_id,
 	            shared_storage.owner_email,
 	            shared_storage.permission,
+	            translation_storage.created_at,
 	            translation_storage.content_language,
 	            translation_storage.target_language,
 	            translation_storage.title,
