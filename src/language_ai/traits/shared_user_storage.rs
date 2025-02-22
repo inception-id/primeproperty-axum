@@ -23,4 +23,10 @@ pub trait LanguageaiStorageSharing<T: diesel::Table> {
     fn delete_shared_storage(pool: &DbPool, id: &i32) -> QueryResult<Self::Output>;
 
     fn find_shared_users(pool: &DbPool, storage_id: &i32) -> QueryResult<Vec<Self::Output>>;
+
+    fn check_shared_storage_and_shared_email(
+        pool: &DbPool,
+        storage_id: &i32,
+        shared_user_email: &str,
+    ) -> QueryResult<Self::Output>;
 }

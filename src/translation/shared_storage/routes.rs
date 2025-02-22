@@ -24,62 +24,65 @@ pub async fn create_translation_shared_storage_route(
     State(pool): State<DbPool>,
     Json(payload): Json<CreateSharedTranslationPayload>,
 ) -> SharedTranslationStorageResponse {
-    match TranslationStorage::find_storage_by_id(&pool, &payload.translation_storage_id) {
-        Ok(translation_storage) => {
-            let owner_data = User::find_user_by_id(&pool, &translation_storage.user_id);
-            let shared_user_data = User::find_user_by_email(&pool, &payload.shared_user_email);
-            match (owner_data, shared_user_data) {
-                (Ok(owner_data), Ok(shared_user_data)) => {
-                    match SharedTranslationStorage::create_shared_storage(
-                        &pool,
-                        &payload,
-                        &owner_data,
-                        &Some(shared_user_data.id),
-                    ) {
-                        Ok(shared_translation_storage) => ApiResponse::new(
-                            StatusCode::CREATED,
-                            Some(shared_translation_storage),
-                            "created",
-                        )
-                        .send(),
-                        Err(err) => ApiResponse::new(
-                            StatusCode::INTERNAL_SERVER_ERROR,
-                            None,
-                            &err.to_string(),
-                        )
-                        .send(),
-                    }
-                }
-                (Ok(owner_data), Err(_)) => {
-                    match SharedTranslationStorage::create_shared_storage(
-                        &pool,
-                        &payload,
-                        &owner_data,
-                        &None,
-                    ) {
-                        Ok(shared_translation_storage) => ApiResponse::new(
-                            StatusCode::CREATED,
-                            Some(shared_translation_storage),
-                            "created",
-                        )
-                        .send(),
-                        Err(err) => ApiResponse::new(
-                            StatusCode::INTERNAL_SERVER_ERROR,
-                            None,
-                            &err.to_string(),
-                        )
-                        .send(),
-                    }
-                }
-                _ => ApiResponse::new(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    None,
-                    "Internal server error",
-                )
-                .send(),
+    // Check if user is already invited
+    if SharedTranslationStorage::check_shared_storage_and_shared_email(
+        &pool,
+        &payload.translation_storage_id,
+        &payload.shared_user_email,
+    )
+    .is_ok()
+    {
+        return ApiResponse::new(
+            StatusCode::BAD_REQUEST,
+            None,
+            "Can not invite the same user twice",
+        )
+        .send();
+    }
+
+    // Find the storage and its owner
+    let translation_storage =
+        match TranslationStorage::find_storage_by_id(&pool, &payload.translation_storage_id) {
+            Ok(storage) => storage,
+            Err(err) => {
+                return ApiResponse::new(StatusCode::BAD_REQUEST, None, &err.to_string()).send()
             }
+        };
+
+    let owner_data = match User::find_user_by_id(&pool, &translation_storage.user_id) {
+        Ok(user) => user,
+        Err(err) => {
+            return ApiResponse::new(StatusCode::BAD_REQUEST, None, &err.to_string()).send()
         }
-        Err(err) => ApiResponse::new(StatusCode::BAD_REQUEST, None, &err.to_string()).send(),
+    };
+
+    // Prevent self-invitation
+    if owner_data.email == payload.shared_user_email {
+        return ApiResponse::new(StatusCode::BAD_REQUEST, None, "Can not invite yourself!").send();
+    }
+
+    // Find shared user, if they exist
+    let shared_user_id = match User::find_user_by_email(&pool, &payload.shared_user_email) {
+        Ok(shared_user) => Some(shared_user.id),
+        Err(_) => None,
+    };
+
+    // Create shared storage
+    match SharedTranslationStorage::create_shared_storage(
+        &pool,
+        &payload,
+        &owner_data,
+        &shared_user_id,
+    ) {
+        Ok(shared_translation_storage) => ApiResponse::new(
+            StatusCode::CREATED,
+            Some(shared_translation_storage),
+            "Created",
+        )
+        .send(),
+        Err(err) => {
+            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+        }
     }
 }
 

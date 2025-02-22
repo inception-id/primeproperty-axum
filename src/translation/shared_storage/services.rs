@@ -4,7 +4,9 @@ use crate::schema::shared_translation_storage;
 use crate::translation::shared_storage::routes::CreateSharedTranslationPayload;
 use crate::users::User;
 use chrono::NaiveDateTime;
-use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
+use diesel::{
+    BoolExpressionMethods, ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl,
+};
 use serde::Serialize;
 
 #[derive(Debug, Queryable, Serialize)]
@@ -71,5 +73,21 @@ impl LanguageaiStorageSharing<shared_translation_storage::table> for SharedTrans
             .filter(shared_translation_storage::translation_storage_id.eq(storage_id))
             .order_by(shared_translation_storage::created_at.desc())
             .get_results(conn)
+    }
+
+    fn check_shared_storage_and_shared_email(
+        pool: &DbPool,
+        storage_id: &i32,
+        shared_user_email: &str,
+    ) -> QueryResult<Self::Output> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        shared_translation_storage::table
+            .filter(
+                shared_translation_storage::translation_storage_id
+                    .eq(storage_id)
+                    .and(shared_translation_storage::shared_user_email.eq(shared_user_email)),
+            )
+            .get_result(conn)
     }
 }
