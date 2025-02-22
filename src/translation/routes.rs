@@ -82,6 +82,10 @@ pub fn translation_routes() -> Router<DbPool> {
         )
         .route(
             "/storage/shared",
+            get(shared_storage::find_user_shared_storage),
+        )
+        .route(
+            "/storage/shared",
             post(shared_storage::create_translation_shared_storage_route),
         )
         .route(

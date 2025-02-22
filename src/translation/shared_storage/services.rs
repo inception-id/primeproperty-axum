@@ -8,6 +8,7 @@ use diesel::{
     BoolExpressionMethods, ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl,
 };
 use serde::Serialize;
+use crate::translation::shared_storage::join_structs::SharedTranslationStorageJoinTranslationStorage;
 
 #[derive(Debug, Queryable, Serialize)]
 pub(crate) struct SharedTranslationStorage {
@@ -25,7 +26,24 @@ pub(crate) struct SharedTranslationStorage {
 impl LanguageaiStorageSharing<shared_translation_storage::table> for SharedTranslationStorage {
     type Output = Self;
     type CreatePayload = CreateSharedTranslationPayload;
+    type SharedJoinStorageOutput = SharedTranslationStorageJoinTranslationStorage;
 
+    fn check_shared_storage_and_shared_email(
+        pool: &DbPool,
+        storage_id: &i32,
+        shared_user_email: &str,
+    ) -> QueryResult<Self::Output> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        shared_translation_storage::table
+            .filter(
+                shared_translation_storage::translation_storage_id
+                    .eq(storage_id)
+                    .and(shared_translation_storage::shared_user_email.eq(shared_user_email)),
+            )
+            .get_result(conn)
+    }
+    
     fn create_shared_storage(
         pool: &DbPool,
         payload: &Self::CreatePayload,
@@ -45,7 +63,7 @@ impl LanguageaiStorageSharing<shared_translation_storage::table> for SharedTrans
             .get_result(conn)
     }
 
-    fn update_permission(
+    fn update_storage_permission(
         pool: &DbPool,
         shared_storage_id: &i32,
         permission: &SharedStoragePermission,
@@ -75,19 +93,40 @@ impl LanguageaiStorageSharing<shared_translation_storage::table> for SharedTrans
             .get_results(conn)
     }
 
-    fn check_shared_storage_and_shared_email(
-        pool: &DbPool,
-        storage_id: &i32,
-        shared_user_email: &str,
-    ) -> QueryResult<Self::Output> {
-        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+    fn find_shared_join_storage(pool: &DbPool, user_id: &uuid::Uuid) -> QueryResult<Vec<Self::SharedJoinStorageOutput>> {
 
-        shared_translation_storage::table
-            .filter(
-                shared_translation_storage::translation_storage_id
-                    .eq(storage_id)
-                    .and(shared_translation_storage::shared_user_email.eq(shared_user_email)),
+        let user_id_string = user_id.to_string();
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+        
+        let sql_query = format!("
+            WITH shared_storage AS (
+	            SELECT DISTINCT ON (translation_storage_id) 
+		            id as shared_storage_id,
+		            translation_storage_id as storage_id,
+		            user_id as owner_id,
+		            user_email as owner_email,
+		            permission
+	            FROM shared_translation_storage
+	            WHERE user_id='{user_id_string}' 
+	            OR shared_user_id='{user_id_string}'
             )
-            .get_result(conn)
+            SELECT
+	            shared_storage.shared_storage_id,
+	            shared_storage.storage_id,
+	            shared_storage.owner_id,
+	            shared_storage.owner_email,
+	            shared_storage.permission,
+	            translation_storage.content_language,
+	            translation_storage.target_language,
+	            translation_storage.title,
+	            translation_storage.content,
+	            translation_storage.updated_completion
+            FROM shared_storage 
+            LEFT JOIN translation_storage
+                on shared_storage.storage_id = translation_storage.id
+            ORDER BY shared_storage.shared_storage_id DESC;
+        ");
+        
+        diesel::sql_query(sql_query).load::<Self::SharedJoinStorageOutput>(conn)
     }
 }

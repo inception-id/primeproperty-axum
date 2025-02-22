@@ -1,15 +1,16 @@
 use super::services::SharedTranslationStorage;
 use crate::db::DbPool;
 use crate::language_ai::{LanguageaiStorage, LanguageaiStorageSharing, SharedStoragePermission};
-use crate::middleware::ApiResponse;
+use crate::middleware::{extract_header_user_id, ApiResponse};
 use crate::schema;
 use crate::translation::TranslationStorage;
 use crate::users::User;
 use axum::extract::{Path, State};
-use axum::http::StatusCode;
+use axum::http::{HeaderMap, StatusCode};
 use axum::Json;
 use diesel::Insertable;
 use serde::Deserialize;
+use crate::translation::shared_storage::join_structs::SharedTranslationStorageJoinTranslationStorage;
 
 type SharedTranslationStorageResponse = (StatusCode, Json<ApiResponse<SharedTranslationStorage>>);
 
@@ -96,7 +97,7 @@ pub async fn update_shared_translation_permission(
     Path(id): Path<i32>,
     Json(payload): Json<UpdateSharedTranslationPermissionPayload>,
 ) -> SharedTranslationStorageResponse {
-    match SharedTranslationStorage::update_permission(&pool, &id, &payload.permission) {
+    match SharedTranslationStorage::update_storage_permission(&pool, &id, &payload.permission) {
         Ok(shared_translation) => {
             ApiResponse::new(StatusCode::OK, Some(shared_translation), "Updated").send()
         }
@@ -131,5 +132,16 @@ pub async fn find_shared_users(
         Err(err) => {
             ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
         }
+    }
+}
+
+pub async fn find_user_shared_storage(
+   State(pool): State<DbPool>,
+   headers: HeaderMap,
+) -> (StatusCode, Json<ApiResponse<Vec<SharedTranslationStorageJoinTranslationStorage>>>) {
+    let user_id = extract_header_user_id(headers).expect("Could not extract user id");
+    match SharedTranslationStorage::find_shared_join_storage(&pool, &user_id) { 
+        Ok(shared_join_storage) => ApiResponse::new(StatusCode::OK, Some(shared_join_storage), "Ok").send(),
+        Err(err) => ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send(),
     }
 }
