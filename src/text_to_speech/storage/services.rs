@@ -1,5 +1,4 @@
 use crate::db::DbPool;
-use crate::middleware::StorageVisibility;
 use crate::schema::text_to_speech_storage;
 use crate::text_to_speech::services::TextToSpeech;
 use chrono::NaiveDateTime;
@@ -17,7 +16,6 @@ pub struct TextToSpeechStorage {
     audio_url: String,
     voice: String,
     title: Option<String>,
-    visibility: StorageVisibility,
 }
 
 impl TextToSpeechStorage {

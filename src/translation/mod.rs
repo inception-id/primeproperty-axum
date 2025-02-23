@@ -1,5 +1,6 @@
 mod routes;
 mod services;
+mod shared_storage;
 mod storage;
 
 pub use routes::translation_routes;

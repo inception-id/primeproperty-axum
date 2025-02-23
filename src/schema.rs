@@ -6,8 +6,8 @@ pub mod sql_types {
     pub struct PaymentStatus;
 
     #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
-    #[diesel(postgres_type(name = "storage_visibility"))]
-    pub struct StorageVisibility;
+    #[diesel(postgres_type(name = "shared_storage_permission"))]
+    pub struct SharedStoragePermission;
 
     #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
     #[diesel(postgres_type(name = "subscription_period"))]
@@ -39,9 +39,6 @@ diesel::table! {
 }
 
 diesel::table! {
-    use diesel::sql_types::*;
-    use super::sql_types::StorageVisibility;
-
     checkbot_storage (id) {
         id -> Int4,
         user_id -> Uuid,
@@ -52,7 +49,6 @@ diesel::table! {
         content -> Text,
         updated_completion -> Text,
         title -> Nullable<Varchar>,
-        visibility -> StorageVisibility,
     }
 }
 
@@ -128,6 +124,23 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::SharedStoragePermission;
+
+    shared_translation_storage (id) {
+        id -> Int4,
+        user_id -> Uuid,
+        shared_user_id -> Nullable<Uuid>,
+        translation_storage_id -> Int4,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+        user_email -> Varchar,
+        shared_user_email -> Varchar,
+        permission -> SharedStoragePermission,
+    }
+}
+
+diesel::table! {
     speech_to_text (id) {
         id -> Int4,
         user_id -> Uuid,
@@ -141,9 +154,6 @@ diesel::table! {
 }
 
 diesel::table! {
-    use diesel::sql_types::*;
-    use super::sql_types::StorageVisibility;
-
     speech_to_text_storage (id) {
         id -> Int4,
         user_id -> Uuid,
@@ -154,7 +164,6 @@ diesel::table! {
         updated_transcription_text -> Text,
         language -> Nullable<Varchar>,
         title -> Nullable<Varchar>,
-        visibility -> StorageVisibility,
     }
 }
 
@@ -171,9 +180,6 @@ diesel::table! {
 }
 
 diesel::table! {
-    use diesel::sql_types::*;
-    use super::sql_types::StorageVisibility;
-
     text_to_speech_storage (id) {
         id -> Int4,
         user_id -> Uuid,
@@ -184,7 +190,6 @@ diesel::table! {
         audio_url -> Varchar,
         voice -> Varchar,
         title -> Nullable<Varchar>,
-        visibility -> StorageVisibility,
     }
 }
 
@@ -203,9 +208,6 @@ diesel::table! {
 }
 
 diesel::table! {
-    use diesel::sql_types::*;
-    use super::sql_types::StorageVisibility;
-
     translation_storage (id) {
         id -> Int4,
         user_id -> Uuid,
@@ -217,7 +219,6 @@ diesel::table! {
         content -> Text,
         updated_completion -> Text,
         title -> Nullable<Varchar>,
-        visibility -> StorageVisibility,
     }
 }
 
@@ -239,6 +240,7 @@ diesel::joinable!(languageai_subscription_payments -> users (user_id));
 diesel::joinable!(languageai_subscriptions -> languageai_subscription_payments (languageai_subscription_payment_id));
 diesel::joinable!(languageai_subscriptions -> languageai_subscription_plans (languageai_subscription_plan_id));
 diesel::joinable!(languageai_subscriptions -> users (user_id));
+diesel::joinable!(shared_translation_storage -> translation_storage (translation_storage_id));
 diesel::joinable!(speech_to_text -> users (user_id));
 diesel::joinable!(speech_to_text_storage -> speech_to_text (speech_to_text_id));
 diesel::joinable!(speech_to_text_storage -> users (user_id));
@@ -257,6 +259,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     languageai_subscription_plans,
     languageai_subscriptions,
     languages,
+    shared_translation_storage,
     speech_to_text,
     speech_to_text_storage,
     text_to_speech,

@@ -1,6 +1,5 @@
 use super::routes::{CreateTranscriptionStoragePayload, UpdateTranscriptionStoragePayload};
 use crate::db::DbPool;
-use crate::middleware::StorageVisibility;
 use crate::schema::speech_to_text_storage;
 use crate::speech_to_text::services::SpeechToText;
 use chrono::NaiveDateTime;
@@ -18,7 +17,6 @@ pub struct SpeechToTextStorage {
     updated_transcription_text: String,
     language: Option<String>,
     title: Option<String>,
-    visibility: StorageVisibility,
 }
 
 impl SpeechToTextStorage {

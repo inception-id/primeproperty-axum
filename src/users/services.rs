@@ -4,12 +4,12 @@ use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
 
 #[derive(Queryable, Debug, Clone, Serialize)]
-pub(super) struct User {
-    id: uuid::Uuid,
+pub struct User {
+    pub id: uuid::Uuid,
     supertokens_user_id: Option<String>,
     created_at: chrono::NaiveDateTime,
     updated_at: chrono::NaiveDateTime,
-    email: String,
+    pub email: String,
 }
 
 impl User {
@@ -28,8 +28,13 @@ impl User {
             .get_result::<User>(conn)
     }
 
-    pub(super) fn find_user_by_email(pool: &DbPool, email: &str) -> QueryResult<User> {
+    pub fn find_user_by_email(pool: &DbPool, email: &str) -> QueryResult<User> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
         users::table.filter(users::email.eq(email)).get_result(conn)
+    }
+
+    pub fn find_user_by_id(pool: &DbPool, id: &uuid::Uuid) -> QueryResult<User> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+        users::table.filter(users::id.eq(id)).get_result(conn)
     }
 }
