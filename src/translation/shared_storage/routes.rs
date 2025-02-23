@@ -16,7 +16,7 @@ type SharedTranslationStorageResponse = (StatusCode, Json<ApiResponse<SharedTran
 
 #[derive(Deserialize, Insertable)]
 #[diesel(table_name = schema::shared_translation_storage)]
-pub(crate) struct CreateSharedTranslationPayload {
+pub struct CreateSharedTranslationPayload {
     shared_user_email: String,
     translation_storage_id: i32,
 }
