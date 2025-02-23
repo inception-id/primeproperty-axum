@@ -6,7 +6,7 @@ use diesel::QueryableByName;
 use serde::Serialize;
 
 #[derive(QueryableByName, Debug, Serialize)]
-pub(crate) struct SharedTranslationStorageJoinTranslationStorage {
+pub struct SharedTranslationStorageJoinTranslationStorage {
     #[diesel(sql_type=Integer)]
     shared_storage_id: i32,
     #[diesel(sql_type=Integer)]

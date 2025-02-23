@@ -11,7 +11,7 @@ use serde::Serialize;
 use crate::translation::shared_storage::join_structs::SharedTranslationStorageJoinTranslationStorage;
 
 #[derive(Debug, Queryable, Serialize)]
-pub(crate) struct SharedTranslationStorage {
+pub struct SharedTranslationStorage {
     id: i32,
     user_id: uuid::Uuid,
     shared_user_id: Option<uuid::Uuid>,
@@ -134,4 +134,15 @@ impl LanguageaiStorageSharing<shared_translation_storage::table> for SharedTrans
         
         diesel::sql_query(sql_query).load::<Self::SharedJoinStorageOutput>(conn)
     }
+}
+
+impl SharedTranslationStorage {
+   pub fn upsert_new_id_to_invited_email(pool: &DbPool, new_id: &uuid::Uuid, email: &str) -> QueryResult<Vec<Self>> {
+       let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+       
+       diesel::update(shared_translation_storage::table)
+           .set(shared_translation_storage::shared_user_id.eq(new_id))
+           .filter(shared_translation_storage::shared_user_email.eq(email))
+           .get_results(conn)
+   }
 }
