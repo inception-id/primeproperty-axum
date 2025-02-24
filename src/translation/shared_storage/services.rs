@@ -89,7 +89,6 @@ impl LanguageAiSharedStorageUser<shared_translation_storage::table> for SharedTr
         storage_id: &i32,
         my_email: &str,
     ) -> QueryResult<Vec<Self::Output>> {
-        // filter user own email from showing on the list - user should not be able to remove or update their own share storage
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         shared_translation_storage::table
@@ -144,10 +143,8 @@ impl LanguageAiSharedStorageUser<shared_translation_storage::table> for SharedTr
 
         diesel::sql_query(sql_query).load::<Self::SharedStorage>(conn)
     }
-}
 
-impl SharedTranslationUser {
-    pub fn upsert_new_id_to_invited_email(
+    fn update_invited_email_user_id(
         pool: &DbPool,
         new_id: &uuid::Uuid,
         email: &str,

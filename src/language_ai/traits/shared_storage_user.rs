@@ -39,4 +39,10 @@ pub trait LanguageAiSharedStorageUser<T: diesel::Table> {
         pool: &DbPool,
         user_id: &uuid::Uuid,
     ) -> QueryResult<Vec<Self::SharedStorage>>;
+
+    fn update_invited_email_user_id(
+        pool: &DbPool,
+        new_id: &uuid::Uuid,
+        email: &str,
+    ) -> QueryResult<Vec<Self::Output>>;
 }

@@ -1,5 +1,6 @@
 use super::services::User;
 use crate::db::DbPool;
+use crate::language_ai::LanguageAiSharedStorageUser;
 use crate::middleware::ApiResponse;
 use crate::translation::SharedTranslationUser;
 use crate::users::request::CreateUserPayload;
@@ -31,7 +32,7 @@ async fn create_user_route(
                     }
                 };
 
-            let _shared_translation_storage = SharedTranslationUser::upsert_new_id_to_invited_email(
+            let _shared_translation_storage = SharedTranslationUser::update_invited_email_user_id(
                 &pool,
                 &new_user.id,
                 &new_user.email,
