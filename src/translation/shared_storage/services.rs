@@ -11,7 +11,7 @@ use diesel::{
 use serde::Serialize;
 
 #[derive(Debug, Queryable, Serialize)]
-pub struct SharedTranslationStorage {
+pub struct SharedTranslationUser {
     id: i32,
     user_id: uuid::Uuid,
     shared_user_id: Option<uuid::Uuid>,
@@ -23,7 +23,7 @@ pub struct SharedTranslationStorage {
     permission: SharedStoragePermission,
 }
 
-impl LanguageAiSharedStorageUser<shared_translation_storage::table> for SharedTranslationStorage {
+impl LanguageAiSharedStorageUser<shared_translation_storage::table> for SharedTranslationUser {
     type Output = Self;
     type CreatePayload = CreateSharedTranslationPayload;
     type SharedStorage = SharedTranslationStorageJoinTranslationStorage;
@@ -146,7 +146,7 @@ impl LanguageAiSharedStorageUser<shared_translation_storage::table> for SharedTr
     }
 }
 
-impl SharedTranslationStorage {
+impl SharedTranslationUser {
     pub fn upsert_new_id_to_invited_email(
         pool: &DbPool,
         new_id: &uuid::Uuid,

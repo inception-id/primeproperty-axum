@@ -7,4 +7,4 @@ pub use routes::{
     find_user_shared_storage, update_shared_translation_permission,
 };
 
-pub use services::SharedTranslationStorage;
+pub use services::SharedTranslationUser;
