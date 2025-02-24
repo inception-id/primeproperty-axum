@@ -1,5 +1,5 @@
-mod shared_user_storage;
+mod shared_storage_user;
 mod storage;
 
-pub use shared_user_storage::LanguageaiStorageSharing;
+pub use shared_storage_user::LanguageAiSharedStorageUser;
 pub use storage::LanguageaiStorage;

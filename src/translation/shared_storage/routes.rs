@@ -1,8 +1,9 @@
 use super::services::SharedTranslationStorage;
 use crate::db::DbPool;
-use crate::language_ai::{LanguageaiStorage, LanguageaiStorageSharing, SharedStoragePermission};
+use crate::language_ai::{LanguageAiSharedStorageUser, LanguageaiStorage, SharedStoragePermission};
 use crate::middleware::{extract_header_user_id, ApiResponse};
 use crate::schema;
+use crate::translation::shared_storage::join_structs::SharedTranslationStorageJoinTranslationStorage;
 use crate::translation::TranslationStorage;
 use crate::users::User;
 use axum::extract::{Path, State};
@@ -10,7 +11,6 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::Json;
 use diesel::Insertable;
 use serde::Deserialize;
-use crate::translation::shared_storage::join_structs::SharedTranslationStorageJoinTranslationStorage;
 
 type SharedTranslationStorageResponse = (StatusCode, Json<ApiResponse<SharedTranslationStorage>>);
 
@@ -129,7 +129,9 @@ pub async fn find_shared_users(
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
     let user = match User::find_user_by_id(&pool, &user_id) {
         Ok(user) => user,
-        Err(err) => return ApiResponse::new(StatusCode::UNAUTHORIZED, None, &err.to_string()).send(),
+        Err(err) => {
+            return ApiResponse::new(StatusCode::UNAUTHORIZED, None, &err.to_string()).send()
+        }
     };
     match SharedTranslationStorage::find_shared_users(&pool, &storage_id, &user.email) {
         Ok(shared_translation_users) => {
@@ -142,12 +144,19 @@ pub async fn find_shared_users(
 }
 
 pub async fn find_user_shared_storage(
-   State(pool): State<DbPool>,
-   headers: HeaderMap,
-) -> (StatusCode, Json<ApiResponse<Vec<SharedTranslationStorageJoinTranslationStorage>>>) {
+    State(pool): State<DbPool>,
+    headers: HeaderMap,
+) -> (
+    StatusCode,
+    Json<ApiResponse<Vec<SharedTranslationStorageJoinTranslationStorage>>>,
+) {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
-    match SharedTranslationStorage::find_shared_join_storage(&pool, &user_id) { 
-        Ok(shared_join_storage) => ApiResponse::new(StatusCode::OK, Some(shared_join_storage), "Ok").send(),
-        Err(err) => ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send(),
+    match SharedTranslationStorage::find_shared_join_storage(&pool, &user_id) {
+        Ok(shared_join_storage) => {
+            ApiResponse::new(StatusCode::OK, Some(shared_join_storage), "Ok").send()
+        }
+        Err(err) => {
+            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+        }
     }
 }

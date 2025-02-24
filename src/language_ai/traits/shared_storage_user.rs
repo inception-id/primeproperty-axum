@@ -3,7 +3,7 @@ use crate::language_ai::SharedStoragePermission;
 use crate::users::User;
 use diesel::{Insertable, QueryResult};
 
-pub trait LanguageaiStorageSharing<T: diesel::Table> {
+pub trait LanguageAiSharedStorageUser<T: diesel::Table> {
     type Output;
     type CreatePayload: Insertable<T>;
     type SharedJoinStorageOutput;
@@ -13,7 +13,7 @@ pub trait LanguageaiStorageSharing<T: diesel::Table> {
         storage_id: &i32,
         shared_user_email: &str,
     ) -> QueryResult<Self::Output>;
-    
+
     fn create_shared_storage(
         pool: &DbPool,
         payload: &Self::CreatePayload,
@@ -29,7 +29,14 @@ pub trait LanguageaiStorageSharing<T: diesel::Table> {
 
     fn delete_shared_storage(pool: &DbPool, id: &i32) -> QueryResult<Self::Output>;
 
-    fn find_shared_users(pool: &DbPool, storage_id: &i32, my_email: &str) -> QueryResult<Vec<Self::Output>>;
-    
-    fn find_shared_join_storage(pool: &DbPool, user_id: &uuid::Uuid) -> QueryResult<Vec<Self::SharedJoinStorageOutput>>;
+    fn find_shared_users(
+        pool: &DbPool,
+        storage_id: &i32,
+        my_email: &str,
+    ) -> QueryResult<Vec<Self::Output>>;
+
+    fn find_shared_join_storage(
+        pool: &DbPool,
+        user_id: &uuid::Uuid,
+    ) -> QueryResult<Vec<Self::SharedJoinStorageOutput>>;
 }
