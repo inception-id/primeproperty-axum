@@ -6,28 +6,28 @@ use diesel::{Insertable, QueryResult};
 pub trait LanguageAiSharedStorageUser<T: diesel::Table> {
     type Output;
     type CreatePayload: Insertable<T>;
-    type SharedJoinStorageOutput;
+    type SharedStorage;
 
-    fn check_shared_storage_and_shared_email(
+    fn check_shared_user(
         pool: &DbPool,
         storage_id: &i32,
         shared_user_email: &str,
     ) -> QueryResult<Self::Output>;
 
-    fn create_shared_storage(
+    fn create_shared_user(
         pool: &DbPool,
         payload: &Self::CreatePayload,
         user: &User,
         shared_user: &Option<uuid::Uuid>,
     ) -> QueryResult<Self::Output>;
 
-    fn update_storage_permission(
+    fn update_shared_user_permission(
         pool: &DbPool,
         shared_storage_id: &i32,
         permission: &SharedStoragePermission,
     ) -> QueryResult<Self::Output>;
 
-    fn delete_shared_storage(pool: &DbPool, id: &i32) -> QueryResult<Self::Output>;
+    fn delete_shared_user(pool: &DbPool, id: &i32) -> QueryResult<Self::Output>;
 
     fn find_shared_users(
         pool: &DbPool,
@@ -35,8 +35,8 @@ pub trait LanguageAiSharedStorageUser<T: diesel::Table> {
         my_email: &str,
     ) -> QueryResult<Vec<Self::Output>>;
 
-    fn find_shared_join_storage(
+    fn find_shared_storages(
         pool: &DbPool,
         user_id: &uuid::Uuid,
-    ) -> QueryResult<Vec<Self::SharedJoinStorageOutput>>;
+    ) -> QueryResult<Vec<Self::SharedStorage>>;
 }

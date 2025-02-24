@@ -26,9 +26,9 @@ pub struct SharedTranslationStorage {
 impl LanguageAiSharedStorageUser<shared_translation_storage::table> for SharedTranslationStorage {
     type Output = Self;
     type CreatePayload = CreateSharedTranslationPayload;
-    type SharedJoinStorageOutput = SharedTranslationStorageJoinTranslationStorage;
+    type SharedStorage = SharedTranslationStorageJoinTranslationStorage;
 
-    fn check_shared_storage_and_shared_email(
+    fn check_shared_user(
         pool: &DbPool,
         storage_id: &i32,
         shared_user_email: &str,
@@ -44,7 +44,7 @@ impl LanguageAiSharedStorageUser<shared_translation_storage::table> for SharedTr
             .get_result(conn)
     }
 
-    fn create_shared_storage(
+    fn create_shared_user(
         pool: &DbPool,
         payload: &Self::CreatePayload,
         user: &User,
@@ -63,7 +63,7 @@ impl LanguageAiSharedStorageUser<shared_translation_storage::table> for SharedTr
             .get_result(conn)
     }
 
-    fn update_storage_permission(
+    fn update_shared_user_permission(
         pool: &DbPool,
         shared_storage_id: &i32,
         permission: &SharedStoragePermission,
@@ -76,7 +76,7 @@ impl LanguageAiSharedStorageUser<shared_translation_storage::table> for SharedTr
             .get_result(conn)
     }
 
-    fn delete_shared_storage(pool: &DbPool, id: &i32) -> QueryResult<Self::Output> {
+    fn delete_shared_user(pool: &DbPool, id: &i32) -> QueryResult<Self::Output> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
         diesel::delete(
             shared_translation_storage::table.filter(shared_translation_storage::id.eq(id)),
@@ -102,10 +102,10 @@ impl LanguageAiSharedStorageUser<shared_translation_storage::table> for SharedTr
             .get_results(conn)
     }
 
-    fn find_shared_join_storage(
+    fn find_shared_storages(
         pool: &DbPool,
         user_id: &uuid::Uuid,
-    ) -> QueryResult<Vec<Self::SharedJoinStorageOutput>> {
+    ) -> QueryResult<Vec<Self::SharedStorage>> {
         let user_id_string = user_id.to_string();
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
@@ -142,7 +142,7 @@ impl LanguageAiSharedStorageUser<shared_translation_storage::table> for SharedTr
         "
         );
 
-        diesel::sql_query(sql_query).load::<Self::SharedJoinStorageOutput>(conn)
+        diesel::sql_query(sql_query).load::<Self::SharedStorage>(conn)
     }
 }
 

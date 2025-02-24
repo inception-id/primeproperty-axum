@@ -26,7 +26,7 @@ pub async fn create_translation_shared_storage_route(
     Json(payload): Json<CreateSharedTranslationPayload>,
 ) -> SharedTranslationStorageResponse {
     // Check if user is already invited
-    if SharedTranslationStorage::check_shared_storage_and_shared_email(
+    if SharedTranslationStorage::check_shared_user(
         &pool,
         &payload.translation_storage_id,
         &payload.shared_user_email,
@@ -69,7 +69,7 @@ pub async fn create_translation_shared_storage_route(
     };
 
     // Create shared storage
-    match SharedTranslationStorage::create_shared_storage(
+    match SharedTranslationStorage::create_shared_user(
         &pool,
         &payload,
         &owner_data,
@@ -97,7 +97,7 @@ pub async fn update_shared_translation_permission(
     Path(id): Path<i32>,
     Json(payload): Json<UpdateSharedTranslationPermissionPayload>,
 ) -> SharedTranslationStorageResponse {
-    match SharedTranslationStorage::update_storage_permission(&pool, &id, &payload.permission) {
+    match SharedTranslationStorage::update_shared_user_permission(&pool, &id, &payload.permission) {
         Ok(shared_translation) => {
             ApiResponse::new(StatusCode::OK, Some(shared_translation), "Updated").send()
         }
@@ -111,7 +111,7 @@ pub async fn delete_shared_translation_storage(
     State(pool): State<DbPool>,
     Path(id): Path<i32>,
 ) -> SharedTranslationStorageResponse {
-    match SharedTranslationStorage::delete_shared_storage(&pool, &id) {
+    match SharedTranslationStorage::delete_shared_user(&pool, &id) {
         Ok(shared_translation) => {
             ApiResponse::new(StatusCode::OK, Some(shared_translation), "Deleted").send()
         }
@@ -151,7 +151,7 @@ pub async fn find_user_shared_storage(
     Json<ApiResponse<Vec<SharedTranslationStorageJoinTranslationStorage>>>,
 ) {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
-    match SharedTranslationStorage::find_shared_join_storage(&pool, &user_id) {
+    match SharedTranslationStorage::find_shared_storages(&pool, &user_id) {
         Ok(shared_join_storage) => {
             ApiResponse::new(StatusCode::OK, Some(shared_join_storage), "Ok").send()
         }
