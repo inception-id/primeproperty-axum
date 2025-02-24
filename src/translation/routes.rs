@@ -82,22 +82,22 @@ pub fn translation_routes() -> Router<DbPool> {
         )
         .route(
             "/storage/shared",
-            post(shared_storage::create_translation_shared_storage_route),
-        )
-        .route(
-            "/storage/shared/permission/:id",
-            put(shared_storage::update_shared_translation_permission),
-        )
-        .route(
-            "/storage/shared/:id",
-            delete(shared_storage::delete_shared_translation_storage),
+            post(shared_storage::create_shared_translation_user_route),
         )
         .route(
             "/storage/shared",
-            get(shared_storage::find_user_shared_storage),
+            get(shared_storage::find_shared_translation_storage_route),
+        )
+        .route(
+            "/storage/shared/:id",
+            delete(shared_storage::delete_shared_translation_user_route),
+        )
+        .route(
+            "/storage/shared/permission/:id",
+            put(shared_storage::update_shared_translation_user_permission_route),
         )
         .route(
             "/storage/shared/users/:storage_id",
-            get(shared_storage::find_shared_users),
+            get(shared_storage::find_shared_translation_users_route),
         )
 }

@@ -2,7 +2,7 @@ use crate::db::DbPool;
 use crate::language_ai::{LanguageAiSharedStorageUser, SharedStoragePermission};
 use crate::schema::shared_translation_storage;
 use crate::translation::shared_storage::join_structs::SharedTranslationStorageJoinTranslationStorage;
-use crate::translation::shared_storage::routes::CreateSharedTranslationPayload;
+use crate::translation::shared_storage::routes::CreateSharedTranslationUserPayload;
 use crate::users::User;
 use chrono::NaiveDateTime;
 use diesel::{
@@ -25,7 +25,7 @@ pub struct SharedTranslationUser {
 
 impl LanguageAiSharedStorageUser<shared_translation_storage::table> for SharedTranslationUser {
     type Output = Self;
-    type CreatePayload = CreateSharedTranslationPayload;
+    type CreatePayload = CreateSharedTranslationUserPayload;
     type SharedStorage = SharedTranslationStorageJoinTranslationStorage;
 
     fn check_shared_user(

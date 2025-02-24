@@ -16,14 +16,14 @@ type SharedTranslationUserResponse = (StatusCode, Json<ApiResponse<SharedTransla
 
 #[derive(Deserialize, Insertable)]
 #[diesel(table_name = schema::shared_translation_storage)]
-pub struct CreateSharedTranslationPayload {
+pub struct CreateSharedTranslationUserPayload {
     shared_user_email: String,
     translation_storage_id: i32,
 }
 
-pub async fn create_translation_shared_storage_route(
+pub async fn create_shared_translation_user_route(
     State(pool): State<DbPool>,
-    Json(payload): Json<CreateSharedTranslationPayload>,
+    Json(payload): Json<CreateSharedTranslationUserPayload>,
 ) -> SharedTranslationUserResponse {
     // Check if user is already invited
     if SharedTranslationUser::check_shared_user(
@@ -83,14 +83,14 @@ pub async fn create_translation_shared_storage_route(
 }
 
 #[derive(Deserialize)]
-pub(crate) struct UpdateSharedTranslationPermissionPayload {
+pub(crate) struct UpdateSharedTranslationUserPermissionPayload {
     permission: SharedStoragePermission,
 }
 
-pub async fn update_shared_translation_permission(
+pub async fn update_shared_translation_user_permission_route(
     State(pool): State<DbPool>,
     Path(id): Path<i32>,
-    Json(payload): Json<UpdateSharedTranslationPermissionPayload>,
+    Json(payload): Json<UpdateSharedTranslationUserPermissionPayload>,
 ) -> SharedTranslationUserResponse {
     match SharedTranslationUser::update_shared_user_permission(&pool, &id, &payload.permission) {
         Ok(shared_translation) => {
@@ -102,7 +102,7 @@ pub async fn update_shared_translation_permission(
     }
 }
 
-pub async fn delete_shared_translation_storage(
+pub async fn delete_shared_translation_user_route(
     State(pool): State<DbPool>,
     Path(id): Path<i32>,
 ) -> SharedTranslationUserResponse {
@@ -116,7 +116,7 @@ pub async fn delete_shared_translation_storage(
     }
 }
 
-pub async fn find_shared_users(
+pub async fn find_shared_translation_users_route(
     State(pool): State<DbPool>,
     Path(storage_id): Path<i32>,
     headers: HeaderMap,
@@ -138,7 +138,7 @@ pub async fn find_shared_users(
     }
 }
 
-pub async fn find_user_shared_storage(
+pub async fn find_shared_translation_storage_route(
     State(pool): State<DbPool>,
     headers: HeaderMap,
 ) -> (

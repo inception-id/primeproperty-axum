@@ -3,8 +3,9 @@ mod routes;
 mod services;
 
 pub use routes::{
-    create_translation_shared_storage_route, delete_shared_translation_storage, find_shared_users,
-    find_user_shared_storage, update_shared_translation_permission,
+    create_shared_translation_user_route, delete_shared_translation_user_route,
+    find_shared_translation_storage_route, find_shared_translation_users_route,
+    update_shared_translation_user_permission_route,
 };
 
 pub use services::SharedTranslationUser;
