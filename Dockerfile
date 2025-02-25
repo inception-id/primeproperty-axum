@@ -51,7 +51,7 @@ COPY --from=builder /app/diesel.toml /app/
 
 # Install only the diesel CLI binary instead of using Cargo
 RUN apt install -y curl && \
-    curl -L https://github.com/diesel-rs/diesel/releases/download/diesel-x86_64-unknown-linux-gnu.tar.xz \
+    curl -L https://github.com/diesel-rs/diesel/releases/download/diesel-x86_64-unknown-linux-gnu.tar.gz \
     | tar -xz -C /usr/local/bin && \
     chmod +x /usr/local/bin/diesel && \
     apt remove -y curl && \
