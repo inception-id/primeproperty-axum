@@ -1,19 +1,19 @@
-FROM rust:1.82-alpine as builder
+FROM rust:1.82-slim as builder
 
-RUN apk update && \
-    apk install -y libpq-dev build-essential && \
-    apk clean
+RUN apt update && \
+    apt install -y libpq-dev build-essential && \
+    apt clean
 
 WORKDIR /app
 COPY . /app
 
 RUN cargo build --release --all-features
 
-FROM rust:1.82-alpine as runner
+FROM rust:1.82-slim as runner
 
-RUN apk update && \
-    apk install -y libpq-dev && \
-    apk clean
+RUN apt update && \
+    apt install -y libpq-dev && \
+    apt clean
 
 # Copy the build artifact from the builder stage
 COPY --from=builder /app/target/release/inception-axum /app/
