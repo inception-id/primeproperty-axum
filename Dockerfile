@@ -52,12 +52,11 @@ COPY --from=builder /app/diesel.toml /app/
 # Install only the diesel CLI binary instead of using Cargo
 RUN apt update && \
     apt install -y curl && \
-    curl -L https://github.com/diesel-rs/diesel/releases/download/diesel-x86_64-unknown-linux-gnu.tar.gz \
-    | tar -xz -C /usr/local/bin && \
-    chmod +x /usr/local/bin/diesel && \
+    curl --proto '=https' --tlsv1.2 -LsSf https://github.com/diesel-rs/diesel/releases/latest/download/diesel_cli-installer.sh | sh && \
     apt remove -y curl && \
     apt autoremove -y && \
-    apt clean
+    apt clean && \
+    rm -rf /var/lib/apt/lists/*
 
 EXPOSE 8000
 ENTRYPOINT ["/app/inception-axum"]
