@@ -15,6 +15,20 @@ pub mod sql_types {
 }
 
 diesel::table! {
+    ai_models (id) {
+        id -> Int4,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+        #[max_length = 255]
+        parent -> Varchar,
+        #[max_length = 255]
+        label -> Varchar,
+        #[max_length = 255]
+        value -> Varchar,
+    }
+}
+
+diesel::table! {
     ai_system_prompts (id) {
         id -> Int4,
         created_at -> Timestamp,
@@ -252,6 +266,7 @@ diesel::joinable!(translation_storage -> translation (translation_id));
 diesel::joinable!(translation_storage -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    ai_models,
     ai_system_prompts,
     checkbot,
     checkbot_storage,

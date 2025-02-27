@@ -1,0 +1,7 @@
+services:
+  inception-axum:
+    image: 355355355/inception-axum
+    restart: on-failure
+    network_mode: "host"
+    env_file:
+      - .env

@@ -1,7 +1,7 @@
-use chrono::NaiveDateTime;
 use crate::language_ai::SharedStoragePermission;
 use crate::schema::sql_types;
-use diesel::sql_types::{Integer, Text, Uuid, VarChar, Nullable, Timestamp};
+use chrono::NaiveDateTime;
+use diesel::sql_types::{Integer, Nullable, Text, Timestamp, Uuid, VarChar};
 use diesel::QueryableByName;
 use serde::Serialize;
 

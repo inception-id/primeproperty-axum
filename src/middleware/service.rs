@@ -59,6 +59,7 @@ pub async fn session_middleware(
         "/ai-system-prompts/find-all",
         "/languageai/subscriptions/plans",
         "/languageai/subscriptions/payment/notification/doku",
+        "/ai-models/find-all",
     ];
 
     if no_auth_path.contains(&path) {

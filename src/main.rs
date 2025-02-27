@@ -1,3 +1,4 @@
+mod ai_models;
 mod ai_system_prompt;
 mod checkbot;
 mod db;
@@ -13,7 +14,7 @@ mod users;
 mod utils;
 
 use crate::db::build_db_pool;
-use axum::{middleware::from_fn, routing::get, Router};
+use axum::{middleware::from_fn, Router};
 use sentry_tower::{NewSentryLayer, SentryHttpLayer};
 use std::env;
 use tower_http::cors::CorsLayer;
@@ -43,8 +44,8 @@ async fn main() {
 
     // build our application with a route
     let app = Router::new()
-        .route("/", get(root))
         .nest("/users", users::user_routes())
+        .nest("/ai-models", ai_models::ai_model_routes())
         .nest(
             "/ai-system-prompts",
             ai_system_prompt::ai_system_prompt_routes(),
@@ -72,9 +73,4 @@ async fn main() {
 
     println!("Server started at {}", host_addr);
     axum::serve(listener, app).await.unwrap();
-}
-
-// basic handler that responds with a static string
-async fn root() -> &'static str {
-    "Hello, World!"
 }
