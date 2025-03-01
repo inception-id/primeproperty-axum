@@ -8,7 +8,7 @@ use diesel::{
 use serde::Serialize;
 
 #[derive(Debug, Queryable, Serialize)]
-pub struct TarsChatMessages {
+pub struct TarsChatMessage {
     id: i32,
     tars_chat_room_id: i32,
     created_at: NaiveDateTime,
@@ -20,7 +20,7 @@ pub struct TarsChatMessages {
     total_tokens: i32,
 }
 
-impl TarsChatMessages {
+impl TarsChatMessage {
     pub fn create_multiple(
         pool: &DbPool,
         payload: &Vec<CreateTarsChatMessagePayload>,

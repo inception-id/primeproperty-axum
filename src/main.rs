@@ -53,6 +53,10 @@ async fn main() {
             tars_chat_rooms::tars_chat_rooms_routes(),
         )
         .nest(
+            "/tars-chat-messages",
+            tars_chat_messages::tars_chat_messages_routes(),
+        )
+        .nest(
             "/ai-system-prompts",
             ai_system_prompt::ai_system_prompt_routes(),
         )

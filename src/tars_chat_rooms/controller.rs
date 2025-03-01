@@ -3,7 +3,7 @@ use crate::db::DbPool;
 use crate::middleware::extract_header_user_id;
 use crate::middleware::ApiResponse;
 use crate::tars_chat_messages::CreateTarsChatMessagePayload;
-use crate::tars_chat_messages::TarsChatMessages;
+use crate::tars_chat_messages::TarsChatMessage;
 use axum::extract::Path;
 use axum::extract::State;
 use axum::http::HeaderMap;
@@ -44,7 +44,7 @@ pub(crate) struct CreateTarsChatPayload {
 #[derive(Serialize)]
 pub(crate) struct CreateTarsChatResponse {
     pub room: TarsChatRoom,
-    pub messages: Vec<TarsChatMessages>,
+    pub messages: Vec<TarsChatMessage>,
 }
 
 async fn create_tars_chat_room_route(
@@ -64,7 +64,7 @@ async fn create_tars_chat_room_route(
 
     let messages_with_room_id =
         CreateTarsChatMessagePayload::assign_room_id_to_messages(payload.messages, room.id);
-    let messages = match TarsChatMessages::create_multiple(&pool, &messages_with_room_id) {
+    let messages = match TarsChatMessage::create_multiple(&pool, &messages_with_room_id) {
         Ok(new_messages) => new_messages,
         Err(err) => {
             return ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string())
