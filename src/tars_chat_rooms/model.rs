@@ -71,4 +71,18 @@ impl TarsChatRoom {
             .set(tars_chat_rooms::is_deleted.eq(true))
             .get_result(conn)
     }
+
+    pub(super) fn find_by_id(pool: &DbPool, id: &i32, user_id: &uuid::Uuid) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        tars_chat_rooms::table
+            .filter(
+                tars_chat_rooms::id.eq(id).and(
+                    tars_chat_rooms::user_id
+                        .eq(user_id)
+                        .and(tars_chat_rooms::is_deleted.eq(false)),
+                ),
+            )
+            .get_result(conn)
+    }
 }

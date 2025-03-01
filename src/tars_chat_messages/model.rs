@@ -2,9 +2,7 @@ use super::{controller::CreateTarsChatMessagePayload, role::TarsChatMessagesRole
 use crate::db::DbPool;
 use crate::schema::tars_chat_messages;
 use chrono::NaiveDateTime;
-use diesel::{
-    BoolExpressionMethods, ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl,
-};
+use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
 
 #[derive(Debug, Queryable, Serialize)]
@@ -38,5 +36,13 @@ impl TarsChatMessage {
         diesel::insert_into(tars_chat_messages::table)
             .values(payload)
             .get_result(conn)
+    }
+
+    pub fn find_by_room_id(pool: &DbPool, room_id: &i32) -> QueryResult<Vec<Self>> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        tars_chat_messages::table
+            .filter(tars_chat_messages::tars_chat_room_id.eq(room_id))
+            .get_results(conn)
     }
 }

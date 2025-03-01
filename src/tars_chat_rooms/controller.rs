@@ -92,9 +92,47 @@ async fn delete_tars_chat_room_route(
     }
 }
 
+#[derive(Serialize)]
+pub(crate) struct FindTarsChatRoomResponse {
+    pub room: TarsChatRoom,
+    pub messages: Vec<TarsChatMessage>,
+}
+
+async fn find_tars_chat_room_route(
+    State(pool): State<DbPool>,
+    headers: HeaderMap,
+    Path(id): Path<i32>,
+) -> (StatusCode, Json<ApiResponse<FindTarsChatRoomResponse>>) {
+    let user_id = extract_header_user_id(headers).expect("Could not extract user id");
+
+    match TarsChatRoom::find_by_id(&pool, &id, &user_id) {
+        Ok(room) => {
+            let messages = match TarsChatMessage::find_by_room_id(&pool, &room.id) {
+                Ok(messages) => messages,
+                Err(err) => {
+                    return ApiResponse::new(
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        None,
+                        &err.to_string(),
+                    )
+                    .send()
+                }
+            };
+
+            let response = FindTarsChatRoomResponse { room, messages };
+
+            ApiResponse::new(StatusCode::OK, Some(response), "ok").send()
+        }
+        Err(err) => {
+            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+        }
+    }
+}
+
 pub fn tars_chat_rooms_routes() -> Router<DbPool> {
     Router::new()
         .route("/find-all", get(find_all_tars_chat_rooms_routes))
         .route("/create", post(create_tars_chat_room_route))
         .route("/delete/:id", delete(delete_tars_chat_room_route))
+        .route("/find/:id", get(find_tars_chat_room_route))
 }
