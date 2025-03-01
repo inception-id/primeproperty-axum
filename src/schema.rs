@@ -182,6 +182,18 @@ diesel::table! {
 }
 
 diesel::table! {
+    tars_chat_rooms (id) {
+        id -> Int4,
+        ai_model_id -> Int4,
+        user_id -> Uuid,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+        title -> Nullable<Varchar>,
+        is_deleted -> Bool,
+    }
+}
+
+diesel::table! {
     text_to_speech (id) {
         id -> Int4,
         user_id -> Uuid,
@@ -258,6 +270,8 @@ diesel::joinable!(shared_translation_storage -> translation_storage (translation
 diesel::joinable!(speech_to_text -> users (user_id));
 diesel::joinable!(speech_to_text_storage -> speech_to_text (speech_to_text_id));
 diesel::joinable!(speech_to_text_storage -> users (user_id));
+diesel::joinable!(tars_chat_rooms -> ai_models (ai_model_id));
+diesel::joinable!(tars_chat_rooms -> users (user_id));
 diesel::joinable!(text_to_speech -> users (user_id));
 diesel::joinable!(text_to_speech_storage -> text_to_speech (text_to_speech_id));
 diesel::joinable!(text_to_speech_storage -> users (user_id));
@@ -277,6 +291,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     shared_translation_storage,
     speech_to_text,
     speech_to_text_storage,
+    tars_chat_rooms,
     text_to_speech,
     text_to_speech_storage,
     translation,
