@@ -1,6 +1,8 @@
 use crate::schema::tars_chat_rooms;
 use chrono::NaiveDateTime;
-use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
+use diesel::{
+    BoolExpressionMethods, ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl,
+};
 use serde::Serialize;
 
 use crate::db::DbPool;
@@ -44,7 +46,29 @@ impl TarsChatRoom {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         tars_chat_rooms::table
-            .filter(tars_chat_rooms::user_id.eq(user_id))
+            .filter(
+                tars_chat_rooms::user_id
+                    .eq(user_id)
+                    .and(tars_chat_rooms::is_deleted.eq(false)),
+            )
+            .order_by(tars_chat_rooms::id.desc())
             .get_results(conn)
+    }
+
+    pub(super) fn delete_chat_room(
+        pool: &DbPool,
+        id: &i32,
+        user_id: &uuid::Uuid,
+    ) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        diesel::update(tars_chat_rooms::table)
+            .filter(
+                tars_chat_rooms::id
+                    .eq(id)
+                    .and(tars_chat_rooms::user_id.eq(user_id)),
+            )
+            .set(tars_chat_rooms::is_deleted.eq(true))
+            .get_result(conn)
     }
 }
