@@ -12,6 +12,10 @@ pub mod sql_types {
     #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
     #[diesel(postgres_type(name = "subscription_period"))]
     pub struct SubscriptionPeriod;
+
+    #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "tars_chat_messages_role"))]
+    pub struct TarsChatMessagesRole;
 }
 
 diesel::table! {
@@ -182,6 +186,23 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::TarsChatMessagesRole;
+
+    tars_chat_messages (id) {
+        id -> Int4,
+        tars_chat_room_id -> Int4,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+        role -> TarsChatMessagesRole,
+        content -> Text,
+        input_tokens -> Int4,
+        output_tokens -> Int4,
+        total_tokens -> Int4,
+    }
+}
+
+diesel::table! {
     tars_chat_rooms (id) {
         id -> Int4,
         ai_model_id -> Int4,
@@ -270,6 +291,7 @@ diesel::joinable!(shared_translation_storage -> translation_storage (translation
 diesel::joinable!(speech_to_text -> users (user_id));
 diesel::joinable!(speech_to_text_storage -> speech_to_text (speech_to_text_id));
 diesel::joinable!(speech_to_text_storage -> users (user_id));
+diesel::joinable!(tars_chat_messages -> tars_chat_rooms (tars_chat_room_id));
 diesel::joinable!(tars_chat_rooms -> ai_models (ai_model_id));
 diesel::joinable!(tars_chat_rooms -> users (user_id));
 diesel::joinable!(text_to_speech -> users (user_id));
@@ -291,6 +313,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     shared_translation_storage,
     speech_to_text,
     speech_to_text_storage,
+    tars_chat_messages,
     tars_chat_rooms,
     text_to_speech,
     text_to_speech_storage,
