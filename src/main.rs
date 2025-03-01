@@ -8,6 +8,7 @@ mod languages;
 mod middleware;
 mod schema;
 mod speech_to_text;
+mod tars_chat_messages;
 mod tars_chat_rooms;
 mod text_to_speech;
 mod translation;

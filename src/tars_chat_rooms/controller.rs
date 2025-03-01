@@ -2,6 +2,8 @@ use super::model::TarsChatRoom;
 use crate::db::DbPool;
 use crate::middleware::extract_header_user_id;
 use crate::middleware::ApiResponse;
+use crate::tars_chat_messages::CreateTarsChatMessagePayload;
+use crate::tars_chat_messages::TarsChatMessages;
 use axum::extract::Path;
 use axum::extract::State;
 use axum::http::HeaderMap;
@@ -9,6 +11,7 @@ use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use reqwest::StatusCode;
 use serde::Deserialize;
+use serde::Serialize;
 
 type TarsChatRoomResponse = (StatusCode, Json<ApiResponse<TarsChatRoom>>);
 
@@ -32,19 +35,46 @@ pub(crate) struct CreateTarsChatRoomPayload {
     pub ai_model_id: i32,
 }
 
+#[derive(Deserialize)]
+pub(crate) struct CreateTarsChatPayload {
+    pub room: CreateTarsChatRoomPayload,
+    pub messages: Vec<CreateTarsChatMessagePayload>,
+}
+
+#[derive(Serialize)]
+pub(crate) struct CreateTarsChatResponse {
+    pub room: TarsChatRoom,
+    pub messages: Vec<TarsChatMessages>,
+}
+
 async fn create_tars_chat_room_route(
     State(pool): State<DbPool>,
     headers: HeaderMap,
-    Json(payload): Json<CreateTarsChatRoomPayload>,
-) -> TarsChatRoomResponse {
+    Json(payload): Json<CreateTarsChatPayload>,
+) -> (StatusCode, Json<ApiResponse<CreateTarsChatResponse>>) {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
 
-    match TarsChatRoom::create(&pool, &user_id, &payload) {
-        Ok(room) => ApiResponse::new(StatusCode::CREATED, Some(room), "ok").send(),
+    let room = match TarsChatRoom::create(&pool, &user_id, &payload.room) {
+        Ok(room) => room,
         Err(err) => {
-            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+            return ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string())
+                .send()
         }
-    }
+    };
+
+    let messages_with_room_id =
+        CreateTarsChatMessagePayload::assign_room_id_to_messages(payload.messages, room.id);
+    let messages = match TarsChatMessages::create_multiple(&pool, &messages_with_room_id) {
+        Ok(new_messages) => new_messages,
+        Err(err) => {
+            return ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string())
+                .send()
+        }
+    };
+
+    let response = CreateTarsChatResponse { room, messages };
+
+    ApiResponse::new(StatusCode::CREATED, Some(response), "ok").send()
 }
 
 async fn delete_tars_chat_room_route(

@@ -11,7 +11,7 @@ use super::controller::CreateTarsChatRoomPayload;
 
 #[derive(Debug, Queryable, Serialize)]
 pub(super) struct TarsChatRoom {
-    id: i32,
+    pub id: i32,
     ai_model_id: i32,
     user_id: uuid::Uuid,
     created_at: NaiveDateTime,
