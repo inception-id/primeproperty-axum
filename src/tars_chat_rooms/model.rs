@@ -17,7 +17,7 @@ pub(super) struct TarsChatRoom {
     created_at: NaiveDateTime,
     updated_at: NaiveDateTime,
     title: Option<String>,
-    is_deleted: bool,
+    is_temporary: bool,
 }
 
 impl TarsChatRoom {
@@ -46,11 +46,7 @@ impl TarsChatRoom {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         tars_chat_rooms::table
-            .filter(
-                tars_chat_rooms::user_id
-                    .eq(user_id)
-                    .and(tars_chat_rooms::is_deleted.eq(false)),
-            )
+            .filter(tars_chat_rooms::user_id.eq(user_id))
             .order_by(tars_chat_rooms::id.desc())
             .get_results(conn)
     }
@@ -68,7 +64,7 @@ impl TarsChatRoom {
                     .eq(id)
                     .and(tars_chat_rooms::user_id.eq(user_id)),
             )
-            .set(tars_chat_rooms::is_deleted.eq(true))
+            .set(tars_chat_rooms::is_temporary.eq(true))
             .get_result(conn)
     }
 
@@ -77,11 +73,9 @@ impl TarsChatRoom {
 
         tars_chat_rooms::table
             .filter(
-                tars_chat_rooms::id.eq(id).and(
-                    tars_chat_rooms::user_id
-                        .eq(user_id)
-                        .and(tars_chat_rooms::is_deleted.eq(false)),
-                ),
+                tars_chat_rooms::id
+                    .eq(id)
+                    .and(tars_chat_rooms::user_id.eq(user_id)),
             )
             .get_result(conn)
     }

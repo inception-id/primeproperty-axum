@@ -210,7 +210,7 @@ diesel::table! {
         created_at -> Timestamp,
         updated_at -> Timestamp,
         title -> Nullable<Varchar>,
-        is_deleted -> Bool,
+        is_temporary -> Bool,
     }
 }
 

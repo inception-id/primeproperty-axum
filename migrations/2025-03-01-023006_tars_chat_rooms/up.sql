@@ -6,7 +6,7 @@ CREATE TABLE tars_chat_rooms (
     created_at TIMESTAMP NOT NULL DEFAULT NOW (),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW (),
     title VARCHAR,
-    is_deleted BOOLEAN NOT NULL DEFAULT FALSE
+    is_temporary BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 SELECT
