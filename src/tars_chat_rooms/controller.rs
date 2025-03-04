@@ -31,24 +31,18 @@ async fn find_all_tars_chat_rooms_routes(
 
 #[derive(Deserialize)]
 pub(crate) struct CreateTarsChatRoomPayload {
-    pub title: Option<String>,
     pub ai_model_id: i32,
-}
-
-#[derive(Deserialize)]
-pub(crate) struct CreateTarsChatPayload {
-    pub room: CreateTarsChatRoomPayload,
     pub messages: Vec<CreateTarsChatMessagePayload>,
 }
 
 async fn create_tars_chat_room_route(
     State(pool): State<DbPool>,
     headers: HeaderMap,
-    Json(payload): Json<CreateTarsChatPayload>,
+    Json(payload): Json<CreateTarsChatRoomPayload>,
 ) -> TarsChatRoomResponse {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
 
-    let room = match TarsChatRoom::create(&pool, &user_id, &payload.room) {
+    let room = match TarsChatRoom::create(&pool, &user_id, &payload.ai_model_id) {
         Ok(room) => room,
         Err(err) => {
             return ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string())

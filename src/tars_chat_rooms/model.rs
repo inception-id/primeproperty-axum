@@ -7,8 +7,6 @@ use serde::Serialize;
 
 use crate::db::DbPool;
 
-use super::controller::CreateTarsChatRoomPayload;
-
 #[derive(Debug, Queryable, Serialize)]
 pub(super) struct TarsChatRoom {
     pub id: i32,
@@ -24,14 +22,13 @@ impl TarsChatRoom {
     pub(super) fn create(
         pool: &DbPool,
         user_id: &uuid::Uuid,
-        payload: &CreateTarsChatRoomPayload,
+        ai_model_id: &i32,
     ) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         let values = (
-            (tars_chat_rooms::ai_model_id.eq(&payload.ai_model_id)),
+            (tars_chat_rooms::ai_model_id.eq(&ai_model_id)),
             (tars_chat_rooms::user_id.eq(user_id)),
-            (tars_chat_rooms::title.eq(&payload.title)),
         );
 
         diesel::insert_into(tars_chat_rooms::table)
