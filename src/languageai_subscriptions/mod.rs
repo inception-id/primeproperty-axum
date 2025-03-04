@@ -3,6 +3,7 @@ mod payments;
 mod plans;
 mod routes;
 mod services;
+mod structs;
 mod subscription_limit;
 
 pub use routes::*;

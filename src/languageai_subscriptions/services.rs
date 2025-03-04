@@ -16,7 +16,7 @@ pub struct LanguageaiSubscription {
     languageai_subscription_payment_id: i32,
     created_at: NaiveDateTime,
     updated_at: NaiveDateTime,
-    expired_at: NaiveDateTime,
+    pub expired_at: NaiveDateTime,
     pub history_limit: Option<i32>,
     pub storage_limit: Option<i32>,
     pub translation_limit: Option<i32>,

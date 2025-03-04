@@ -1,20 +1,21 @@
 use crate::db::DbPool;
-use crate::languageai_subscriptions::plans::LanguageaiSubscriptionPlan;
-use crate::middleware::{extract_header_user_id, ApiResponse};
-use crate::schema::{languageai_subscription_payments, languageai_subscription_plans};
-
 use crate::languageai_subscriptions::enumerates::{PaymentStatus, SubscriptionPeriod};
 use crate::languageai_subscriptions::payments::{DokuNotification, LanguageaiSubscriptionPayment};
+use crate::languageai_subscriptions::plans::LanguageaiSubscriptionPlan;
 use crate::languageai_subscriptions::services::LanguageaiSubscription;
 use crate::languageai_subscriptions::SubcriptionLimit;
+use crate::middleware::{extract_header_user_id, ApiResponse};
+use crate::schema::{languageai_subscription_payments, languageai_subscription_plans};
 use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use bigdecimal::{BigDecimal, ToPrimitive};
-use chrono::{Months, NaiveDateTime};
+use chrono::Months;
 use diesel::Insertable;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+
+use super::structs::{LanguageAiActiveSubscription, LanguageaiSubscriptionUsage};
 
 type TPaymentResponse = (StatusCode, Json<ApiResponse<LanguageaiSubscriptionPayment>>);
 
@@ -204,24 +205,18 @@ async fn update_doku_notification_success_route(
     }
 }
 
-#[derive(Debug, Serialize)]
-struct LanguageAiActiveSubscription {
-    user_id: uuid::Uuid,
-    plan_name: String,
-    expired_at: Option<NaiveDateTime>,
-    history_limit: Option<i32>,
-    storage_limit: Option<i32>,
-    translation_limit: Option<i32>,
-    checkbot_limit: Option<i32>,
-    text_to_speech_limit: Option<i32>,
-    speech_to_text_limit: Option<i32>,
-}
-
 async fn find_user_active_subscription_route(
     State(pool): State<DbPool>,
     headers: HeaderMap,
 ) -> (StatusCode, Json<ApiResponse<LanguageAiActiveSubscription>>) {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
+
+    let subscription_usage = match LanguageaiSubscriptionUsage::find_by_user_id(&pool, &user_id) {
+        Ok(usage) => usage,
+        Err(err) => {
+            return ApiResponse::reply(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string())
+        }
+    };
 
     let subscription = match LanguageaiSubscription::find_user_active_subscription(&pool, &user_id)
     {
@@ -250,13 +245,21 @@ async fn find_user_active_subscription_route(
             let active_subscription = LanguageAiActiveSubscription {
                 user_id,
                 plan_name: subscription_plan.name,
-                expired_at: None,
+                expired_at: Some(sub.expired_at),
                 history_limit: sub.history_limit,
                 storage_limit: sub.storage_limit,
                 translation_limit: sub.translation_limit,
+                translation_count: subscription_usage.translation_count,
+                translation_storage_count: subscription_usage.translation_storage_count,
                 checkbot_limit: sub.checkbot_limit,
+                checkbot_count: subscription_usage.checkbot_count,
+                checkbot_storage_count: subscription_usage.checkbot_storage_count,
                 text_to_speech_limit: sub.text_to_speech_limit,
+                text_to_speech_count: subscription_usage.text_to_speech_count,
+                text_to_speech_storage_count: subscription_usage.text_to_speech_storage_count,
                 speech_to_text_limit: sub.speech_to_text_limit,
+                speech_to_text_count: subscription_usage.speech_to_text_count,
+                speech_to_text_storage_count: subscription_usage.speech_to_text_storage_count,
             };
             ApiResponse::reply(StatusCode::OK, Some(active_subscription), "ok")
         }
