@@ -161,71 +161,63 @@ async fn update_doku_notification_success_route(
         return ApiResponse::new(StatusCode::UNAUTHORIZED, None, "Invalid client id").send();
     }
 
-    if let Ok(subscription_payment) =
-        LanguageaiSubscriptionPayment::find_subscription_payment_by_invoice_id(
+    let prev_subscription_payment =
+        match LanguageaiSubscriptionPayment::find_subscription_payment_by_invoice_id(
             &pool,
             &payload.transaction.original_request_id,
-        )
-    {
-        match subscription_payment.status {
-            PaymentStatus::Success => {
-                ApiResponse::new(StatusCode::BAD_REQUEST, None, "Payment is already paid").send()
-            }
-            _ => {
+        ) {
+            Ok(prev_payment) => prev_payment,
+            Err(err) => return ApiResponse::reply(StatusCode::NOT_FOUND, None, &err.to_string()),
+        };
+
+    match prev_subscription_payment.status {
+        PaymentStatus::Success => ApiResponse::reply(StatusCode::BAD_REQUEST, None, "Paid!"),
+        _ => {
+            let subscription_payment =
                 match LanguageaiSubscriptionPayment::update_doku_notification_success(
                     &pool, &payload,
                 ) {
-                    Ok(subscription_payment) => {
-                        match LanguageaiSubscriptionPlan::find_subscription_plan_by_id(
-                            &pool,
-                            &subscription_payment.languageai_subscription_plan_id,
-                        ) {
-                            Ok(subscription_plan) => {
-                                let month_count =
-                                    subscription_payment.period.clone().to_month_count();
-                                let expired_at = chrono::Utc::now()
-                                    .naive_utc()
-                                    .checked_add_months(Months::new(month_count))
-                                    .expect("Could not add months");
-                                match LanguageaiSubscription::create_new_subscription(
-                                    &pool,
-                                    &expired_at,
-                                    &subscription_payment,
-                                    &subscription_plan,
-                                ) {
-                                    Ok(subscription) => ApiResponse::new(
-                                        StatusCode::OK,
-                                        Some(subscription),
-                                        "success",
-                                    )
-                                    .send(),
-                                    Err(subscription_err) => ApiResponse::new(
-                                        StatusCode::INTERNAL_SERVER_ERROR,
-                                        None,
-                                        &subscription_err.to_string(),
-                                    )
-                                    .send(),
-                                }
-                            }
-                            Err(subscription_plan_err) => ApiResponse::new(
-                                StatusCode::INTERNAL_SERVER_ERROR,
-                                None,
-                                &subscription_plan_err.to_string(),
-                            )
-                            .send(),
-                        }
+                    Ok(payment) => payment,
+                    Err(err) => {
+                        return ApiResponse::reply(
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            None,
+                            &err.to_string(),
+                        )
                     }
-                    Err(payment_err) => ApiResponse::new(
+                };
+            let subscription_plan = match LanguageaiSubscriptionPlan::find_subscription_plan_by_id(
+                &pool,
+                &subscription_payment.languageai_subscription_plan_id,
+            ) {
+                Ok(plan) => plan,
+                Err(err) => {
+                    return ApiResponse::reply(
                         StatusCode::INTERNAL_SERVER_ERROR,
                         None,
-                        &payment_err.to_string(),
+                        &err.to_string(),
                     )
-                    .send(),
                 }
+            };
+            let month_count = subscription_payment.period.clone().to_month_count();
+            let expired_at = chrono::Utc::now()
+                .naive_utc()
+                .checked_add_months(Months::new(month_count))
+                .expect("Could not add months");
+            match LanguageaiSubscription::create_new_subscription(
+                &pool,
+                &expired_at,
+                &subscription_payment,
+                &subscription_plan,
+            ) {
+                Ok(subscription) => ApiResponse::reply(StatusCode::OK, Some(subscription), "ok"),
+                Err(subscription_err) => ApiResponse::reply(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    None,
+                    &subscription_err.to_string(),
+                ),
             }
         }
-    } else {
-        ApiResponse::new(StatusCode::BAD_REQUEST, None, "Payment history not found").send()
     }
 }
 
