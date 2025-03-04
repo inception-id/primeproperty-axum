@@ -1,9 +1,9 @@
 mod enumerates;
 mod payments;
 mod plans;
-mod raw_query_structs;
 mod routes;
 mod services;
+mod structs;
 mod subscription_limit;
 
 pub use routes::*;

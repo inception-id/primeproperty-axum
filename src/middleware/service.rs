@@ -23,6 +23,14 @@ impl<T> ApiResponse<T> {
     pub fn send(self) -> (StatusCode, Json<ApiResponse<T>>) {
         (StatusCode::from_u16(self.status).unwrap(), Json(self))
     }
+
+    pub fn reply(
+        status: StatusCode,
+        data: Option<T>,
+        message: &str,
+    ) -> (StatusCode, Json<ApiResponse<T>>) {
+        Self::new(status, data, message).send()
+    }
 }
 
 pub async fn api_key_middleware(req: Request, next: Next) -> Result<Response, StatusCode> {

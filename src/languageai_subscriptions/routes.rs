@@ -1,13 +1,11 @@
 use crate::db::DbPool;
-use crate::languageai_subscriptions::plans::LanguageaiSubscriptionPlan;
-use crate::middleware::{extract_header_user_id, ApiResponse};
-use crate::schema::{languageai_subscription_payments, languageai_subscription_plans};
-
 use crate::languageai_subscriptions::enumerates::{PaymentStatus, SubscriptionPeriod};
 use crate::languageai_subscriptions::payments::{DokuNotification, LanguageaiSubscriptionPayment};
-use crate::languageai_subscriptions::raw_query_structs::UserLanguageaiStats;
+use crate::languageai_subscriptions::plans::LanguageaiSubscriptionPlan;
 use crate::languageai_subscriptions::services::LanguageaiSubscription;
 use crate::languageai_subscriptions::SubcriptionLimit;
+use crate::middleware::{extract_header_user_id, ApiResponse};
+use crate::schema::{languageai_subscription_payments, languageai_subscription_plans};
 use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::routing::{get, post};
@@ -16,6 +14,8 @@ use bigdecimal::{BigDecimal, ToPrimitive};
 use chrono::Months;
 use diesel::Insertable;
 use serde::Deserialize;
+
+use super::structs::{LanguageAiActiveSubscription, LanguageaiSubscriptionUsage};
 
 type TPaymentResponse = (StatusCode, Json<ApiResponse<LanguageaiSubscriptionPayment>>);
 
@@ -134,22 +134,6 @@ async fn create_subscription_payment_checkout_route(
     }
 }
 
-async fn find_latest_pending_checkout_route(
-    State(pool): State<DbPool>,
-    headers: HeaderMap,
-) -> TPaymentResponse {
-    let user_id = extract_header_user_id(headers).expect("Could not extract user id");
-
-    match LanguageaiSubscriptionPayment::find_latest_pending_checkout(&pool, &user_id) {
-        Ok(pending_checkout) => {
-            ApiResponse::new(StatusCode::OK, Some(pending_checkout), "success").send()
-        }
-        Err(err) => {
-            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
-        }
-    }
-}
-
 async fn update_doku_notification_success_route(
     State(pool): State<DbPool>,
     headers: HeaderMap,
@@ -161,98 +145,130 @@ async fn update_doku_notification_success_route(
         return ApiResponse::new(StatusCode::UNAUTHORIZED, None, "Invalid client id").send();
     }
 
-    if let Ok(subscription_payment) =
-        LanguageaiSubscriptionPayment::find_subscription_payment_by_invoice_id(
+    let prev_subscription_payment =
+        match LanguageaiSubscriptionPayment::find_subscription_payment_by_invoice_id(
             &pool,
             &payload.transaction.original_request_id,
-        )
-    {
-        match subscription_payment.status {
-            PaymentStatus::Success => {
-                ApiResponse::new(StatusCode::BAD_REQUEST, None, "Payment is already paid").send()
-            }
-            _ => {
+        ) {
+            Ok(prev_payment) => prev_payment,
+            Err(err) => return ApiResponse::reply(StatusCode::NOT_FOUND, None, &err.to_string()),
+        };
+
+    match prev_subscription_payment.status {
+        PaymentStatus::Success => ApiResponse::reply(StatusCode::BAD_REQUEST, None, "Paid!"),
+        _ => {
+            let subscription_payment =
                 match LanguageaiSubscriptionPayment::update_doku_notification_success(
                     &pool, &payload,
                 ) {
-                    Ok(subscription_payment) => {
-                        match LanguageaiSubscriptionPlan::find_subscription_plan_by_id(
-                            &pool,
-                            &subscription_payment.languageai_subscription_plan_id,
-                        ) {
-                            Ok(subscription_plan) => {
-                                let month_count =
-                                    subscription_payment.period.clone().to_month_count();
-                                let expired_at = chrono::Utc::now()
-                                    .naive_utc()
-                                    .checked_add_months(Months::new(month_count))
-                                    .expect("Could not add months");
-                                match LanguageaiSubscription::create_new_subscription(
-                                    &pool,
-                                    &expired_at,
-                                    &subscription_payment,
-                                    &subscription_plan,
-                                ) {
-                                    Ok(subscription) => ApiResponse::new(
-                                        StatusCode::OK,
-                                        Some(subscription),
-                                        "success",
-                                    )
-                                    .send(),
-                                    Err(subscription_err) => ApiResponse::new(
-                                        StatusCode::INTERNAL_SERVER_ERROR,
-                                        None,
-                                        &subscription_err.to_string(),
-                                    )
-                                    .send(),
-                                }
-                            }
-                            Err(subscription_plan_err) => ApiResponse::new(
-                                StatusCode::INTERNAL_SERVER_ERROR,
-                                None,
-                                &subscription_plan_err.to_string(),
-                            )
-                            .send(),
-                        }
+                    Ok(payment) => payment,
+                    Err(err) => {
+                        return ApiResponse::reply(
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            None,
+                            &err.to_string(),
+                        )
                     }
-                    Err(payment_err) => ApiResponse::new(
+                };
+            let subscription_plan = match LanguageaiSubscriptionPlan::find_subscription_plan_by_id(
+                &pool,
+                &subscription_payment.languageai_subscription_plan_id,
+            ) {
+                Ok(plan) => plan,
+                Err(err) => {
+                    return ApiResponse::reply(
                         StatusCode::INTERNAL_SERVER_ERROR,
                         None,
-                        &payment_err.to_string(),
+                        &err.to_string(),
                     )
-                    .send(),
                 }
+            };
+            let month_count = subscription_payment.period.clone().to_month_count();
+            let expired_at = chrono::Utc::now()
+                .naive_utc()
+                .checked_add_months(Months::new(month_count))
+                .expect("Could not add months");
+            match LanguageaiSubscription::create_new_subscription(
+                &pool,
+                &expired_at,
+                &subscription_payment,
+                &subscription_plan,
+            ) {
+                Ok(subscription) => ApiResponse::reply(StatusCode::OK, Some(subscription), "ok"),
+                Err(subscription_err) => ApiResponse::reply(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    None,
+                    &subscription_err.to_string(),
+                ),
             }
         }
-    } else {
-        ApiResponse::new(StatusCode::BAD_REQUEST, None, "Payment history not found").send()
     }
 }
 
 async fn find_user_active_subscription_route(
     State(pool): State<DbPool>,
     headers: HeaderMap,
-) -> (StatusCode, Json<ApiResponse<LanguageaiSubscription>>) {
+) -> (StatusCode, Json<ApiResponse<LanguageAiActiveSubscription>>) {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
 
-    match LanguageaiSubscription::find_user_active_subscription(&pool, &user_id) {
-        Ok(subscription) => ApiResponse::new(StatusCode::OK, Some(subscription), "success").send(),
+    let subscription_usage = match LanguageaiSubscriptionUsage::find_by_user_id(&pool, &user_id) {
+        Ok(usage) => usage,
         Err(err) => {
-            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+            return ApiResponse::reply(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string())
         }
-    }
-}
+    };
 
-async fn find_user_subscription_stats_route(
-    State(pool): State<DbPool>,
-    headers: HeaderMap,
-) -> (StatusCode, Json<ApiResponse<Vec<UserLanguageaiStats>>>) {
-    let user_id = extract_header_user_id(headers).expect("Could not extract user id");
+    let subscription = match LanguageaiSubscription::find_user_active_subscription(&pool, &user_id)
+    {
+        Ok(sub) => Some(sub),
+        Err(_) => None,
+    };
+    let plan_id = match &subscription {
+        Some(sub) => sub.languageai_subscription_plan_id,
+        None => 1,
+    };
 
-    match UserLanguageaiStats::find_by_user_id(&pool, &user_id) {
-        Ok(stats) => ApiResponse::new(StatusCode::OK, Some(stats), "success").send(),
-        Err(err) => {
-            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+    let subscription_plan =
+        match LanguageaiSubscriptionPlan::find_subscription_plan_by_id(&pool, &plan_id) {
+            Ok(plan) => plan,
+            Err(err) => {
+                return ApiResponse::reply(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    None,
+                    &err.to_string(),
+                )
+            }
+        };
+
+    match subscription {
+        Some(sub) => {
+            let active_subscription = LanguageAiActiveSubscription {
+                user_id,
+                plan_name: subscription_plan.name,
+                expired_at: Some(sub.expired_at),
+                history_limit: sub.history_limit,
+                storage_limit: sub.storage_limit,
+                translation_limit: sub.translation_limit,
+                translation_count: subscription_usage.translation_count,
+                translation_storage_count: subscription_usage.translation_storage_count,
+                checkbot_limit: sub.checkbot_limit,
+                checkbot_count: subscription_usage.checkbot_count,
+                checkbot_storage_count: subscription_usage.checkbot_storage_count,
+                text_to_speech_limit: sub.text_to_speech_limit,
+                text_to_speech_count: subscription_usage.text_to_speech_count,
+                text_to_speech_storage_count: subscription_usage.text_to_speech_storage_count,
+                speech_to_text_limit: sub.speech_to_text_limit,
+                speech_to_text_count: subscription_usage.speech_to_text_count,
+                speech_to_text_storage_count: subscription_usage.speech_to_text_storage_count,
+            };
+            ApiResponse::reply(StatusCode::OK, Some(active_subscription), "ok")
+        }
+        None => {
+            return ApiResponse::reply(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                None,
+                "Subscription not found",
+            )
         }
     }
 }
@@ -285,12 +301,10 @@ pub fn languageai_subscription_routes() -> Router<DbPool> {
             "/payment/checkout",
             post(create_subscription_payment_checkout_route),
         )
-        .route("/payment/pending", get(find_latest_pending_checkout_route))
         .route(
             "/payment/notification/doku",
             post(update_doku_notification_success_route),
         )
         .route("/active", get(find_user_active_subscription_route))
-        .route("/stats", get(find_user_subscription_stats_route))
         .route("/limit", get(check_user_exceed_subscription_limit_route))
 }
