@@ -264,11 +264,26 @@ async fn find_user_active_subscription_route(
             ApiResponse::reply(StatusCode::OK, Some(active_subscription), "ok")
         }
         None => {
-            return ApiResponse::reply(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                None,
-                "Subscription not found",
-            )
+            let active_subscription = LanguageAiActiveSubscription {
+                user_id,
+                plan_name: subscription_plan.name,
+                expired_at: None,
+                history_limit: subscription_plan.history_limit,
+                storage_limit: subscription_plan.storage_limit,
+                translation_limit: subscription_plan.translation_limit,
+                translation_count: subscription_usage.translation_count,
+                translation_storage_count: subscription_usage.translation_storage_count,
+                checkbot_limit: subscription_plan.checkbot_limit,
+                checkbot_count: subscription_usage.checkbot_count,
+                checkbot_storage_count: subscription_usage.checkbot_storage_count,
+                text_to_speech_limit: subscription_plan.text_to_speech_limit,
+                text_to_speech_count: subscription_usage.text_to_speech_count,
+                text_to_speech_storage_count: subscription_usage.text_to_speech_storage_count,
+                speech_to_text_limit: subscription_plan.speech_to_text_limit,
+                speech_to_text_count: subscription_usage.speech_to_text_count,
+                speech_to_text_storage_count: subscription_usage.speech_to_text_storage_count,
+            };
+            ApiResponse::reply(StatusCode::OK, Some(active_subscription), "ok")
         }
     }
 }
