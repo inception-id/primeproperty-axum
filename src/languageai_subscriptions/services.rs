@@ -12,7 +12,7 @@ use serde::Serialize;
 pub struct LanguageaiSubscription {
     id: i32,
     user_id: uuid::Uuid,
-    languageai_subscription_plan_id: i32,
+    pub languageai_subscription_plan_id: i32,
     languageai_subscription_payment_id: i32,
     created_at: NaiveDateTime,
     updated_at: NaiveDateTime,

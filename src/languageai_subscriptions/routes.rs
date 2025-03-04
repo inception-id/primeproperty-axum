@@ -12,9 +12,9 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use bigdecimal::{BigDecimal, ToPrimitive};
-use chrono::Months;
+use chrono::{Months, NaiveDateTime};
 use diesel::Insertable;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 type TPaymentResponse = (StatusCode, Json<ApiResponse<LanguageaiSubscriptionPayment>>);
 
@@ -204,16 +204,68 @@ async fn update_doku_notification_success_route(
     }
 }
 
+#[derive(Debug, Serialize)]
+struct LanguageAiActiveSubscription {
+    user_id: uuid::Uuid,
+    plan_name: String,
+    expired_at: Option<NaiveDateTime>,
+    history_limit: Option<i32>,
+    storage_limit: Option<i32>,
+    translation_limit: Option<i32>,
+    checkbot_limit: Option<i32>,
+    text_to_speech_limit: Option<i32>,
+    speech_to_text_limit: Option<i32>,
+}
+
 async fn find_user_active_subscription_route(
     State(pool): State<DbPool>,
     headers: HeaderMap,
-) -> (StatusCode, Json<ApiResponse<LanguageaiSubscription>>) {
+) -> (StatusCode, Json<ApiResponse<LanguageAiActiveSubscription>>) {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
 
-    match LanguageaiSubscription::find_user_active_subscription(&pool, &user_id) {
-        Ok(subscription) => ApiResponse::new(StatusCode::OK, Some(subscription), "success").send(),
-        Err(err) => {
-            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
+    let subscription = match LanguageaiSubscription::find_user_active_subscription(&pool, &user_id)
+    {
+        Ok(sub) => Some(sub),
+        Err(_) => None,
+    };
+    let plan_id = match &subscription {
+        Some(sub) => sub.languageai_subscription_plan_id,
+        None => 1,
+    };
+
+    let subscription_plan =
+        match LanguageaiSubscriptionPlan::find_subscription_plan_by_id(&pool, &plan_id) {
+            Ok(plan) => plan,
+            Err(err) => {
+                return ApiResponse::reply(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    None,
+                    &err.to_string(),
+                )
+            }
+        };
+
+    match subscription {
+        Some(sub) => {
+            let active_subscription = LanguageAiActiveSubscription {
+                user_id,
+                plan_name: subscription_plan.name,
+                expired_at: None,
+                history_limit: sub.history_limit,
+                storage_limit: sub.storage_limit,
+                translation_limit: sub.translation_limit,
+                checkbot_limit: sub.checkbot_limit,
+                text_to_speech_limit: sub.text_to_speech_limit,
+                speech_to_text_limit: sub.speech_to_text_limit,
+            };
+            ApiResponse::reply(StatusCode::OK, Some(active_subscription), "ok")
+        }
+        None => {
+            return ApiResponse::reply(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                None,
+                "Subscription not found",
+            )
         }
     }
 }

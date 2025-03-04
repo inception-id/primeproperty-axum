@@ -11,7 +11,7 @@ pub(crate) struct LanguageaiSubscriptionPlan {
     pub id: i32,
     created_at: NaiveDateTime,
     updated_at: NaiveDateTime,
-    name: String,
+    pub name: String,
     initial_price: BigDecimal,
     pub discounted_price: Option<BigDecimal>,
     pub history_limit: Option<i32>,
