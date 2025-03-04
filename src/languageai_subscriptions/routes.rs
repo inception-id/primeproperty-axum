@@ -5,7 +5,6 @@ use crate::schema::{languageai_subscription_payments, languageai_subscription_pl
 
 use crate::languageai_subscriptions::enumerates::{PaymentStatus, SubscriptionPeriod};
 use crate::languageai_subscriptions::payments::{DokuNotification, LanguageaiSubscriptionPayment};
-use crate::languageai_subscriptions::raw_query_structs::UserLanguageaiStats;
 use crate::languageai_subscriptions::services::LanguageaiSubscription;
 use crate::languageai_subscriptions::SubcriptionLimit;
 use axum::extract::{Path, Query, State};
@@ -134,22 +133,6 @@ async fn create_subscription_payment_checkout_route(
     }
 }
 
-async fn find_latest_pending_checkout_route(
-    State(pool): State<DbPool>,
-    headers: HeaderMap,
-) -> TPaymentResponse {
-    let user_id = extract_header_user_id(headers).expect("Could not extract user id");
-
-    match LanguageaiSubscriptionPayment::find_latest_pending_checkout(&pool, &user_id) {
-        Ok(pending_checkout) => {
-            ApiResponse::new(StatusCode::OK, Some(pending_checkout), "success").send()
-        }
-        Err(err) => {
-            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
-        }
-    }
-}
-
 async fn update_doku_notification_success_route(
     State(pool): State<DbPool>,
     headers: HeaderMap,
@@ -235,20 +218,6 @@ async fn find_user_active_subscription_route(
     }
 }
 
-async fn find_user_subscription_stats_route(
-    State(pool): State<DbPool>,
-    headers: HeaderMap,
-) -> (StatusCode, Json<ApiResponse<Vec<UserLanguageaiStats>>>) {
-    let user_id = extract_header_user_id(headers).expect("Could not extract user id");
-
-    match UserLanguageaiStats::find_by_user_id(&pool, &user_id) {
-        Ok(stats) => ApiResponse::new(StatusCode::OK, Some(stats), "success").send(),
-        Err(err) => {
-            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
-        }
-    }
-}
-
 #[derive(Deserialize)]
 struct CheckUserExceedLimitQuery {
     name: SubcriptionLimit,
@@ -277,12 +246,10 @@ pub fn languageai_subscription_routes() -> Router<DbPool> {
             "/payment/checkout",
             post(create_subscription_payment_checkout_route),
         )
-        .route("/payment/pending", get(find_latest_pending_checkout_route))
         .route(
             "/payment/notification/doku",
             post(update_doku_notification_success_route),
         )
         .route("/active", get(find_user_active_subscription_route))
-        .route("/stats", get(find_user_subscription_stats_route))
         .route("/limit", get(check_user_exceed_subscription_limit_route))
 }

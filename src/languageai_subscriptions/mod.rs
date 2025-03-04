@@ -1,7 +1,6 @@
 mod enumerates;
 mod payments;
 mod plans;
-mod raw_query_structs;
 mod routes;
 mod services;
 mod subscription_limit;
