@@ -8,6 +8,7 @@ use std::io::Write;
 
 #[derive(Debug, AsExpression, FromSqlRow, Deserialize, Serialize, Clone)]
 #[diesel(sql_type = sql_types::TarsChatMessagesRole)]
+#[serde(rename_all = "lowercase")]
 pub enum TarsChatMessagesRole {
     Developer,
     System,

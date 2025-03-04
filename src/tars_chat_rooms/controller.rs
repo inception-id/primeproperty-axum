@@ -41,17 +41,11 @@ pub(crate) struct CreateTarsChatPayload {
     pub messages: Vec<CreateTarsChatMessagePayload>,
 }
 
-#[derive(Serialize)]
-pub(crate) struct CreateTarsChatResponse {
-    pub room: TarsChatRoom,
-    pub messages: Vec<TarsChatMessage>,
-}
-
 async fn create_tars_chat_room_route(
     State(pool): State<DbPool>,
     headers: HeaderMap,
     Json(payload): Json<CreateTarsChatPayload>,
-) -> (StatusCode, Json<ApiResponse<CreateTarsChatResponse>>) {
+) -> TarsChatRoomResponse {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
 
     let room = match TarsChatRoom::create(&pool, &user_id, &payload.room) {
@@ -64,17 +58,9 @@ async fn create_tars_chat_room_route(
 
     let messages_with_room_id =
         CreateTarsChatMessagePayload::assign_room_id_to_messages(payload.messages, room.id);
-    let messages = match TarsChatMessage::create_multiple(&pool, &messages_with_room_id) {
-        Ok(new_messages) => new_messages,
-        Err(err) => {
-            return ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string())
-                .send()
-        }
-    };
+    let _messages = TarsChatMessage::create_multiple(&pool, &messages_with_room_id);
 
-    let response = CreateTarsChatResponse { room, messages };
-
-    ApiResponse::new(StatusCode::CREATED, Some(response), "ok").send()
+    ApiResponse::new(StatusCode::CREATED, Some(room), "ok").send()
 }
 
 async fn delete_tars_chat_room_route(
