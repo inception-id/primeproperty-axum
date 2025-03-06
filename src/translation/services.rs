@@ -1,7 +1,7 @@
 use super::routes::CreateTranslationPayload;
-use crate::db::DbPool;
 use crate::schema::translation;
 use crate::utils::get_start_of_month;
+use crate::{db::DbPool, language_ai::LanguageAiCrud};
 use chrono::NaiveDateTime;
 use diesel::{
     BoolExpressionMethods, ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl,
@@ -20,6 +20,8 @@ pub struct Translation {
     pub content: String,
     completion: String,
 }
+
+// impl LanguageAiCrud for Translation {}
 
 impl Translation {
     pub(super) fn create_translation(

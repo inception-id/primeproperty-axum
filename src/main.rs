@@ -1,6 +1,7 @@
 mod ai_system_prompt;
 mod checkbot;
 mod db;
+mod language_ai;
 mod languageai_subscriptions;
 mod languages;
 mod middleware;

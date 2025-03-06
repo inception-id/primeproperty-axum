@@ -6,30 +6,8 @@ pub mod sql_types {
     pub struct PaymentStatus;
 
     #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
-    #[diesel(postgres_type(name = "shared_storage_permission"))]
-    pub struct SharedStoragePermission;
-
-    #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
     #[diesel(postgres_type(name = "subscription_period"))]
     pub struct SubscriptionPeriod;
-
-    #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
-    #[diesel(postgres_type(name = "tars_chat_messages_role"))]
-    pub struct TarsChatMessagesRole;
-}
-
-diesel::table! {
-    ai_models (id) {
-        id -> Int4,
-        created_at -> Timestamp,
-        updated_at -> Timestamp,
-        #[max_length = 255]
-        parent -> Varchar,
-        #[max_length = 255]
-        label -> Varchar,
-        #[max_length = 255]
-        value -> Varchar,
-    }
 }
 
 diesel::table! {
@@ -142,23 +120,6 @@ diesel::table! {
 }
 
 diesel::table! {
-    use diesel::sql_types::*;
-    use super::sql_types::SharedStoragePermission;
-
-    shared_translation_storage (id) {
-        id -> Int4,
-        user_id -> Uuid,
-        shared_user_id -> Nullable<Uuid>,
-        translation_storage_id -> Int4,
-        created_at -> Timestamp,
-        updated_at -> Timestamp,
-        user_email -> Varchar,
-        shared_user_email -> Varchar,
-        permission -> SharedStoragePermission,
-    }
-}
-
-diesel::table! {
     speech_to_text (id) {
         id -> Int4,
         user_id -> Uuid,
@@ -182,35 +143,6 @@ diesel::table! {
         updated_transcription_text -> Text,
         language -> Nullable<Varchar>,
         title -> Nullable<Varchar>,
-    }
-}
-
-diesel::table! {
-    use diesel::sql_types::*;
-    use super::sql_types::TarsChatMessagesRole;
-
-    tars_chat_messages (id) {
-        id -> Int4,
-        tars_chat_room_id -> Int4,
-        created_at -> Timestamp,
-        updated_at -> Timestamp,
-        role -> TarsChatMessagesRole,
-        content -> Text,
-        input_tokens -> Int4,
-        output_tokens -> Int4,
-        total_tokens -> Int4,
-    }
-}
-
-diesel::table! {
-    tars_chat_rooms (id) {
-        id -> Int4,
-        ai_model_id -> Int4,
-        user_id -> Uuid,
-        created_at -> Timestamp,
-        updated_at -> Timestamp,
-        title -> Nullable<Varchar>,
-        is_temporary -> Bool,
     }
 }
 
@@ -287,13 +219,9 @@ diesel::joinable!(languageai_subscription_payments -> users (user_id));
 diesel::joinable!(languageai_subscriptions -> languageai_subscription_payments (languageai_subscription_payment_id));
 diesel::joinable!(languageai_subscriptions -> languageai_subscription_plans (languageai_subscription_plan_id));
 diesel::joinable!(languageai_subscriptions -> users (user_id));
-diesel::joinable!(shared_translation_storage -> translation_storage (translation_storage_id));
 diesel::joinable!(speech_to_text -> users (user_id));
 diesel::joinable!(speech_to_text_storage -> speech_to_text (speech_to_text_id));
 diesel::joinable!(speech_to_text_storage -> users (user_id));
-diesel::joinable!(tars_chat_messages -> tars_chat_rooms (tars_chat_room_id));
-diesel::joinable!(tars_chat_rooms -> ai_models (ai_model_id));
-diesel::joinable!(tars_chat_rooms -> users (user_id));
 diesel::joinable!(text_to_speech -> users (user_id));
 diesel::joinable!(text_to_speech_storage -> text_to_speech (text_to_speech_id));
 diesel::joinable!(text_to_speech_storage -> users (user_id));
@@ -302,7 +230,6 @@ diesel::joinable!(translation_storage -> translation (translation_id));
 diesel::joinable!(translation_storage -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-    ai_models,
     ai_system_prompts,
     checkbot,
     checkbot_storage,
@@ -310,11 +237,8 @@ diesel::allow_tables_to_appear_in_same_query!(
     languageai_subscription_plans,
     languageai_subscriptions,
     languages,
-    shared_translation_storage,
     speech_to_text,
     speech_to_text_storage,
-    tars_chat_messages,
-    tars_chat_rooms,
     text_to_speech,
     text_to_speech_storage,
     translation,
