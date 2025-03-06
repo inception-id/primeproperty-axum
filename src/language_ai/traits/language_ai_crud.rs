@@ -8,6 +8,6 @@ pub trait LanguageAiCrud {
     fn create(
         pool: &DbPool,
         user_id: &uuid::Uuid,
-        payload: Self::CreatePayload,
+        payload: &Self::CreatePayload,
     ) -> QueryResult<Self::Output>;
 }

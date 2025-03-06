@@ -183,6 +183,10 @@ diesel::table! {
         target_language -> Varchar,
         content -> Text,
         completion -> Text,
+        input_tokens -> Int4,
+        output_tokens -> Int4,
+        total_tokens -> Int4,
+        temperature -> Float8,
     }
 }
 

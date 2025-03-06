@@ -19,22 +19,29 @@ pub struct Translation {
     pub target_language: String,
     pub content: String,
     completion: String,
+    input_tokens: i32,
+    output_tokens: i32,
+    total_tokens: i32,
+    temperature: f64,
 }
 
-// impl LanguageAiCrud for Translation {}
+impl LanguageAiCrud for Translation {
+    type Output = Self;
+    type CreatePayload = CreateTranslationPayload;
 
-impl Translation {
-    pub(super) fn create_translation(
+    fn create(
         pool: &DbPool,
         user_id: &uuid::Uuid,
-        payload: &CreateTranslationPayload,
+        payload: &Self::CreatePayload,
     ) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
         diesel::insert_into(translation::table)
             .values((translation::user_id.eq(user_id), payload))
             .get_result(conn)
     }
+}
 
+impl Translation {
     pub(super) fn find_translation_history(
         pool: &DbPool,
         user_id: &uuid::Uuid,

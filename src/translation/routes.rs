@@ -1,5 +1,6 @@
 use super::storage;
 use crate::db::DbPool;
+use crate::language_ai::LanguageAiCrud;
 use crate::languageai_subscriptions::SubcriptionLimit;
 use crate::middleware::{extract_header_user_id, ApiResponse};
 use crate::schema::translation;
@@ -15,12 +16,16 @@ type TranslationResponse = (StatusCode, Json<ApiResponse<Translation>>);
 
 #[derive(Deserialize, Insertable)]
 #[diesel(table_name = translation)]
-pub(super) struct CreateTranslationPayload {
+pub struct CreateTranslationPayload {
     ai_system_prompt: String,
     content_language: Option<String>,
     target_language: String,
     content: String,
     completion: String,
+    input_tokens: i32,
+    output_tokens: i32,
+    total_tokens: i32,
+    temperature: f64,
 }
 
 async fn create_translation_route(
@@ -29,14 +34,9 @@ async fn create_translation_route(
     Json(payload): Json<CreateTranslationPayload>,
 ) -> TranslationResponse {
     let user_id = extract_header_user_id(headers).expect("Could not extract user id");
-    let translation_creation = Translation::create_translation(&pool, &user_id, &payload);
-    match translation_creation {
-        Ok(translation) => {
-            ApiResponse::new(StatusCode::CREATED, Some(translation), "Created").send()
-        }
-        Err(err) => {
-            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
-        }
+    match Translation::create(&pool, &user_id, &payload) {
+        Ok(translation) => ApiResponse::reply(StatusCode::CREATED, Some(translation), "Created"),
+        Err(err) => ApiResponse::reply(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()),
     }
 }
 
