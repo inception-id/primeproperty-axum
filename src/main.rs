@@ -1,4 +1,3 @@
-mod ai_models;
 mod ai_system_prompt;
 mod checkbot;
 mod db;
@@ -7,8 +6,6 @@ mod languages;
 mod middleware;
 mod schema;
 mod speech_to_text;
-mod tars_chat_messages;
-mod tars_chat_rooms;
 mod text_to_speech;
 mod translation;
 mod users;
@@ -46,15 +43,6 @@ async fn main() {
     // build our application with a route
     let app = Router::new()
         .nest("/users", users::user_routes())
-        .nest("/ai-models", ai_models::ai_model_routes())
-        .nest(
-            "/tars-chat-rooms",
-            tars_chat_rooms::tars_chat_rooms_routes(),
-        )
-        .nest(
-            "/tars-chat-messages",
-            tars_chat_messages::tars_chat_messages_routes(),
-        )
         .nest(
             "/ai-system-prompts",
             ai_system_prompt::ai_system_prompt_routes(),
