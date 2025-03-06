@@ -1,6 +1,5 @@
 use super::routes::{CreateTranslationStoragePayload, UpdateTranslationStoragePayload};
 use crate::db::DbPool;
-use crate::language_ai::LanguageaiStorage;
 use crate::schema::translation_storage;
 use crate::translation::services::Translation;
 use chrono::NaiveDateTime;
@@ -19,16 +18,6 @@ pub struct TranslationStorage {
     content: String,
     updated_completion: String,
     title: Option<String>,
-}
-
-impl LanguageaiStorage for TranslationStorage {
-    type Output = TranslationStorage;
-
-    fn find_storage_by_id(pool: &DbPool, storage_id: &i32) -> QueryResult<Self::Output> {
-        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-
-        translation_storage::table.find(storage_id).get_result(conn)
-    }
 }
 
 impl TranslationStorage {

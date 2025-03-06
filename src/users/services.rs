@@ -32,9 +32,4 @@ impl User {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
         users::table.filter(users::email.eq(email)).get_result(conn)
     }
-
-    pub fn find_user_by_id(pool: &DbPool, id: &uuid::Uuid) -> QueryResult<User> {
-        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-        users::table.filter(users::id.eq(id)).get_result(conn)
-    }
 }

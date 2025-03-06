@@ -1,4 +1,4 @@
-use super::{shared_storage, storage};
+use super::storage;
 use crate::db::DbPool;
 use crate::languageai_subscriptions::SubcriptionLimit;
 use crate::middleware::{extract_header_user_id, ApiResponse};
@@ -79,25 +79,5 @@ pub fn translation_routes() -> Router<DbPool> {
         .route(
             "/update-storage/:id",
             put(storage::update_translation_storage_route),
-        )
-        .route(
-            "/storage/shared",
-            post(shared_storage::create_shared_translation_user_route),
-        )
-        .route(
-            "/storage/shared",
-            get(shared_storage::find_shared_translation_storage_route),
-        )
-        .route(
-            "/storage/shared/:id",
-            delete(shared_storage::delete_shared_translation_user_route),
-        )
-        .route(
-            "/storage/shared/permission/:id",
-            put(shared_storage::update_shared_translation_user_permission_route),
-        )
-        .route(
-            "/storage/shared/users/:storage_id",
-            get(shared_storage::find_shared_translation_users_route),
         )
 }
