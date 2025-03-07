@@ -1,5 +1,6 @@
 services:
   inception-axum:
+    container_name: inception_axum
     image: 355355355/inception-axum
     restart: on-failure
     network_mode: "host"
