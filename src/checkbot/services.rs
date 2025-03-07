@@ -1,7 +1,7 @@
 use super::routes::CreateCheckbotPayload;
-use crate::db::DbPool;
 use crate::schema::checkbot;
 use crate::utils::get_start_of_month;
+use crate::{db::DbPool, language_ai::LanguageAiCrud};
 use chrono::NaiveDateTime;
 use diesel::{
     BoolExpressionMethods, ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl,
@@ -18,20 +18,29 @@ pub struct Checkbot {
     ai_system_prompt: String,
     pub content: String,
     pub completion: String,
+    input_tokens: i32,
+    output_tokens: i32,
+    total_tokens: i32,
+    temperature: f64,
 }
 
-impl Checkbot {
-    pub(super) fn create_checkbot(
+impl LanguageAiCrud for Checkbot {
+    type Output = Self;
+    type CreatePayload = CreateCheckbotPayload;
+
+    fn create(
         pool: &DbPool,
         user_id: &uuid::Uuid,
-        payload: &CreateCheckbotPayload,
+        payload: &Self::CreatePayload,
     ) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
         diesel::insert_into(checkbot::table)
             .values((checkbot::user_id.eq(user_id), payload))
             .get_result(conn)
     }
+}
 
+impl Checkbot {
     pub(super) fn find_checkbot_history(
         pool: &DbPool,
         user_id: &uuid::Uuid,
