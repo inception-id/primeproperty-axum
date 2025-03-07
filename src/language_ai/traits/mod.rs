@@ -1,5 +1,3 @@
-mod shared_storage_user;
-mod storage;
+mod language_ai_crud;
 
-pub use shared_storage_user::LanguageAiSharedStorageUser;
-pub use storage::LanguageaiStorage;
+pub use language_ai_crud::LanguageAiCrud;

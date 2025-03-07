@@ -1,8 +1,6 @@
 use super::services::User;
 use crate::db::DbPool;
-use crate::language_ai::LanguageAiSharedStorageUser;
 use crate::middleware::ApiResponse;
-use crate::translation::SharedTranslationUser;
 use crate::users::request::CreateUserPayload;
 use axum::extract::{Query, State};
 use axum::http::StatusCode;
@@ -31,12 +29,6 @@ async fn create_user_route(
                         .send()
                     }
                 };
-
-            let _shared_translation_storage = SharedTranslationUser::update_invited_email_user_id(
-                &pool,
-                &new_user.id,
-                &new_user.email,
-            );
 
             ApiResponse::new(StatusCode::CREATED, Some(new_user), "Created").send()
         }
