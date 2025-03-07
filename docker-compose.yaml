@@ -5,10 +5,10 @@ services:
     restart: on-failure
     env_file:
       - .env
-    networks:
-      - axum_network
     ports:
       - 8000:8000
+    networks:
+      - axum_network
 networks:
   axum_network:
     driver: bridge
