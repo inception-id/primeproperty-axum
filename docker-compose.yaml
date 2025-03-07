@@ -1,7 +1,14 @@
 services:
   inception-axum:
+    container_name: inception_axum
     image: 355355355/inception-axum
     restart: on-failure
-    network_mode: "host"
     env_file:
       - .env
+    ports:
+      - 8000:8000
+    networks:
+      - axum_network
+networks:
+  axum_network:
+    driver: bridge
