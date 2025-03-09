@@ -47,18 +47,6 @@ pub(crate) struct CreateLanguageaiSubscriptionPlansPayload {
     speech_to_text_limit: Option<i32>,
 }
 
-async fn create_languageai_subscription_plans_route(
-    State(pool): State<DbPool>,
-    Json(payload): Json<CreateLanguageaiSubscriptionPlansPayload>,
-) -> (StatusCode, Json<ApiResponse<LanguageaiSubscriptionPlan>>) {
-    match LanguageaiSubscriptionPlan::create_subscription_plan(&pool, &payload) {
-        Ok(plans) => ApiResponse::new(StatusCode::CREATED, Some(plans), "created").send(),
-        Err(err) => {
-            ApiResponse::new(StatusCode::INTERNAL_SERVER_ERROR, None, &err.to_string()).send()
-        }
-    }
-}
-
 async fn find_languageai_subscription_plan_by_id_route(
     State(pool): State<DbPool>,
     Path(id): Path<i32>,
@@ -94,35 +82,30 @@ async fn create_subscription_payment_checkout_route(
     ) {
         Ok(subscription_plan) => {
             let month_count = payload.period.clone().to_month_count() as i32;
-            if let Some(plan_discounted_price) = &subscription_plan.discounted_price {
-                let amount =
-                    BigDecimal::from(&plan_discounted_price.to_i32().unwrap() * month_count);
-                let expired_at = chrono::Utc::now().naive_utc() + chrono::Duration::hours(1);
-                match LanguageaiSubscriptionPayment::create_checkout(
-                    &pool,
-                    &user_id,
-                    &expired_at,
-                    &payload,
-                    &amount,
-                ) {
-                    Ok(payment_checkout) => {
-                        ApiResponse::new(StatusCode::CREATED, Some(payment_checkout), "created")
-                            .send()
-                    }
-                    Err(payment_checkout_err) => ApiResponse::new(
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        None,
-                        &payment_checkout_err.to_string(),
-                    )
-                    .send(),
+            let amount = match &subscription_plan.discounted_price {
+                Some(price) => BigDecimal::from(&price.to_i32().unwrap() * month_count),
+                None => BigDecimal::from(
+                    &subscription_plan.initial_price.to_i32().unwrap() * month_count,
+                ),
+            };
+
+            let expired_at = chrono::Utc::now().naive_utc() + chrono::Duration::hours(1);
+            match LanguageaiSubscriptionPayment::create_checkout(
+                &pool,
+                &user_id,
+                &expired_at,
+                &payload,
+                &amount,
+            ) {
+                Ok(payment_checkout) => {
+                    ApiResponse::new(StatusCode::CREATED, Some(payment_checkout), "created").send()
                 }
-            } else {
-                ApiResponse::new(
+                Err(payment_checkout_err) => ApiResponse::new(
                     StatusCode::INTERNAL_SERVER_ERROR,
                     None,
-                    "Invalid subscription plan id",
+                    &payment_checkout_err.to_string(),
                 )
-                .send()
+                .send(),
             }
         }
         Err(subscription_plan_err) => ApiResponse::new(
@@ -307,7 +290,6 @@ async fn check_user_exceed_subscription_limit_route(
 pub fn languageai_subscription_routes() -> Router<DbPool> {
     Router::new()
         .route("/plans", get(find_all_subscription_plans_route))
-        .route("/plans", post(create_languageai_subscription_plans_route))
         .route(
             "/plans/:id",
             get(find_languageai_subscription_plan_by_id_route),
