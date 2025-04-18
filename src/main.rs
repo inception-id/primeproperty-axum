@@ -24,7 +24,6 @@ async fn main() {
         .route("/agent/login", get(|| async { "Hello, World!" }))
         .with_state(pool)
         .layer(from_fn(middleware::Session::middleware))
-        .layer(from_fn(middleware::ApiKey::middleware))
         .layer(cors)
         .layer(TraceLayer::new_for_http());
 
