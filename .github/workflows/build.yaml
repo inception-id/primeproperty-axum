@@ -7,7 +7,7 @@ on:
 
 jobs:
   build_and_test:
-    name: Inception-axum Build Workflow
+    name: primeproperty-axum Build Workflow
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -26,4 +26,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/inception-axum:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/primeproperty-axum:latest

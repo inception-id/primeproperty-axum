@@ -1,7 +1,7 @@
 services:
-  inception-axum:
-    container_name: inception_axum
-    image: 355355355/inception-axum
+  primeproperty-axum:
+    container_name: primeproperty_axum
+    image: 355355355/primeproperty-axum
     restart: on-failure
     env_file:
       - .env
