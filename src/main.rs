@@ -2,10 +2,9 @@ mod db;
 mod middleware;
 
 use crate::db::build_db_pool;
-use axum::http::HeaderValue;
 use axum::{middleware::from_fn, routing::get, Router};
 use std::env;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 
 #[tokio::main]
@@ -13,11 +12,7 @@ async fn main() {
     dotenvy::dotenv().ok();
 
     let pool = build_db_pool();
-    let allow_origin = env::var("ALLOW_ORIGIN").expect("Missing ALLOW_ORIGIN");
-    let cors = CorsLayer::new()
-        .allow_origin(allow_origin.parse::<HeaderValue>().unwrap())
-        .allow_methods(Any)
-        .allow_headers(Any);
+    let cors = CorsLayer::permissive();
 
     let tracing_filter = tracing_subscriber::EnvFilter::new("tower_http::trace::make_span=debug,tower_http::trace::on_response=debug,tower_http::trace::on_request=debug");
     tracing_subscriber::fmt()
@@ -26,8 +21,10 @@ async fn main() {
 
     // build our application with a route
     let app = Router::new()
-        .route("/", get(|| async { "Hello, World!" }))
+        .route("/agent/login", get(|| async { "Hello, World!" }))
         .with_state(pool)
+        .layer(from_fn(middleware::Session::middleware))
+        .layer(from_fn(middleware::ApiKey::middleware))
         .layer(cors)
         .layer(TraceLayer::new_for_http());
 
