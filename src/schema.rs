@@ -15,8 +15,10 @@ diesel::table! {
         supertokens_user_id -> Nullable<Varchar>,
         created_at -> Timestamp,
         updated_at -> Timestamp,
+        fullname -> Varchar,
         email -> Varchar,
         phone_number -> Varchar,
+        profile_picture_url -> Nullable<Varchar>,
         role -> AgentRole,
     }
 }

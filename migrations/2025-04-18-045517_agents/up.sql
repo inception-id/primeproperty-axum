@@ -8,8 +8,10 @@ CREATE TABLE agents (
     supertokens_user_id VARCHAR,
     created_at TIMESTAMP NOT NULL DEFAULT NOW (),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW (),
+    fullname VARCHAR NOT NULL,
     email VARCHAR NOT NULL,
     phone_number VARCHAR NOT NULL,
+    profile_picture_url VARCHAR,
     role agent_role NOT NULL DEFAULT 'agent'
 );
 

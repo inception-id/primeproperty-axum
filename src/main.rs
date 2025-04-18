@@ -1,8 +1,10 @@
+mod agents;
 mod db;
 mod middleware;
+mod schema;
 
 use crate::db::build_db_pool;
-use axum::{middleware::from_fn, routing::get, Router};
+use axum::{middleware::from_fn, Router};
 use std::env;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
@@ -21,7 +23,7 @@ async fn main() {
 
     // build our application with a route
     let app = Router::new()
-        .route("/agent/login", get(|| async { "Hello, World!" }))
+        .nest("/agents", agents::agent_routes())
         .with_state(pool)
         .layer(from_fn(middleware::Session::middleware))
         .layer(cors)
