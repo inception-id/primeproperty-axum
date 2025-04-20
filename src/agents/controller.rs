@@ -3,7 +3,7 @@ use crate::{
     db::DbPool,
     middleware::{AxumResponse, JsonResponse},
 };
-use axum::extract::{Path, Query, State};
+use axum::extract::{Path, State};
 use axum::routing::get;
 use axum::Router;
 
