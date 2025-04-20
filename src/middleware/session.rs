@@ -1,7 +1,7 @@
 use super::{axum_response::AxumResponse, JsonResponse};
 use axum::{
     extract::Request,
-    http::{header, HeaderValue, Method},
+    http::{HeaderMap, HeaderValue, Method},
     middleware::Next,
     response::Response,
 };
@@ -56,13 +56,22 @@ impl Session {
             .await
     }
 
+    pub fn extract_session_user_id(header_map: &HeaderMap) -> uuid::Uuid {
+        let user_id = header_map
+            .get("x-user-id")
+            .expect("Missing x-user-id")
+            .to_str()
+            .unwrap_or("");
+        uuid::Uuid::parse_str(user_id).expect("Invalid x-user-id")
+    }
+
     pub async fn middleware(req: Request, next: Next) -> Result<Response, AxumResponse<String>> {
         let method = req.method();
 
         match method {
             &Method::GET => Ok(next.run(req).await),
             _ => {
-                let authorization_header = req.headers().get(header::AUTHORIZATION);
+                let authorization_header = req.headers().get("x-access-token");
                 let access_token = match authorization_header {
                     Some(header_value) => header_value.to_str().unwrap_or(""),
                     None => {

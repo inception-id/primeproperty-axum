@@ -2,6 +2,7 @@ mod agents;
 mod db;
 mod middleware;
 mod schema;
+mod traits;
 
 use crate::db::build_db_pool;
 use axum::{middleware::from_fn, Router};
