@@ -1,5 +1,5 @@
 use super::model::Agent;
-use crate::middleware::Session;
+use crate::middleware::{Role, Session};
 use crate::traits::Crud;
 use crate::{
     db::DbPool,
@@ -8,6 +8,7 @@ use crate::{
 };
 use axum::extract::{Json, Path, State};
 use axum::http::HeaderMap;
+use axum::middleware::from_fn_with_state;
 use axum::routing::{get, post};
 use axum::Router;
 use diesel::prelude::Insertable;
@@ -25,7 +26,7 @@ async fn find_agent_by_supertokens_user_id(
 
 #[derive(Deserialize, Insertable)]
 #[diesel(table_name = schema::agents)]
-pub(crate) struct CreateAgentPayload {
+pub struct CreateAgentPayload {
     supertokens_user_id: String,
     fullname: String,
     email: String,
@@ -44,8 +45,9 @@ async fn create_agent(
     }
 }
 
-pub fn agent_routes() -> Router<DbPool> {
+pub fn agent_routes(pool: DbPool) -> Router<DbPool> {
     Router::new()
         .route("/", post(create_agent))
+        .layer(from_fn_with_state(pool.clone(), Role::middleware))
         .route("/supertokens/{id}", get(find_agent_by_supertokens_user_id))
 }

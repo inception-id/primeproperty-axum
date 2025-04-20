@@ -8,7 +8,7 @@ use crate::schema::agents;
 use crate::traits::Crud;
 
 #[derive(Debug, Serialize, Queryable)]
-pub(super) struct Agent {
+pub struct Agent {
     id: uuid::Uuid,
     supertokens_user_id: Option<String>,
     created_at: chrono::NaiveDateTime,
@@ -17,7 +17,7 @@ pub(super) struct Agent {
     email: String,
     phone_number: String,
     profile_picture_url: Option<String>,
-    role: AgentRole,
+    pub role: AgentRole,
 }
 
 impl Agent {
@@ -30,6 +30,12 @@ impl Agent {
         agents::table
             .filter(agents::supertokens_user_id.eq(supertokens_user_id))
             .get_result(conn)
+    }
+
+    pub fn find_by_id(pool: &DbPool, id: &uuid::Uuid) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        agents::table.find(id).get_result(conn)
     }
 }
 

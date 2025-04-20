@@ -8,7 +8,7 @@ use std::io::Write;
 
 #[derive(Debug, AsExpression, Deserialize, Serialize, Clone, FromSqlRow)]
 #[diesel(sql_type = sql_types::AgentRole)]
-pub(super) enum AgentRole {
+pub enum AgentRole {
     Admin,
     Agent,
 }
