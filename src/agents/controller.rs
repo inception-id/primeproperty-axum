@@ -39,9 +39,18 @@ async fn create_agent(
     Json(payload): Json<CreateAgentPayload>,
 ) -> AxumResponse<Agent> {
     let user_id = Session::extract_session_user_id(&headers);
-    match Agent::create(&pool, &user_id, &payload) {
-        Ok(agent) => JsonResponse::send(201, Some(agent), None),
-        Err(err) => JsonResponse::send(500, None, Some(err.to_string())),
+
+    // test this
+    match Agent::find_by_email_or_phone_number(&pool, &payload.email, &payload.phone_number) {
+        Ok(_) => JsonResponse::send(
+            400,
+            None,
+            Some("Email or phone number already exists".to_string()),
+        ),
+        _ => match Agent::create(&pool, &user_id, &payload) {
+            Ok(agent) => JsonResponse::send(201, Some(agent), None),
+            Err(err) => JsonResponse::send(500, None, Some(err.to_string())),
+        },
     }
 }
 

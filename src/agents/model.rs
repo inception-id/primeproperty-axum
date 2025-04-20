@@ -1,4 +1,6 @@
-use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
+use diesel::{
+    BoolExpressionMethods, ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl,
+};
 use serde::Serialize;
 
 use super::agent_role::AgentRole;
@@ -36,6 +38,22 @@ impl Agent {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         agents::table.find(id).get_result(conn)
+    }
+
+    pub(super) fn find_by_email_or_phone_number(
+        pool: &DbPool,
+        email: &str,
+        phone_number: &str,
+    ) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        agents::table
+            .filter(
+                agents::phone_number
+                    .eq(phone_number)
+                    .or(agents::email.eq(email)),
+            )
+            .get_result(conn)
     }
 }
 
