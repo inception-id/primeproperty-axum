@@ -6,7 +6,7 @@ use crate::{
     middleware::{AxumResponse, JsonResponse},
     schema,
 };
-use axum::extract::{Json, Path, State};
+use axum::extract::{Json, Path, Query, State};
 use axum::http::HeaderMap;
 use axum::middleware::from_fn_with_state;
 use axum::routing::{get, post};
@@ -54,9 +54,25 @@ async fn create_agent(
     }
 }
 
+#[derive(Deserialize)]
+pub struct FindAgentQuery {
+    pub name_or_email: Option<String>,
+    pub page: Option<i64>,
+}
+async fn find_agents(
+    State(pool): State<DbPool>,
+    Query(query): Query<FindAgentQuery>,
+) -> AxumResponse<Vec<Agent>> {
+    match Agent::find(&pool, &query) {
+        Ok(agents) => JsonResponse::send(200, Some(agents), None),
+        Err(err) => JsonResponse::send(500, None, Some(err.to_string())),
+    }
+}
+
 pub fn agent_routes(pool: DbPool) -> Router<DbPool> {
     Router::new()
         .route("/", post(create_agent))
+        .route("/", get(find_agents))
         .layer(from_fn_with_state(pool.clone(), Role::middleware))
         .route("/supertokens/{id}", get(find_agent_by_supertokens_user_id))
 }

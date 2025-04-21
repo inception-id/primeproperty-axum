@@ -67,9 +67,10 @@ impl Session {
 
     pub async fn middleware(req: Request, next: Next) -> Result<Response, AxumResponse<String>> {
         let method = req.method();
+        let path = req.uri().path();
 
         match method {
-            &Method::GET => Ok(next.run(req).await),
+            &Method::GET if path != "/agents" => Ok(next.run(req).await),
             _ => {
                 let authorization_header = req.headers().get("x-access-token");
                 let access_token = match authorization_header {

@@ -1,13 +1,14 @@
 use diesel::{
-    BoolExpressionMethods, ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl,
+    BoolExpressionMethods, ExpressionMethods, PgTextExpressionMethods, QueryDsl, QueryResult,
+    Queryable, RunQueryDsl,
 };
 use serde::Serialize;
 
 use super::agent_role::AgentRole;
-use super::controller::CreateAgentPayload;
+use super::controller::{CreateAgentPayload, FindAgentQuery};
 use crate::db::DbPool;
 use crate::schema::agents;
-use crate::traits::Crud;
+use crate::traits::{Crud, PAGE_SIZE};
 
 #[derive(Debug, Serialize, Queryable)]
 pub struct Agent {
@@ -61,6 +62,7 @@ impl Crud for Agent {
     type Output = Self;
     type SchemaTable = agents::table;
     type CreatePayload = CreateAgentPayload;
+    type FindQueries = FindAgentQuery;
 
     fn schema_table() -> Self::SchemaTable {
         agents::table
@@ -76,5 +78,43 @@ impl Crud for Agent {
         diesel::insert_into(Self::schema_table())
             .values(payload)
             .get_result(conn)
+    }
+
+    fn find(pool: &DbPool, find_queries: &Self::FindQueries) -> QueryResult<Vec<Self>> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        let mut query = agents::table
+            .order_by(agents::created_at.desc())
+            .into_boxed();
+
+        match &find_queries.name_or_email {
+            Some(name_or_email) => {
+                query = query.filter(
+                    agents::role.ne(AgentRole::Admin).and(
+                        agents::fullname
+                            .ilike(format!("%{}", name_or_email))
+                            .or(agents::fullname.ilike(format!("%{}%", name_or_email)))
+                            .or(agents::fullname.ilike(format!("{}%", name_or_email)))
+                            .or(agents::email.ilike(format!("%{}", name_or_email)))
+                            .or(agents::email.ilike(format!("%{}%", name_or_email)))
+                            .or(agents::email.ilike(format!("{}%", name_or_email))),
+                    ),
+                );
+            }
+            None => query = query.filter(agents::role.ne(AgentRole::Admin)),
+        }
+
+        match &find_queries.page {
+            Some(page) => {
+                let offset = (page - 1) * PAGE_SIZE;
+                query = query.offset(offset).limit(PAGE_SIZE);
+            }
+            None => {
+                query = query.limit(PAGE_SIZE);
+            }
+        };
+
+        query.get_results(conn)
+        // .get_results(conn)
     }
 }

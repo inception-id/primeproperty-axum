@@ -1,3 +1,3 @@
 mod crud;
 
-pub use crud::Crud;
+pub use crud::{Crud, PAGE_SIZE};
