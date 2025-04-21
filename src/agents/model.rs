@@ -41,19 +41,11 @@ impl Agent {
         agents::table.find(id).get_result(conn)
     }
 
-    pub(super) fn find_by_email_or_phone_number(
-        pool: &DbPool,
-        email: &str,
-        phone_number: &str,
-    ) -> QueryResult<Self> {
+    pub(super) fn find_by_email(pool: &DbPool, email: &str) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         agents::table
-            .filter(
-                agents::phone_number
-                    .eq(phone_number)
-                    .or(agents::email.eq(email)),
-            )
+            .filter(agents::email.eq(email))
             .get_result(conn)
     }
 }
