@@ -31,6 +31,7 @@ pub struct CreateAgentPayload {
     fullname: String,
     email: String,
     phone_number: String,
+    profile_picture_url: Option<String>,
 }
 
 async fn create_agent(
