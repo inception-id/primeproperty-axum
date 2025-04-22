@@ -8,7 +8,7 @@ pub trait Crud {
     type CreatePayload: Insertable<Self::SchemaTable> + DeserializeOwned;
     type FindQueries: DeserializeOwned;
 
-    const PAGE_SIZE: i64 = 10;
+    const PAGE_SIZE: i64 = 15;
 
     fn schema_table() -> Self::SchemaTable;
 

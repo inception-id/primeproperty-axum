@@ -139,16 +139,6 @@ impl Crud for Agent {
             None => query = query.filter(agents::role.ne(AgentRole::Admin)),
         }
 
-        match &find_queries.page {
-            Some(page) => {
-                let offset = (page - 1) * Self::PAGE_SIZE;
-                query = query.offset(offset).limit(Self::PAGE_SIZE);
-            }
-            None => {
-                query = query.limit(Self::PAGE_SIZE);
-            }
-        };
-
         query.get_result(conn)
     }
 }
