@@ -5,7 +5,7 @@ use diesel::{
 use serde::Serialize;
 
 use super::agent_role::AgentRole;
-use super::controller::{CreateAgentPayload, FindAgentQuery};
+use super::controller::{CreateAgentPayload, FindAgentQuery, UpdateAgentPayload};
 use crate::db::DbPool;
 use crate::schema::agents;
 use crate::traits::Crud;
@@ -46,6 +46,27 @@ impl Agent {
 
         agents::table
             .filter(agents::email.eq(email))
+            .get_result(conn)
+    }
+
+    pub(super) fn update_agent(
+        pool: &DbPool,
+        user_id: &uuid::Uuid,
+        payload: &UpdateAgentPayload,
+    ) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        diesel::update(agents::table)
+            .filter(agents::id.eq(user_id))
+            .set(payload)
+            .get_result(conn)
+    }
+
+    pub(super) fn delete_agent(pool: &DbPool, user_id: &uuid::Uuid) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        diesel::delete(agents::table)
+            .filter(agents::id.eq(user_id))
             .get_result(conn)
     }
 }
