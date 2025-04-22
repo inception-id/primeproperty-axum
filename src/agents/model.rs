@@ -35,7 +35,7 @@ impl Agent {
             .get_result(conn)
     }
 
-    pub fn find_by_id(pool: &DbPool, id: &uuid::Uuid) -> QueryResult<Self> {
+    pub fn find_by_agent_id(pool: &DbPool, id: &uuid::Uuid) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         agents::table.find(id).get_result(conn)

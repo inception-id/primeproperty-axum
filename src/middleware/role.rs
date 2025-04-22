@@ -20,7 +20,7 @@ impl Role {
         let headers = req.headers();
         let user_id = Session::extract_session_user_id(&headers);
 
-        match Agent::find_by_id(&pool, &user_id) {
+        match Agent::find_by_agent_id(&pool, &user_id) {
             Ok(agent) => match agent.role {
                 AgentRole::Admin => Ok(next.run(req).await),
                 AgentRole::Agent => {
