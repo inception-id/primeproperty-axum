@@ -1,5 +1,5 @@
 use super::model::Agent;
-use crate::middleware::{Role, Session};
+use crate::middleware::{JsonFindResponse, Role, Session};
 use crate::traits::Crud;
 use crate::{
     db::DbPool,
@@ -57,12 +57,28 @@ pub struct FindAgentQuery {
 }
 async fn find_agents(
     State(pool): State<DbPool>,
+    headers: HeaderMap,
     Query(query): Query<FindAgentQuery>,
-) -> AxumResponse<Vec<Agent>> {
-    match Agent::find(&pool, &query) {
-        Ok(agents) => JsonResponse::send(200, Some(agents), None),
-        Err(err) => JsonResponse::send(500, None, Some(err.to_string())),
-    }
+) -> AxumResponse<JsonFindResponse<Vec<Agent>>> {
+    let user_id = Session::extract_session_user_id(&headers);
+    let agents = match Agent::find(&pool, &user_id, &query) {
+        Ok(agents) => agents,
+        Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
+    };
+
+    let total_agent_pages = match Agent::count_find_total(&pool, &user_id, &query) {
+        Ok(agents_count) => (agents_count / Agent::PAGE_SIZE) + 1,
+        Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
+    };
+
+    JsonResponse::send(
+        200,
+        Some(JsonFindResponse {
+            data: agents,
+            total_pages: total_agent_pages,
+        }),
+        None,
+    )
 }
 
 pub fn agent_routes(pool: DbPool) -> Router<DbPool> {

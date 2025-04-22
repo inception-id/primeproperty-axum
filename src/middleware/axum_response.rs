@@ -34,3 +34,9 @@ impl<T> JsonResponse<T> {
         (StatusCode::from_u16(status).unwrap(), Json(response))
     }
 }
+
+#[derive(Debug, Serialize)]
+pub struct JsonFindResponse<T> {
+    pub data: T,
+    pub total_pages: i64,
+}
