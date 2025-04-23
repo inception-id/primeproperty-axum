@@ -19,13 +19,13 @@ pub trait Crud {
     ) -> QueryResult<Self::Output>;
 
     // TODO:  Count page total
-    fn find(
+    fn find_many_by_user_id(
         pool: &DbPool,
         user_id: &uuid::Uuid,
         queries: &Self::FindQueries,
     ) -> QueryResult<Vec<Self::Output>>;
 
-    fn count_find_total(
+    fn count_find_many_by_user_id_total(
         pool: &DbPool,
         user_id: &uuid::Uuid,
         queries: &Self::FindQueries,

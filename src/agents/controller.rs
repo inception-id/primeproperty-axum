@@ -62,12 +62,12 @@ async fn find_agents(
     Query(query): Query<FindAgentQuery>,
 ) -> AxumResponse<JsonFindResponse<Vec<Agent>>> {
     let user_id = Session::extract_session_user_id(&headers);
-    let agents = match Agent::find(&pool, &user_id, &query) {
+    let agents = match Agent::find_many_by_user_id(&pool, &user_id, &query) {
         Ok(agents) => agents,
         Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
     };
 
-    let total_agent_pages = match Agent::count_find_total(&pool, &user_id, &query) {
+    let total_agent_pages = match Agent::count_find_many_by_user_id_total(&pool, &user_id, &query) {
         Ok(agents_count) => (agents_count / Agent::PAGE_SIZE) + 1,
         Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
     };

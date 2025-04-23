@@ -35,7 +35,7 @@ impl Agent {
             .get_result(conn)
     }
 
-    pub fn find_by_agent_id(pool: &DbPool, id: &uuid::Uuid) -> QueryResult<Self> {
+    pub fn find_by_user_id(pool: &DbPool, id: &uuid::Uuid) -> QueryResult<Self> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         agents::table.find(id).get_result(conn)
@@ -93,7 +93,7 @@ impl Crud for Agent {
             .get_result(conn)
     }
 
-    fn find(
+    fn find_many_by_user_id(
         pool: &DbPool,
         #[allow(unused_variables)] uuid: &uuid::Uuid,
         find_queries: &Self::FindQueries,
@@ -134,7 +134,7 @@ impl Crud for Agent {
         query.get_results(conn)
     }
 
-    fn count_find_total(
+    fn count_find_many_by_user_id_total(
         pool: &DbPool,
         #[allow(unused_variables)] uuid: &uuid::Uuid,
         find_queries: &Self::FindQueries,
