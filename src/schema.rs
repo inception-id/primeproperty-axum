@@ -48,42 +48,38 @@ diesel::table! {
 
     properties (id) {
         id -> Int4,
-        agent_id -> Uuid,
+        user_id -> Uuid,
         created_at -> Nullable<Timestamp>,
         updated_at -> Nullable<Timestamp>,
+        site_path -> Varchar,
         #[max_length = 255]
         title -> Varchar,
         description -> Text,
-        address -> Text,
+        #[max_length = 255]
+        province -> Varchar,
+        #[max_length = 255]
+        regency -> Varchar,
+        #[max_length = 255]
+        street -> Varchar,
         gmap_iframe -> Nullable<Text>,
         price -> Int4,
         images -> Jsonb,
         purchase_status -> PurchaseStatus,
         sold_status -> SoldStatus,
-        land_area -> Nullable<Int4>,
-        land_width -> Nullable<Int4>,
-        land_length -> Nullable<Int4>,
+        land_measurements -> Jsonb,
         #[max_length = 255]
         building_type -> Varchar,
         building_condition -> BuildingCondition,
         building_furniture_capacity -> Nullable<FurnitureCapacity>,
         #[max_length = 255]
         building_certificate -> Varchar,
-        building_levels -> Int4,
-        building_area -> Nullable<Int4>,
-        building_width -> Nullable<Int4>,
-        building_length -> Nullable<Int4>,
-        building_height -> Nullable<Int4>,
-        bedrooms_count -> Nullable<Int4>,
-        bathrooms_count -> Nullable<Int4>,
-        garage_capacity -> Nullable<Int4>,
-        carport_capacity -> Nullable<Int4>,
-        electrical_power -> Nullable<Int4>,
+        building_measurements -> Jsonb,
+        specifications -> Jsonb,
         facilities -> Jsonb,
     }
 }
 
-diesel::joinable!(properties -> agents (agent_id));
+diesel::joinable!(properties -> agents (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     agents,

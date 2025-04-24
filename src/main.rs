@@ -1,6 +1,7 @@
 mod agents;
 mod db;
 mod middleware;
+mod properties;
 mod schema;
 mod traits;
 
