@@ -77,10 +77,6 @@ impl Crud for Agent {
     type CreatePayload = CreateAgentPayload;
     type FindQueries = FindAgentQuery;
 
-    fn schema_table() -> Self::SchemaTable {
-        agents::table
-    }
-
     fn create(
         pool: &DbPool,
         #[allow(unused_variables)] uuid: &uuid::Uuid,
@@ -88,7 +84,7 @@ impl Crud for Agent {
     ) -> QueryResult<Self::Output> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
-        diesel::insert_into(Self::schema_table())
+        diesel::insert_into(agents::table)
             .values(payload)
             .get_result(conn)
     }

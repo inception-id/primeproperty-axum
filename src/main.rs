@@ -26,6 +26,7 @@ async fn main() {
     // build our application with a route
     let app = Router::new()
         .nest("/agents", agents::agent_routes(pool.clone()))
+        .nest("/properties", properties::property_routes())
         .with_state(pool)
         .layer(from_fn(middleware::Session::middleware))
         .layer(cors)

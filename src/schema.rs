@@ -49,8 +49,8 @@ diesel::table! {
     properties (id) {
         id -> Int4,
         user_id -> Uuid,
-        created_at -> Nullable<Timestamp>,
-        updated_at -> Nullable<Timestamp>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
         site_path -> Varchar,
         #[max_length = 255]
         title -> Varchar,
@@ -62,7 +62,7 @@ diesel::table! {
         #[max_length = 255]
         street -> Varchar,
         gmap_iframe -> Nullable<Text>,
-        price -> Int4,
+        price -> Int8,
         images -> Jsonb,
         purchase_status -> PurchaseStatus,
         sold_status -> SoldStatus,

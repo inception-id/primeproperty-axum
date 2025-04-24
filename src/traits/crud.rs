@@ -10,15 +10,12 @@ pub trait Crud {
 
     const PAGE_SIZE: i64 = 15;
 
-    fn schema_table() -> Self::SchemaTable;
-
     fn create(
         pool: &DbPool,
         user_id: &uuid::Uuid,
         payload: &Self::CreatePayload,
     ) -> QueryResult<Self::Output>;
 
-    // TODO:  Count page total
     fn find_many_by_user_id(
         pool: &DbPool,
         user_id: &uuid::Uuid,

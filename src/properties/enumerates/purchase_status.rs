@@ -35,3 +35,13 @@ impl FromSql<sql_types::PurchaseStatus, Pg> for PurchaseStatus {
         }
     }
 }
+
+impl PurchaseStatus {
+    pub fn to_slug(&self) -> &'static str {
+        match self {
+            PurchaseStatus::ForSale => "dijual",
+            PurchaseStatus::ForRent => "disewa",
+            PurchaseStatus::ForSaleOrRent => "dijual-dan-disewa",
+        }
+    }
+}
