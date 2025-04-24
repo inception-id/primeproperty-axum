@@ -15,6 +15,13 @@ use diesel::prelude::Insertable;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
+pub(crate) struct Images {
+    path: String,
+    english_label: String,
+    indonesian_label: String,
+}
+
+#[derive(Deserialize, Serialize)]
 pub(crate) struct LandMeasurements {
     area: Option<i32>,
     width: Option<i32>,
@@ -54,7 +61,7 @@ pub(crate) struct CreatePropertyApiPayload {
     street: String,
     gmap_iframe: Option<String>,
     price: i64,
-    images: Vec<String>,
+    images: Vec<Images>,
     purchase_status: PurchaseStatus,
     land_measurements: LandMeasurements,
     building_type: String,
