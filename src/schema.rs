@@ -76,6 +76,7 @@ diesel::table! {
         building_measurements -> Jsonb,
         specifications -> Jsonb,
         facilities -> Jsonb,
+        is_deleted -> Bool,
     }
 }
 

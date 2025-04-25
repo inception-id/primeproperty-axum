@@ -36,7 +36,8 @@ CREATE TABLE properties (
     building_certificate VARCHAR(255) NOT NULL,
     building_measurements JSONB NOT NULL DEFAULT '{}',
     specifications JSONB NOT NULL DEFAULT '{}',
-    facilities JSONB NOT NULL DEFAULT '[]'
+    facilities JSONB NOT NULL DEFAULT '[]',
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 SELECT

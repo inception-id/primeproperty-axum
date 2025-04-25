@@ -34,6 +34,7 @@ pub(crate) struct Property {
     building_measurements: serde_json::Value,
     specifications: serde_json::Value,
     facilities: serde_json::Value,
+    is_deleted: bool,
 }
 
 impl Crud for Property {
