@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
 pub(crate) struct Images {
+    is_cover: bool,
     path: String,
     english_label: String,
     indonesian_label: String,
