@@ -22,18 +22,10 @@ pub(crate) struct Images {
 }
 
 #[derive(Deserialize, Serialize)]
-pub(crate) struct LandMeasurements {
-    area: Option<i32>,
-    width: Option<i32>,
-    length: Option<i32>,
-}
-
-#[derive(Deserialize, Serialize)]
-pub(crate) struct BuildingMeasurements {
-    area: Option<i32>,
-    width: Option<i32>,
-    length: Option<i32>,
-    height: Option<i32>,
+pub(crate) struct Measurements {
+    land_area: Option<i32>,
+    building_area: Option<i32>,
+    building_level: Option<i32>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -63,12 +55,11 @@ pub(crate) struct CreatePropertyApiPayload {
     price: i64,
     images: Vec<Images>,
     purchase_status: PurchaseStatus,
-    land_measurements: LandMeasurements,
+    measurements: Measurements,
     building_type: String,
     building_condition: BuildingCondition,
     building_furniture_capacity: Option<FurnitureCapacity>,
     building_certificate: String,
-    building_measurements: BuildingMeasurements,
     specifications: Specifications,
     facilities: Vec<Facilities>,
 }
@@ -86,12 +77,11 @@ pub(crate) struct CreatePropertySqlPayload {
     price: i64,
     images: serde_json::Value,
     purchase_status: PurchaseStatus,
-    land_measurements: serde_json::Value,
+    measurements: serde_json::Value,
     building_type: String,
     building_condition: BuildingCondition,
     building_furniture_capacity: Option<FurnitureCapacity>,
     building_certificate: String,
-    building_measurements: serde_json::Value,
     specifications: serde_json::Value,
     facilities: serde_json::Value,
 }
@@ -118,12 +108,11 @@ fn to_sql_payload(api_payload: &CreatePropertyApiPayload) -> CreatePropertySqlPa
         price: api_payload.price,
         images: serde_json::json!(&api_payload.images),
         purchase_status: api_payload.purchase_status.clone(),
-        land_measurements: serde_json::json!(&api_payload.land_measurements),
-        building_type: api_payload.building_type.to_string(),
+        measurements: serde_json::json!(&api_payload.measurements),
+        building_type: api_payload.building_type.to_lowercase(),
         building_condition: api_payload.building_condition.clone(),
         building_furniture_capacity: api_payload.building_furniture_capacity.clone(),
-        building_certificate: api_payload.building_certificate.to_string(),
-        building_measurements: serde_json::json!(&api_payload.building_measurements),
+        building_certificate: api_payload.building_certificate.to_lowercase(),
         specifications: serde_json::json!(&api_payload.specifications),
         facilities: serde_json::json!(&api_payload.facilities),
     }

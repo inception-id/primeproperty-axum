@@ -66,14 +66,13 @@ diesel::table! {
         images -> Jsonb,
         purchase_status -> PurchaseStatus,
         sold_status -> SoldStatus,
-        land_measurements -> Jsonb,
+        measurements -> Jsonb,
         #[max_length = 255]
         building_type -> Varchar,
         building_condition -> BuildingCondition,
         building_furniture_capacity -> Nullable<FurnitureCapacity>,
         #[max_length = 255]
         building_certificate -> Varchar,
-        building_measurements -> Jsonb,
         specifications -> Jsonb,
         facilities -> Jsonb,
         is_deleted -> Bool,

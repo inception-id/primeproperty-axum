@@ -29,12 +29,11 @@ CREATE TABLE properties (
     images JSONB NOT NULL DEFAULT '[]',
     purchase_status purchase_status NOT NULL,
     sold_status sold_status NOT NULL DEFAULT 'available',
-    land_measurements JSONB NOT NULL DEFAULT '{}',
+    measurements JSONB NOT NULL DEFAULT '{}',
     building_type VARCHAR(255) NOT NULL,
     building_condition building_condition NOT NULL,
     building_furniture_capacity furniture_capacity,
     building_certificate VARCHAR(255) NOT NULL,
-    building_measurements JSONB NOT NULL DEFAULT '{}',
     specifications JSONB NOT NULL DEFAULT '{}',
     facilities JSONB NOT NULL DEFAULT '[]',
     is_deleted BOOLEAN NOT NULL DEFAULT FALSE
