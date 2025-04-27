@@ -41,7 +41,6 @@ pub(crate) struct Specifications {
 #[derive(Deserialize, Serialize)]
 pub(crate) struct Facilities {
     value: String,
-    english_label: String,
     indonesian_label: String,
 }
 
