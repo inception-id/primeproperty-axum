@@ -1,4 +1,8 @@
-use axum::{extract::State, http::HeaderMap};
+use axum::{
+    extract::{Path, Query, State},
+    http::HeaderMap,
+};
+use serde::Deserialize;
 
 use crate::{
     agents::Agent,
@@ -8,11 +12,18 @@ use crate::{
     traits::PAGE_SIZE,
 };
 
+#[derive(Deserialize)]
+pub struct FindPropertyQuery {
+    pub s: Option<String>,
+    pub page: Option<i64>,
+}
+
 pub(crate) type PropertyWithAgent = (Property, String, String, Option<String>);
 
 pub async fn find_many_properties(
     State(pool): State<DbPool>,
     headers: HeaderMap,
+    Query(query): Query<FindPropertyQuery>,
 ) -> AxumResponse<JsonFindResponse<Vec<PropertyWithAgent>>> {
     let header_user_id = headers.get("x-user-id");
     let (user_id, role) = match header_user_id {
@@ -28,7 +39,7 @@ pub async fn find_many_properties(
         None => (None, None),
     };
 
-    let property_with_agent = match Property::find_many(&pool, &user_id, &role) {
+    let property_with_agent = match Property::find_many(&pool, &user_id, &role, &query) {
         Ok(property_with_agent) => property_with_agent,
         Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
     };
@@ -46,4 +57,14 @@ pub async fn find_many_properties(
         }),
         None,
     )
+}
+
+pub async fn find_one_by_id(
+    State(pool): State<DbPool>,
+    Path(id): Path<i32>,
+) -> AxumResponse<PropertyWithAgent> {
+    match Property::find_one_by_id(&pool, &id) {
+        Ok(property) => JsonResponse::send(200, Some(property), None),
+        Err(err) => JsonResponse::send(500, None, Some(err.to_string())),
+    }
 }

@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use super::controllers::PropertyWithAgent;
+use super::controllers::{FindPropertyQuery, PropertyWithAgent};
 use crate::agents::AgentRole;
 use crate::traits::Crud;
 use crate::{
@@ -8,7 +8,8 @@ use crate::{
     schema::{agents, properties},
 };
 use diesel::{
-    BoolExpressionMethods, ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl,
+    BoolExpressionMethods, ExpressionMethods, PgTextExpressionMethods, QueryDsl, QueryResult,
+    Queryable, RunQueryDsl,
 };
 
 use super::{
@@ -48,10 +49,11 @@ impl Property {
         pool: &DbPool,
         user_id: &Option<uuid::Uuid>,
         role: &Option<AgentRole>,
+        query: &FindPropertyQuery,
     ) -> QueryResult<Vec<PropertyWithAgent>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
-        let property_query = match role {
+        let mut property_query = match role {
             Some(role) => match role {
                 AgentRole::Admin => properties::table.into_boxed(),
                 AgentRole::Agent => properties::table
@@ -70,6 +72,24 @@ impl Property {
                 )
                 .into_boxed(),
         };
+
+        match &query.s {
+            Some(search_query) => match search_query.parse::<i32>() {
+                Ok(id) => property_query = property_query.filter(properties::id.eq(id)),
+                Err(_) => {
+                    property_query = property_query.filter(
+                        properties::title
+                            .ilike(format!("%{}", search_query))
+                            .or(properties::title.ilike(format!("%{}%", search_query)))
+                            .or(properties::title.ilike(format!("{}%", search_query)))
+                            .or(properties::street.ilike(format!("%{}", search_query)))
+                            .or(properties::street.ilike(format!("%{}%", search_query)))
+                            .or(properties::street.ilike(format!("{}%", search_query))),
+                    )
+                }
+            },
+            None => {}
+        }
 
         property_query
             .inner_join(agents::table)
@@ -111,6 +131,21 @@ impl Property {
         };
 
         property_query.count().get_result(conn)
+    }
+
+    pub(super) fn find_one_by_id(pool: &DbPool, id: &i32) -> QueryResult<PropertyWithAgent> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        properties::table
+            .filter(properties::id.eq(id))
+            .inner_join(agents::table)
+            .select((
+                properties::all_columns,
+                agents::fullname,
+                agents::phone_number,
+                agents::profile_picture_url,
+            ))
+            .get_result(conn)
     }
 }
 
