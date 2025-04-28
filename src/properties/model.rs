@@ -1,8 +1,15 @@
 use serde::Serialize;
 
+use super::controllers::PropertyWithAgent;
+use crate::agents::AgentRole;
 use crate::traits::Crud;
-use crate::{db::DbPool, schema::properties};
-use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
+use crate::{
+    db::DbPool,
+    schema::{agents, properties},
+};
+use diesel::{
+    BoolExpressionMethods, ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl,
+};
 
 use super::{
     controllers::CreatePropertySqlPayload,
@@ -36,11 +43,51 @@ pub(crate) struct Property {
     is_deleted: bool,
 }
 
+impl Property {
+    pub(super) fn find_many(
+        pool: &DbPool,
+        user_id: &Option<uuid::Uuid>,
+        role: &Option<AgentRole>,
+    ) -> QueryResult<Vec<PropertyWithAgent>> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        let property_query = match role {
+            Some(role) => match role {
+                AgentRole::Admin => properties::table.into_boxed(),
+                AgentRole::Agent => properties::table
+                    .filter(
+                        properties::user_id
+                            .eq(user_id.unwrap())
+                            .and(properties::is_deleted.eq(false)),
+                    )
+                    .into_boxed(),
+            },
+            None => properties::table
+                .filter(
+                    properties::is_deleted
+                        .eq(false)
+                        .and(properties::sold_status.eq(SoldStatus::Available)),
+                )
+                .into_boxed(),
+        };
+
+        property_query
+            .inner_join(agents::table)
+            .select((
+                properties::all_columns,
+                agents::fullname,
+                agents::phone_number,
+                agents::profile_picture_url,
+            ))
+            .order_by(properties::id.desc())
+            .get_results::<(Property, String, String, Option<String>)>(conn)
+    }
+}
+
 impl Crud for Property {
     type Output = Self;
     type SchemaTable = properties::table;
     type CreatePayload = CreatePropertySqlPayload;
-    type FindQueries = CreatePropertySqlPayload;
 
     fn create(
         pool: &DbPool,
@@ -51,29 +98,6 @@ impl Crud for Property {
 
         diesel::insert_into(properties::table)
             .values((properties::user_id.eq(uuid), payload))
-            .get_result(conn)
-    }
-
-    fn find_many_by_user_id(
-        pool: &DbPool,
-        user_id: &uuid::Uuid,
-        queries: &Self::FindQueries,
-    ) -> QueryResult<Vec<Self::Output>> {
-        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-
-        properties::table.get_results(conn)
-    }
-
-    fn count_find_many_by_user_id_total(
-        pool: &DbPool,
-        user_id: &uuid::Uuid,
-        queries: &Self::FindQueries,
-    ) -> QueryResult<i64> {
-        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-
-        properties::table
-            .count()
-            .filter(properties::user_id.eq(user_id))
             .get_result(conn)
     }
 }

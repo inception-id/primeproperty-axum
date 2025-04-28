@@ -69,30 +69,11 @@ impl Agent {
             .filter(agents::id.eq(user_id))
             .get_result(conn)
     }
-}
 
-impl Crud for Agent {
-    type Output = Self;
-    type SchemaTable = agents::table;
-    type CreatePayload = CreateAgentPayload;
-    type FindQueries = FindAgentQuery;
-
-    fn create(
+    pub(super) fn find_many_by_user_id(
         pool: &DbPool,
         #[allow(unused_variables)] uuid: &uuid::Uuid,
-        payload: &Self::CreatePayload,
-    ) -> QueryResult<Self::Output> {
-        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-
-        diesel::insert_into(agents::table)
-            .values(payload)
-            .get_result(conn)
-    }
-
-    fn find_many_by_user_id(
-        pool: &DbPool,
-        #[allow(unused_variables)] uuid: &uuid::Uuid,
-        find_queries: &Self::FindQueries,
+        find_queries: &FindAgentQuery,
     ) -> QueryResult<Vec<Self>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
@@ -130,10 +111,10 @@ impl Crud for Agent {
         query.get_results(conn)
     }
 
-    fn count_find_many_by_user_id_total(
+    pub(super) fn count_find_many_by_user_id_total(
         pool: &DbPool,
         #[allow(unused_variables)] uuid: &uuid::Uuid,
-        find_queries: &Self::FindQueries,
+        find_queries: &FindAgentQuery,
     ) -> QueryResult<i64> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
@@ -157,5 +138,23 @@ impl Crud for Agent {
         }
 
         query.get_result(conn)
+    }
+}
+
+impl Crud for Agent {
+    type Output = Self;
+    type SchemaTable = agents::table;
+    type CreatePayload = CreateAgentPayload;
+
+    fn create(
+        pool: &DbPool,
+        #[allow(unused_variables)] uuid: &uuid::Uuid,
+        payload: &Self::CreatePayload,
+    ) -> QueryResult<Self::Output> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        diesel::insert_into(agents::table)
+            .values(payload)
+            .get_result(conn)
     }
 }
