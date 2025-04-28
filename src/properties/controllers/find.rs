@@ -3,8 +3,9 @@ use axum::{extract::State, http::HeaderMap};
 use crate::{
     agents::Agent,
     db::DbPool,
-    middleware::{AxumResponse, JsonResponse, Session},
+    middleware::{AxumResponse, JsonFindResponse, JsonResponse, Session},
     properties::model::Property,
+    traits::PAGE_SIZE,
 };
 
 pub(crate) type PropertyWithAgent = (Property, String, String, Option<String>);
@@ -12,7 +13,7 @@ pub(crate) type PropertyWithAgent = (Property, String, String, Option<String>);
 pub async fn find_many_properties(
     State(pool): State<DbPool>,
     headers: HeaderMap,
-) -> AxumResponse<Vec<PropertyWithAgent>> {
+) -> AxumResponse<JsonFindResponse<Vec<PropertyWithAgent>>> {
     let header_user_id = headers.get("x-user-id");
     let (user_id, role) = match header_user_id {
         Some(_) => {
@@ -27,8 +28,22 @@ pub async fn find_many_properties(
         None => (None, None),
     };
 
-    match Property::find_many(&pool, &user_id, &role) {
-        Ok(property_with_agent) => JsonResponse::send(200, Some(property_with_agent), None),
-        Err(err) => JsonResponse::send(500, None, Some(err.to_string())),
-    }
+    let property_with_agent = match Property::find_many(&pool, &user_id, &role) {
+        Ok(property_with_agent) => property_with_agent,
+        Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
+    };
+
+    let total_property_pages = match Property::count_find_many_total(&pool, &user_id, &role) {
+        Ok(property_with_agent_count) => (property_with_agent_count / PAGE_SIZE) + 1,
+        Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
+    };
+
+    JsonResponse::send(
+        200,
+        Some(JsonFindResponse {
+            data: property_with_agent,
+            total_pages: total_property_pages,
+        }),
+        None,
+    )
 }

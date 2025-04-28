@@ -2,12 +2,12 @@ use crate::db::DbPool;
 use diesel::{Insertable, QueryResult, Table};
 use serde::de::DeserializeOwned;
 
+pub const PAGE_SIZE: i64 = 15;
+
 pub trait Crud {
     type Output;
     type SchemaTable: Table;
     type CreatePayload: Insertable<Self::SchemaTable> + DeserializeOwned;
-
-    const PAGE_SIZE: i64 = 15;
 
     fn create(
         pool: &DbPool,

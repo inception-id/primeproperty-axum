@@ -8,7 +8,7 @@ use super::agent_role::AgentRole;
 use super::controller::{CreateAgentPayload, FindAgentQuery, UpdateAgentPayload};
 use crate::db::DbPool;
 use crate::schema::agents;
-use crate::traits::Crud;
+use crate::traits::{Crud, PAGE_SIZE};
 
 #[derive(Debug, Serialize, Queryable)]
 pub struct Agent {
@@ -70,9 +70,8 @@ impl Agent {
             .get_result(conn)
     }
 
-    pub(super) fn find_many_by_user_id(
+    pub(super) fn find_many(
         pool: &DbPool,
-        #[allow(unused_variables)] uuid: &uuid::Uuid,
         find_queries: &FindAgentQuery,
     ) -> QueryResult<Vec<Self>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
@@ -100,20 +99,19 @@ impl Agent {
 
         match &find_queries.page {
             Some(page) => {
-                let offset = (page - 1) * Self::PAGE_SIZE;
-                query = query.offset(offset).limit(Self::PAGE_SIZE);
+                let offset = (page - 1) * PAGE_SIZE;
+                query = query.offset(offset).limit(PAGE_SIZE);
             }
             None => {
-                query = query.limit(Self::PAGE_SIZE);
+                query = query.limit(PAGE_SIZE);
             }
         };
 
         query.get_results(conn)
     }
 
-    pub(super) fn count_find_many_by_user_id_total(
+    pub(super) fn count_find_many_total(
         pool: &DbPool,
-        #[allow(unused_variables)] uuid: &uuid::Uuid,
         find_queries: &FindAgentQuery,
     ) -> QueryResult<i64> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");

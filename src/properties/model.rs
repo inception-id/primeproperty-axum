@@ -82,6 +82,36 @@ impl Property {
             .order_by(properties::id.desc())
             .get_results::<(Property, String, String, Option<String>)>(conn)
     }
+
+    pub(super) fn count_find_many_total(
+        pool: &DbPool,
+        user_id: &Option<uuid::Uuid>,
+        role: &Option<AgentRole>,
+    ) -> QueryResult<i64> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        let property_query = match role {
+            Some(role) => match role {
+                AgentRole::Admin => properties::table.into_boxed(),
+                AgentRole::Agent => properties::table
+                    .filter(
+                        properties::user_id
+                            .eq(user_id.unwrap())
+                            .and(properties::is_deleted.eq(false)),
+                    )
+                    .into_boxed(),
+            },
+            None => properties::table
+                .filter(
+                    properties::is_deleted
+                        .eq(false)
+                        .and(properties::sold_status.eq(SoldStatus::Available)),
+                )
+                .into_boxed(),
+        };
+
+        property_query.count().get_result(conn)
+    }
 }
 
 impl Crud for Property {
