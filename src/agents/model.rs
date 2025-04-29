@@ -5,10 +5,11 @@ use diesel::{
 use serde::Serialize;
 
 use super::agent_role::AgentRole;
+use super::controller::PAGE_SIZE;
 use super::controller::{CreateAgentPayload, FindAgentQuery, UpdateAgentPayload};
 use crate::db::DbPool;
 use crate::schema::agents;
-use crate::traits::{Crud, PAGE_SIZE};
+use crate::traits::Crud;
 
 #[derive(Debug, Serialize, Queryable)]
 pub struct Agent {

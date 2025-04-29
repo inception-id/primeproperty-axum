@@ -1,7 +1,7 @@
 use super::model::Agent;
 use super::AgentRole;
 use crate::middleware::{JsonFindResponse, Role, Session};
-use crate::traits::{Crud, PAGE_SIZE};
+use crate::traits::Crud;
 use crate::{
     db::DbPool,
     middleware::{AxumResponse, JsonResponse},
@@ -51,6 +51,7 @@ async fn create_agent(
     }
 }
 
+pub(super) const PAGE_SIZE: i64 = 15;
 #[derive(Deserialize)]
 pub struct FindAgentQuery {
     pub name_or_email: Option<String>,

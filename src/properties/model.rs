@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use super::controllers::{FindPropertyQuery, PropertyWithAgent};
+use super::controllers::{FindPropertyQuery, PropertyWithAgent, PAGE_SIZE};
 use crate::agents::AgentRole;
 use crate::traits::Crud;
 use crate::{
@@ -91,6 +91,32 @@ impl Property {
             None => {}
         }
 
+        match &query.province {
+            Some(province_query) => {
+                property_query =
+                    property_query.filter(properties::province.eq(province_query.to_lowercase()));
+            }
+            None => {}
+        }
+
+        match &query.regency {
+            Some(regency_query) => {
+                property_query =
+                    property_query.filter(properties::regency.eq(regency_query.to_lowercase()));
+            }
+            None => {}
+        }
+
+        match &query.page {
+            Some(page) => {
+                let offset = (page - 1) * PAGE_SIZE;
+                property_query = property_query.offset(offset).limit(PAGE_SIZE);
+            }
+            None => {
+                property_query = property_query.limit(PAGE_SIZE);
+            }
+        };
+
         property_query
             .inner_join(agents::table)
             .select((
@@ -107,10 +133,11 @@ impl Property {
         pool: &DbPool,
         user_id: &Option<uuid::Uuid>,
         role: &Option<AgentRole>,
+        query: &FindPropertyQuery,
     ) -> QueryResult<i64> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
-        let property_query = match role {
+        let mut property_query = match role {
             Some(role) => match role {
                 AgentRole::Admin => properties::table.into_boxed(),
                 AgentRole::Agent => properties::table
@@ -130,6 +157,23 @@ impl Property {
                 .into_boxed(),
         };
 
+        match &query.s {
+            Some(search_query) => match search_query.parse::<i32>() {
+                Ok(id) => property_query = property_query.filter(properties::id.eq(id)),
+                Err(_) => {
+                    property_query = property_query.filter(
+                        properties::title
+                            .ilike(format!("%{}", search_query))
+                            .or(properties::title.ilike(format!("%{}%", search_query)))
+                            .or(properties::title.ilike(format!("{}%", search_query)))
+                            .or(properties::street.ilike(format!("%{}", search_query)))
+                            .or(properties::street.ilike(format!("%{}%", search_query)))
+                            .or(properties::street.ilike(format!("{}%", search_query))),
+                    )
+                }
+            },
+            None => {}
+        }
         property_query.count().get_result(conn)
     }
 

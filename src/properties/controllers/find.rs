@@ -9,12 +9,14 @@ use crate::{
     db::DbPool,
     middleware::{AxumResponse, JsonFindResponse, JsonResponse, Session},
     properties::model::Property,
-    traits::PAGE_SIZE,
 };
 
+pub(crate) const PAGE_SIZE: i64 = 20;
 #[derive(Deserialize)]
 pub struct FindPropertyQuery {
     pub s: Option<String>,
+    pub province: Option<String>,
+    pub regency: Option<String>,
     pub page: Option<i64>,
 }
 
@@ -44,7 +46,8 @@ pub async fn find_many_properties(
         Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
     };
 
-    let total_property_pages = match Property::count_find_many_total(&pool, &user_id, &role) {
+    let total_property_pages = match Property::count_find_many_total(&pool, &user_id, &role, &query)
+    {
         Ok(property_with_agent_count) => (property_with_agent_count / PAGE_SIZE) + 1,
         Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
     };
