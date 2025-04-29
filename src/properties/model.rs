@@ -13,14 +13,14 @@ use diesel::{
 };
 
 use super::{
-    controllers::CreatePropertySqlPayload,
+    controllers::CreateUpdatePropertySqlPayload,
     enumerates::{BuildingCondition, FurnitureCapacity, PurchaseStatus, SoldStatus},
 };
 
 #[derive(Debug, Serialize, Queryable)]
 pub(crate) struct Property {
     id: i32,
-    user_id: uuid::Uuid,
+    pub user_id: uuid::Uuid,
     created_at: chrono::NaiveDateTime,
     updated_at: chrono::NaiveDateTime,
     site_path: String,
@@ -207,12 +207,24 @@ impl Property {
             ))
             .get_result(conn)
     }
+
+    pub(super) fn update(
+        pool: &DbPool,
+        id: &i32,
+        payload: &CreateUpdatePropertySqlPayload,
+    ) -> QueryResult<Property> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        diesel::update(properties::table.filter(properties::id.eq(id)))
+            .set(payload)
+            .get_result(conn)
+    }
 }
 
 impl Crud for Property {
     type Output = Self;
     type SchemaTable = properties::table;
-    type CreatePayload = CreatePropertySqlPayload;
+    type CreatePayload = CreateUpdatePropertySqlPayload;
 
     fn create(
         pool: &DbPool,

@@ -65,37 +65,55 @@ impl Session {
         uuid::Uuid::parse_str(user_id).expect("Invalid x-user-id")
     }
 
+    async fn check_session(
+        req: Request,
+        next: Next,
+    ) -> Result<axum::http::Response<axum::body::Body>, AxumResponse<String>> {
+        let authorization_header = req.headers().get("x-access-token");
+        let access_token = match authorization_header {
+            Some(header_value) => header_value.to_str().unwrap_or(""),
+            None => {
+                let response = JsonResponse::send(401, None, None);
+                return Err(response);
+            }
+        };
+        let session_verification = Self::verify_session(access_token).await;
+
+        match session_verification {
+            Ok(session) if session.status == "OK" => {
+                let mut new_req = req;
+                let x_user_id = HeaderValue::from_str(&session.session.userDataInJWT.id)
+                    .expect("Fail to convert x-user-id");
+                new_req.headers_mut().insert("x-user-id", x_user_id);
+                Ok(next.run(new_req).await)
+            }
+            _ => {
+                let response = JsonResponse::send(401, None, None);
+                Err(response)
+            }
+        }
+    }
+
     pub async fn middleware(req: Request, next: Next) -> Result<Response, AxumResponse<String>> {
         let method = req.method();
         let path = req.uri().path();
 
         match method {
-            &Method::GET if path != "/agents" => Ok(next.run(req).await),
-            _ => {
-                let authorization_header = req.headers().get("x-access-token");
-                let access_token = match authorization_header {
-                    Some(header_value) => header_value.to_str().unwrap_or(""),
-                    None => {
-                        let response = JsonResponse::send(401, None, None);
-                        return Err(response);
-                    }
-                };
-                let session_verification = Self::verify_session(access_token).await;
-
-                match session_verification {
-                    Ok(session) if session.status == "OK" => {
-                        let mut new_req = req;
-                        let x_user_id = HeaderValue::from_str(&session.session.userDataInJWT.id)
-                            .expect("Fail to convert x-user-id");
-                        new_req.headers_mut().insert("x-user-id", x_user_id);
-                        Ok(next.run(new_req).await)
-                    }
-                    _ => {
-                        let response = JsonResponse::send(401, None, None);
-                        Err(response)
+            &Method::GET => {
+                if path == "/agents" {
+                    return Self::check_session(req, next).await;
+                }
+                if path == "/properties" {
+                    let authorization_header = req.headers().get("x-access-token");
+                    match authorization_header {
+                        Some(_) => return Self::check_session(req, next).await,
+                        None => return Ok(next.run(req).await),
                     }
                 }
+
+                Ok(next.run(req).await)
             }
+            _ => Self::check_session(req, next).await,
         }
     }
 }
