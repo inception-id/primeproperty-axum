@@ -78,24 +78,23 @@ impl Agent {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         let mut query = agents::table
+            .filter(agents::role.ne(AgentRole::Admin))
             .order_by(agents::created_at.desc())
             .into_boxed();
 
         match &find_queries.name_or_email {
             Some(name_or_email) => {
                 query = query.filter(
-                    agents::role.ne(AgentRole::Admin).and(
-                        agents::fullname
-                            .ilike(format!("%{}", name_or_email))
-                            .or(agents::fullname.ilike(format!("%{}%", name_or_email)))
-                            .or(agents::fullname.ilike(format!("{}%", name_or_email)))
-                            .or(agents::email.ilike(format!("%{}", name_or_email)))
-                            .or(agents::email.ilike(format!("%{}%", name_or_email)))
-                            .or(agents::email.ilike(format!("{}%", name_or_email))),
-                    ),
+                    agents::fullname
+                        .ilike(format!("%{}", name_or_email))
+                        .or(agents::fullname.ilike(format!("%{}%", name_or_email)))
+                        .or(agents::fullname.ilike(format!("{}%", name_or_email)))
+                        .or(agents::email.ilike(format!("%{}", name_or_email)))
+                        .or(agents::email.ilike(format!("%{}%", name_or_email)))
+                        .or(agents::email.ilike(format!("{}%", name_or_email))),
                 );
             }
-            None => query = query.filter(agents::role.ne(AgentRole::Admin)),
+            None => {}
         }
 
         match &find_queries.page {
@@ -117,23 +116,24 @@ impl Agent {
     ) -> QueryResult<i64> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
-        let mut query = agents::table.count().into_boxed();
+        let mut query = agents::table
+            .count()
+            .filter(agents::role.ne(AgentRole::Admin))
+            .into_boxed();
 
         match &find_queries.name_or_email {
             Some(name_or_email) => {
                 query = query.filter(
-                    agents::role.ne(AgentRole::Admin).and(
-                        agents::fullname
-                            .ilike(format!("%{}", name_or_email))
-                            .or(agents::fullname.ilike(format!("%{}%", name_or_email)))
-                            .or(agents::fullname.ilike(format!("{}%", name_or_email)))
-                            .or(agents::email.ilike(format!("%{}", name_or_email)))
-                            .or(agents::email.ilike(format!("%{}%", name_or_email)))
-                            .or(agents::email.ilike(format!("{}%", name_or_email))),
-                    ),
+                    agents::fullname
+                        .ilike(format!("%{}", name_or_email))
+                        .or(agents::fullname.ilike(format!("%{}%", name_or_email)))
+                        .or(agents::fullname.ilike(format!("{}%", name_or_email)))
+                        .or(agents::email.ilike(format!("%{}", name_or_email)))
+                        .or(agents::email.ilike(format!("%{}%", name_or_email)))
+                        .or(agents::email.ilike(format!("{}%", name_or_email))),
                 );
             }
-            None => query = query.filter(agents::role.ne(AgentRole::Admin)),
+            None => {}
         }
 
         query.get_result(conn)

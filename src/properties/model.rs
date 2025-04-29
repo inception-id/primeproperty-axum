@@ -219,6 +219,20 @@ impl Property {
             .set(payload)
             .get_result(conn)
     }
+
+    pub(super) fn delete(pool: &DbPool, id: &i32, role: &AgentRole) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        match role {
+            AgentRole::Admin => diesel::delete(properties::table)
+                .filter(properties::id.eq(id))
+                .get_result(conn),
+            AgentRole::Agent => diesel::update(properties::table)
+                .filter(properties::id.eq(id))
+                .set(properties::is_deleted.eq(true))
+                .get_result(conn),
+        }
+    }
 }
 
 impl Crud for Property {

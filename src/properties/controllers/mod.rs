@@ -1,8 +1,9 @@
 use crate::db::DbPool;
-use axum::routing::{get, post, put};
+use axum::routing::{delete, get, post, put};
 use axum::Router;
 
 mod create_update;
+mod delete;
 mod find;
 
 pub(crate) use create_update::CreateUpdatePropertySqlPayload;
@@ -14,4 +15,5 @@ pub fn property_routes() -> Router<DbPool> {
         .route("/{id}", put(create_update::update_property))
         .route("/", get(find::find_many_properties))
         .route("/{id}", get(find::find_one_by_id))
+        .route("/{id}", delete(delete::delete_property))
 }
