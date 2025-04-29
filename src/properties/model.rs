@@ -174,6 +174,22 @@ impl Property {
             },
             None => {}
         }
+
+        match &query.province {
+            Some(province_query) => {
+                property_query =
+                    property_query.filter(properties::province.eq(province_query.to_lowercase()));
+            }
+            None => {}
+        }
+
+        match &query.regency {
+            Some(regency_query) => {
+                property_query =
+                    property_query.filter(properties::regency.eq(regency_query.to_lowercase()));
+            }
+            None => {}
+        }
         property_query.count().get_result(conn)
     }
 

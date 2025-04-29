@@ -11,7 +11,7 @@ use crate::{
     properties::model::Property,
 };
 
-pub(crate) const PAGE_SIZE: i64 = 20;
+pub(crate) const PAGE_SIZE: i64 = 28;
 #[derive(Deserialize)]
 pub struct FindPropertyQuery {
     pub s: Option<String>,
