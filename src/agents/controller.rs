@@ -8,7 +8,7 @@ use crate::{
     schema,
 };
 use axum::extract::{Json, Path, Query, Request, State};
-use axum::http::HeaderMap;
+use axum::http::{HeaderMap, Method};
 use axum::middleware::{from_fn_with_state, Next};
 use axum::response::Response;
 use axum::routing::{delete, get, post, put};
@@ -24,14 +24,17 @@ async fn middleware(
     let headers = req.headers();
     let user_id = Session::extract_session_user_id(&headers);
 
-    match Agent::find_by_user_id(&pool, &user_id) {
-        Ok(agent) => match agent.role {
-            AgentRole::Admin => Ok(next.run(req).await),
-            AgentRole::Agent => {
-                let response = JsonResponse::send(403, None, None);
-                Err(response)
-            }
-        },
+    let agent = match Agent::find_by_user_id(&pool, &user_id) {
+        Ok(agent) => agent,
+        Err(err) => {
+            let response = JsonResponse::send(403, None, Some(err.to_string()));
+            return Err(response);
+        }
+    };
+
+    match agent.role {
+        AgentRole::Admin => Ok(next.run(req).await),
+        AgentRole::Agent if req.method() == &Method::PUT => Ok(next.run(req).await),
         _ => {
             let response = JsonResponse::send(403, None, None);
             Err(response)
@@ -154,7 +157,7 @@ pub fn agent_routes(pool: DbPool) -> Router<DbPool> {
         .route("/", post(create_agent))
         .route("/", get(find_agents))
         .route("/{id}", delete(delete_agent))
-        .layer(from_fn_with_state(pool.clone(), middleware))
         .route("/{id}", put(update_agent))
+        .layer(from_fn_with_state(pool.clone(), middleware))
         .route("/supertokens/{id}", get(find_agent_by_supertokens_user_id))
 }
