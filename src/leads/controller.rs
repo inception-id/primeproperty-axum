@@ -1,4 +1,5 @@
 use crate::middleware::JsonResponse;
+use crate::properties::Property;
 use crate::traits::Crud;
 use crate::{db::DbPool, middleware::AxumResponse, schema};
 use axum::extract::{Json, State};
@@ -23,7 +24,11 @@ async fn create_lead(
     State(pool): State<DbPool>,
     Json(payload): Json<CreateLeadPayload>,
 ) -> AxumResponse<Lead> {
-    match Lead::create(&pool, &payload.user_id, &payload) {
+    let property = match Property::find_one_by_id(&pool, &payload.property_id) {
+        Ok(property) if property.0.user_id == payload.user_id => property,
+        _ => return JsonResponse::send(400, None, None),
+    };
+    match Lead::create(&pool, &property.0.user_id, &payload) {
         Ok(lead) => JsonResponse::send(201, Some(lead), None),
         Err(err) => JsonResponse::send(500, None, Some(err.to_string())),
     }

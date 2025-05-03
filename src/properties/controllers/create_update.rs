@@ -70,7 +70,7 @@ pub(crate) struct CreateUpdatePropertyApiPayload {
 
 #[derive(Deserialize, Serialize, Insertable, AsChangeset)]
 #[diesel(table_name = schema::properties)]
-pub(crate) struct CreateUpdatePropertySqlPayload {
+pub struct CreateUpdatePropertySqlPayload {
     site_path: String,
     title: String,
     description: String,

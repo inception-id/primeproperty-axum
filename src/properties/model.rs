@@ -18,8 +18,8 @@ use super::{
 };
 
 #[derive(Debug, Serialize, Queryable)]
-pub(crate) struct Property {
-    id: i32,
+pub struct Property {
+    pub id: i32,
     pub user_id: uuid::Uuid,
     created_at: chrono::NaiveDateTime,
     updated_at: chrono::NaiveDateTime,
@@ -198,7 +198,7 @@ impl Property {
         property_query.count().get_result(conn)
     }
 
-    pub(super) fn find_one_by_id(pool: &DbPool, id: &i32) -> QueryResult<PropertyWithAgent> {
+    pub fn find_one_by_id(pool: &DbPool, id: &i32) -> QueryResult<PropertyWithAgent> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         properties::table

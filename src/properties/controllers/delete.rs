@@ -1,4 +1,5 @@
 use crate::agents::{Agent, AgentRole};
+use crate::leads::Lead;
 use crate::middleware::Session;
 use crate::properties::model::Property;
 use crate::{
@@ -32,6 +33,11 @@ pub async fn delete_property(
 
     if property.0.user_id != user_id && !is_admin {
         return JsonResponse::send(403, None, Some("Forbidden".to_string()));
+    }
+
+    // Update leads is_deleted to true
+    if let AgentRole::Agent = role {
+        let _ = Lead::delete_by_property_id(&pool, &property.0.id);
     }
 
     match Property::delete(&pool, &id, &role) {
