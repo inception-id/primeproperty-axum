@@ -40,6 +40,23 @@ diesel::table! {
 }
 
 diesel::table! {
+    leads (id) {
+        id -> Int4,
+        user_id -> Uuid,
+        property_id -> Int4,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+        #[max_length = 255]
+        name -> Varchar,
+        #[max_length = 255]
+        phone -> Varchar,
+        #[max_length = 255]
+        email -> Nullable<Varchar>,
+        is_deleted -> Bool,
+    }
+}
+
+diesel::table! {
     use diesel::sql_types::*;
     use super::sql_types::PurchaseStatus;
     use super::sql_types::SoldStatus;
@@ -79,9 +96,12 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(leads -> agents (user_id));
+diesel::joinable!(leads -> properties (property_id));
 diesel::joinable!(properties -> agents (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     agents,
+    leads,
     properties,
 );

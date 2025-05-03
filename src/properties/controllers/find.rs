@@ -11,7 +11,8 @@ use crate::{
     properties::model::Property,
 };
 
-pub(crate) const PAGE_SIZE: i64 = 28;
+pub(crate) const AGENT_PAGE_SIZE: i64 = 28;
+pub(crate) const CLIENT_PAGE_SIZE: i64 = 16;
 #[derive(Deserialize)]
 pub struct FindPropertyQuery {
     pub s: Option<String>,
@@ -46,9 +47,14 @@ pub async fn find_many_properties(
         Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
     };
 
+    let page_size = match role {
+        Some(_) => AGENT_PAGE_SIZE,
+        None => CLIENT_PAGE_SIZE,
+    };
+
     let total_property_pages = match Property::count_find_many_total(&pool, &user_id, &role, &query)
     {
-        Ok(property_with_agent_count) => (property_with_agent_count / PAGE_SIZE) + 1,
+        Ok(property_with_agent_count) => (property_with_agent_count / page_size) + 1,
         Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
     };
 

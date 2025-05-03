@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use super::controllers::{FindPropertyQuery, PropertyWithAgent, PAGE_SIZE};
+use super::controllers::{FindPropertyQuery, PropertyWithAgent, AGENT_PAGE_SIZE, CLIENT_PAGE_SIZE};
 use crate::agents::AgentRole;
 use crate::traits::Crud;
 use crate::{
@@ -107,13 +107,18 @@ impl Property {
             None => {}
         }
 
+        let page_size = match role {
+            Some(_) => AGENT_PAGE_SIZE,
+            None => CLIENT_PAGE_SIZE,
+        };
+
         match &query.page {
             Some(page) => {
-                let offset = (page - 1) * PAGE_SIZE;
-                property_query = property_query.offset(offset).limit(PAGE_SIZE);
+                let offset = (page - 1) * page_size;
+                property_query = property_query.offset(offset).limit(page_size);
             }
             None => {
-                property_query = property_query.limit(PAGE_SIZE);
+                property_query = property_query.limit(page_size);
             }
         };
 

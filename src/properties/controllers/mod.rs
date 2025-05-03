@@ -7,7 +7,7 @@ mod delete;
 mod find;
 
 pub(crate) use create_update::CreateUpdatePropertySqlPayload;
-pub(crate) use find::{FindPropertyQuery, PropertyWithAgent, PAGE_SIZE};
+pub(crate) use find::{FindPropertyQuery, PropertyWithAgent, AGENT_PAGE_SIZE, CLIENT_PAGE_SIZE};
 
 pub fn property_routes() -> Router<DbPool> {
     Router::new()
