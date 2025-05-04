@@ -49,6 +49,12 @@ async fn create_lead(
     }
 }
 
+#[derive(Deserialize)]
+pub struct FindLeadQueryParam {
+    name: Option<String>,
+    phone: Option<String>,
+}
+
 pub fn lead_routes() -> Router<DbPool> {
     Router::new().route("/", post(create_lead))
 }

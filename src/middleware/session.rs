@@ -100,7 +100,7 @@ impl Session {
 
         match method {
             &Method::GET => {
-                if path == "/agents" {
+                if path == "/agents" || path == "/leads" {
                     return Self::check_session(req, next).await;
                 }
                 if path == "/properties" {

@@ -45,12 +45,73 @@ pub struct Property {
 }
 
 impl Property {
-    pub(super) fn find_many(
+    pub fn find_one_by_id(pool: &DbPool, id: &i32) -> QueryResult<PropertyWithAgent> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        properties::table
+            .filter(properties::id.eq(id))
+            .inner_join(agents::table)
+            .select((
+                properties::all_columns,
+                agents::fullname,
+                agents::phone_number,
+                agents::profile_picture_url,
+            ))
+            .get_result(conn)
+    }
+
+    pub(super) fn update(
+        pool: &DbPool,
+        id: &i32,
+        payload: &CreateUpdatePropertySqlPayload,
+    ) -> QueryResult<Property> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        diesel::update(properties::table.filter(properties::id.eq(id)))
+            .set(payload)
+            .get_result(conn)
+    }
+
+    pub(super) fn delete(pool: &DbPool, id: &i32, role: &AgentRole) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        match role {
+            AgentRole::Admin => diesel::delete(properties::table)
+                .filter(properties::id.eq(id))
+                .get_result(conn),
+            AgentRole::Agent => diesel::update(properties::table)
+                .filter(properties::id.eq(id))
+                .set(properties::is_deleted.eq(true))
+                .get_result(conn),
+        }
+    }
+}
+
+impl Crud for Property {
+    type Output = Self;
+    type SchemaTable = properties::table;
+    type CreatePayload = CreateUpdatePropertySqlPayload;
+    type FindManyOutput = PropertyWithAgent;
+    type FindManyParam = FindPropertyQuery;
+
+    fn create(
+        pool: &DbPool,
+        uuid: &uuid::Uuid,
+        payload: &Self::CreatePayload,
+    ) -> QueryResult<Self::Output> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        diesel::insert_into(properties::table)
+            .values((properties::user_id.eq(uuid), payload))
+            .get_result(conn)
+    }
+
+    fn find_many(
         pool: &DbPool,
         user_id: &Option<uuid::Uuid>,
         role: &Option<AgentRole>,
-        query: &FindPropertyQuery,
-    ) -> QueryResult<Vec<PropertyWithAgent>> {
+        query: &Self::FindManyParam,
+    ) -> QueryResult<Vec<Self::FindManyOutput>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         let mut property_query = match role {
@@ -134,11 +195,11 @@ impl Property {
             .get_results::<(Property, String, String, Option<String>)>(conn)
     }
 
-    pub(super) fn count_find_many_total(
+    fn count_find_many_rows(
         pool: &DbPool,
         user_id: &Option<uuid::Uuid>,
         role: &Option<AgentRole>,
-        query: &FindPropertyQuery,
+        query: &Self::FindManyParam,
     ) -> QueryResult<i64> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
@@ -196,64 +257,5 @@ impl Property {
             None => {}
         }
         property_query.count().get_result(conn)
-    }
-
-    pub fn find_one_by_id(pool: &DbPool, id: &i32) -> QueryResult<PropertyWithAgent> {
-        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-
-        properties::table
-            .filter(properties::id.eq(id))
-            .inner_join(agents::table)
-            .select((
-                properties::all_columns,
-                agents::fullname,
-                agents::phone_number,
-                agents::profile_picture_url,
-            ))
-            .get_result(conn)
-    }
-
-    pub(super) fn update(
-        pool: &DbPool,
-        id: &i32,
-        payload: &CreateUpdatePropertySqlPayload,
-    ) -> QueryResult<Property> {
-        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-
-        diesel::update(properties::table.filter(properties::id.eq(id)))
-            .set(payload)
-            .get_result(conn)
-    }
-
-    pub(super) fn delete(pool: &DbPool, id: &i32, role: &AgentRole) -> QueryResult<Self> {
-        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-
-        match role {
-            AgentRole::Admin => diesel::delete(properties::table)
-                .filter(properties::id.eq(id))
-                .get_result(conn),
-            AgentRole::Agent => diesel::update(properties::table)
-                .filter(properties::id.eq(id))
-                .set(properties::is_deleted.eq(true))
-                .get_result(conn),
-        }
-    }
-}
-
-impl Crud for Property {
-    type Output = Self;
-    type SchemaTable = properties::table;
-    type CreatePayload = CreateUpdatePropertySqlPayload;
-
-    fn create(
-        pool: &DbPool,
-        uuid: &uuid::Uuid,
-        payload: &Self::CreatePayload,
-    ) -> QueryResult<Self::Output> {
-        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-
-        diesel::insert_into(properties::table)
-            .values((properties::user_id.eq(uuid), payload))
-            .get_result(conn)
     }
 }

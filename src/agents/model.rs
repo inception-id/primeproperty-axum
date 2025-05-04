@@ -70,11 +70,33 @@ impl Agent {
             .filter(agents::id.eq(user_id))
             .get_result(conn)
     }
+}
 
-    pub(super) fn find_many(
+impl Crud for Agent {
+    type Output = Self;
+    type SchemaTable = agents::table;
+    type CreatePayload = CreateAgentPayload;
+    type FindManyOutput = Self;
+    type FindManyParam = FindAgentQuery;
+
+    fn create(
         pool: &DbPool,
-        find_queries: &FindAgentQuery,
-    ) -> QueryResult<Vec<Self>> {
+        #[allow(unused_variables)] uuid: &uuid::Uuid,
+        payload: &Self::CreatePayload,
+    ) -> QueryResult<Self::Output> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        diesel::insert_into(agents::table)
+            .values(payload)
+            .get_result(conn)
+    }
+
+    fn find_many(
+        pool: &DbPool,
+        #[allow(unused_variables)] user_id: &Option<uuid::Uuid>,
+        #[allow(unused_variables)] role: &Option<AgentRole>,
+        find_queries: &Self::FindManyParam,
+    ) -> QueryResult<Vec<Self::FindManyOutput>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
         let mut query = agents::table
@@ -110,9 +132,11 @@ impl Agent {
         query.get_results(conn)
     }
 
-    pub(super) fn count_find_many_total(
+    fn count_find_many_rows(
         pool: &DbPool,
-        find_queries: &FindAgentQuery,
+        #[allow(unused_variables)] user_id: &Option<uuid::Uuid>,
+        #[allow(unused_variables)] role: &Option<AgentRole>,
+        find_queries: &Self::FindManyParam,
     ) -> QueryResult<i64> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
@@ -137,23 +161,5 @@ impl Agent {
         }
 
         query.get_result(conn)
-    }
-}
-
-impl Crud for Agent {
-    type Output = Self;
-    type SchemaTable = agents::table;
-    type CreatePayload = CreateAgentPayload;
-
-    fn create(
-        pool: &DbPool,
-        #[allow(unused_variables)] uuid: &uuid::Uuid,
-        payload: &Self::CreatePayload,
-    ) -> QueryResult<Self::Output> {
-        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
-
-        diesel::insert_into(agents::table)
-            .values(payload)
-            .get_result(conn)
     }
 }

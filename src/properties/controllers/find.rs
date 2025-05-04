@@ -1,3 +1,4 @@
+use crate::traits::Crud;
 use axum::{
     extract::{Path, Query, State},
     http::HeaderMap,
@@ -52,7 +53,7 @@ pub async fn find_many_properties(
         None => CLIENT_PAGE_SIZE,
     };
 
-    let total_property_pages = match Property::count_find_many_total(&pool, &user_id, &role, &query)
+    let total_property_pages = match Property::count_find_many_rows(&pool, &user_id, &role, &query)
     {
         Ok(property_with_agent_count) => (property_with_agent_count / page_size) + 1,
         Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),

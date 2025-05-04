@@ -88,12 +88,12 @@ async fn find_agents(
     State(pool): State<DbPool>,
     Query(query): Query<FindAgentQuery>,
 ) -> AxumResponse<JsonFindResponse<Vec<Agent>>> {
-    let agents = match Agent::find_many(&pool, &query) {
+    let agents = match Agent::find_many(&pool, &None, &None, &query) {
         Ok(agents) => agents,
         Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
     };
 
-    let total_agent_pages = match Agent::count_find_many_total(&pool, &query) {
+    let total_agent_pages = match Agent::count_find_many_rows(&pool, &None, &None, &query) {
         Ok(agents_count) => (agents_count / PAGE_SIZE) + 1,
         Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
     };

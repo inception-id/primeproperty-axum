@@ -1,5 +1,5 @@
-use super::controller::CreateLeadPayload;
-use diesel::{ExpressionMethods, QueryResult, Queryable, RunQueryDsl};
+use super::controller::{CreateLeadPayload, FindLeadQueryParam};
+use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
 use serde::Serialize;
 
 use crate::{db::DbPool, schema::leads, traits::Crud};
@@ -32,10 +32,12 @@ impl Crud for Lead {
     type Output = Self;
     type SchemaTable = leads::table;
     type CreatePayload = CreateLeadPayload;
+    type FindManyOutput = Self;
+    type FindManyParam = FindLeadQueryParam;
 
     fn create(
         pool: &DbPool,
-        #[allow(unused)] uuid: &uuid::Uuid,
+        #[allow(unused_variables)] uuid: &uuid::Uuid,
         payload: &Self::CreatePayload,
     ) -> QueryResult<Self::Output> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
@@ -43,5 +45,29 @@ impl Crud for Lead {
         diesel::insert_into(leads::table)
             .values(payload)
             .get_result(conn)
+    }
+
+    fn find_many(
+        pool: &DbPool,
+        #[allow(unused_variables)] user_id: &Option<uuid::Uuid>,
+        #[allow(unused_variables)] role: &Option<crate::agents::AgentRole>,
+        #[allow(unused_variables)] query_params: &Self::FindManyParam,
+    ) -> QueryResult<Vec<Self::FindManyOutput>> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        leads::table
+            .order_by(leads::created_at.desc())
+            .get_results(conn)
+    }
+
+    fn count_find_many_rows(
+        pool: &DbPool,
+        #[allow(unused_variables)] user_id: &Option<uuid::Uuid>,
+        #[allow(unused_variables)] role: &Option<crate::agents::AgentRole>,
+        #[allow(unused_variables)] query_params: &Self::FindManyParam,
+    ) -> QueryResult<i64> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        leads::table.count().get_result(conn)
     }
 }
