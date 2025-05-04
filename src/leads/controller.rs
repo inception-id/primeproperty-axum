@@ -1,10 +1,11 @@
-use crate::middleware::JsonResponse;
+use crate::agents::Agent;
+use crate::middleware::{JsonFindResponse, JsonResponse, Session};
 use crate::properties::Property;
 use crate::traits::Crud;
 use crate::{db::DbPool, middleware::AxumResponse, schema};
-use axum::extract::{Json, State};
+use axum::extract::{Json, Query, State};
 use axum::http::HeaderMap;
-use axum::routing::post;
+use axum::routing::{get, post};
 use axum::Router;
 use diesel::prelude::Insertable;
 use serde::Deserialize;
@@ -49,12 +50,48 @@ async fn create_lead(
     }
 }
 
+pub(super) const PAGE_SIZE: i64 = 20;
+
 #[derive(Deserialize)]
 pub struct FindLeadQueryParam {
-    name: Option<String>,
-    phone: Option<String>,
+    pub search: Option<String>,
+    pub page: Option<i64>,
+}
+
+async fn find_many_leads(
+    State(pool): State<DbPool>,
+    headers: HeaderMap,
+    Query(query_params): Query<FindLeadQueryParam>,
+) -> AxumResponse<JsonFindResponse<Vec<Lead>>> {
+    let user_id = Session::extract_session_user_id(&headers);
+
+    let role = match Agent::find_by_user_id(&pool, &user_id) {
+        Ok(agent) => Some(agent.role),
+        _ => {
+            return JsonResponse::send(403, None, None);
+        }
+    };
+
+    let leads = match Lead::find_many(&pool, &Some(user_id), &role, &query_params) {
+        Ok(leads_vec) => leads_vec,
+        Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
+    };
+
+    let leads_count = match Lead::count_find_many_rows(&pool, &Some(user_id), &role, &query_params)
+    {
+        Ok(count) => count,
+        Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
+    };
+
+    let body = JsonFindResponse {
+        data: leads,
+        total_pages: (leads_count / PAGE_SIZE) + 1,
+    };
+    JsonResponse::send(200, Some(body), None)
 }
 
 pub fn lead_routes() -> Router<DbPool> {
-    Router::new().route("/", post(create_lead))
+    Router::new()
+        .route("/", post(create_lead))
+        .route("/", get(find_many_leads))
 }

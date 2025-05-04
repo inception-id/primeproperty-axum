@@ -1,8 +1,11 @@
-use super::controller::{CreateLeadPayload, FindLeadQueryParam};
-use diesel::{ExpressionMethods, QueryDsl, QueryResult, Queryable, RunQueryDsl};
+use super::controller::{CreateLeadPayload, FindLeadQueryParam, PAGE_SIZE};
+use diesel::{
+    BoolExpressionMethods, ExpressionMethods, PgTextExpressionMethods, QueryDsl, QueryResult,
+    Queryable, RunQueryDsl,
+};
 use serde::Serialize;
 
-use crate::{db::DbPool, schema::leads, traits::Crud};
+use crate::{agents::AgentRole, db::DbPool, schema::leads, traits::Crud};
 
 #[derive(Serialize, Queryable)]
 pub struct Lead {
@@ -49,25 +52,73 @@ impl Crud for Lead {
 
     fn find_many(
         pool: &DbPool,
-        #[allow(unused_variables)] user_id: &Option<uuid::Uuid>,
-        #[allow(unused_variables)] role: &Option<crate::agents::AgentRole>,
-        #[allow(unused_variables)] query_params: &Self::FindManyParam,
+        user_id_option: &Option<uuid::Uuid>,
+        role_option: &Option<crate::agents::AgentRole>,
+        query_params: &Self::FindManyParam,
     ) -> QueryResult<Vec<Self::FindManyOutput>> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
-        leads::table
+        let mut lead_query = match (user_id_option, role_option) {
+            (Some(user_id), Some(role)) => match role {
+                &AgentRole::Admin => leads::table.into_boxed(),
+                &AgentRole::Agent => leads::table
+                    .filter(leads::user_id.eq(user_id).and(leads::is_deleted.eq(false)))
+                    .into_boxed(),
+            },
+            _ => return Err(diesel::result::Error::NotFound),
+        };
+
+        if let Some(search) = &query_params.search {
+            lead_query = lead_query.filter(
+                leads::name
+                    .ilike(format!("%{}", search))
+                    .or(leads::name.ilike(format!("%{}%", search)))
+                    .or(leads::name.ilike(format!("{}%", search)))
+                    .or(leads::phone.ilike(format!("%{}", search)))
+                    .or(leads::phone.ilike(format!("%{}%", search)))
+                    .or(leads::phone.ilike(format!("{}%", search))),
+            )
+        }
+
+        if let Some(page) = query_params.page {
+            lead_query = lead_query.offset((page - 1) * PAGE_SIZE).limit(PAGE_SIZE);
+        }
+
+        lead_query
             .order_by(leads::created_at.desc())
             .get_results(conn)
     }
 
     fn count_find_many_rows(
         pool: &DbPool,
-        #[allow(unused_variables)] user_id: &Option<uuid::Uuid>,
-        #[allow(unused_variables)] role: &Option<crate::agents::AgentRole>,
-        #[allow(unused_variables)] query_params: &Self::FindManyParam,
+        user_id_option: &Option<uuid::Uuid>,
+        role_option: &Option<crate::agents::AgentRole>,
+        query_params: &Self::FindManyParam,
     ) -> QueryResult<i64> {
         let conn = &mut pool.get().expect("Couldn't get db connection from pool");
 
-        leads::table.count().get_result(conn)
+        let mut lead_query = match (user_id_option, role_option) {
+            (Some(user_id), Some(role)) => match role {
+                &AgentRole::Admin => leads::table.into_boxed(),
+                &AgentRole::Agent => leads::table
+                    .filter(leads::user_id.eq(user_id).and(leads::is_deleted.eq(false)))
+                    .into_boxed(),
+            },
+            _ => return Err(diesel::result::Error::NotFound),
+        };
+
+        if let Some(search) = &query_params.search {
+            lead_query = lead_query.filter(
+                leads::name
+                    .ilike(format!("%{}", search))
+                    .or(leads::name.ilike(format!("%{}%", search)))
+                    .or(leads::name.ilike(format!("{}%", search)))
+                    .or(leads::phone.ilike(format!("%{}", search)))
+                    .or(leads::phone.ilike(format!("%{}%", search)))
+                    .or(leads::phone.ilike(format!("{}%", search))),
+            )
+        }
+
+        lead_query.count().get_result(conn)
     }
 }
