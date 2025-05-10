@@ -1,4 +1,4 @@
-use crate::traits::Crud;
+use crate::{properties::enumerates::SoldStatus, traits::Crud};
 use axum::{
     extract::{Path, Query, State},
     http::HeaderMap,
@@ -21,7 +21,7 @@ pub struct FindPropertyQuery {
     pub regency: Option<String>,
     pub page: Option<i64>,
     pub is_popular: Option<bool>,
-    pub is_sold: Option<bool>,
+    pub is_sold: Option<SoldStatus>,
 }
 
 pub(crate) type PropertyWithAgent = (Property, String, String, Option<String>);

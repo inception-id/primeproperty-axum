@@ -196,8 +196,8 @@ impl Crud for Property {
         }
 
         match &query.is_sold {
-            Some(is_sold) if is_sold == &true => {
-                property_query = property_query.filter(properties::sold_status.eq(SoldStatus::Sold))
+            Some(sold_status) => {
+                property_query = property_query.filter(properties::sold_status.eq(sold_status))
             }
             _ => {}
         }
@@ -301,8 +301,8 @@ impl Crud for Property {
         }
 
         match &query.is_sold {
-            Some(is_sold) if is_sold == &true => {
-                property_query = property_query.filter(properties::sold_status.eq(SoldStatus::Sold))
+            Some(sold_status) => {
+                property_query = property_query.filter(properties::sold_status.eq(sold_status))
             }
             _ => {}
         }
