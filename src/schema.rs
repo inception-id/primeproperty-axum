@@ -18,6 +18,10 @@ pub mod sql_types {
     pub struct PurchaseStatus;
 
     #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "sold_channel"))]
+    pub struct SoldChannel;
+
+    #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
     #[diesel(postgres_type(name = "sold_status"))]
     pub struct SoldStatus;
 }
@@ -62,6 +66,7 @@ diesel::table! {
     use super::sql_types::SoldStatus;
     use super::sql_types::BuildingCondition;
     use super::sql_types::FurnitureCapacity;
+    use super::sql_types::SoldChannel;
 
     properties (id) {
         id -> Int4,
@@ -93,6 +98,8 @@ diesel::table! {
         specifications -> Jsonb,
         facilities -> Jsonb,
         is_deleted -> Bool,
+        sold_channel -> Nullable<SoldChannel>,
+        configurations -> Jsonb,
     }
 }
 
