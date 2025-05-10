@@ -86,6 +86,7 @@ async fn find_many_leads(
     let body = JsonFindResponse {
         data: leads,
         total_pages: (leads_count / PAGE_SIZE) + 1,
+        total_data: leads_count,
     };
     JsonResponse::send(200, Some(body), None)
 }

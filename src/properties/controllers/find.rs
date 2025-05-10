@@ -55,9 +55,9 @@ pub async fn find_many_properties(
         None => CLIENT_PAGE_SIZE,
     };
 
-    let total_property_pages = match Property::count_find_many_rows(&pool, &user_id, &role, &query)
+    let total_property_count = match Property::count_find_many_rows(&pool, &user_id, &role, &query)
     {
-        Ok(property_with_agent_count) => (property_with_agent_count / page_size) + 1,
+        Ok(property_with_agent_count) => property_with_agent_count,
         Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
     };
 
@@ -65,7 +65,8 @@ pub async fn find_many_properties(
         200,
         Some(JsonFindResponse {
             data: property_with_agent,
-            total_pages: total_property_pages,
+            total_pages: (total_property_count / page_size) + 1,
+            total_data: total_property_count,
         }),
         None,
     )

@@ -93,8 +93,8 @@ async fn find_agents(
         Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
     };
 
-    let total_agent_pages = match Agent::count_find_many_rows(&pool, &None, &None, &query) {
-        Ok(agents_count) => (agents_count / PAGE_SIZE) + 1,
+    let total_agent_count = match Agent::count_find_many_rows(&pool, &None, &None, &query) {
+        Ok(agents_count) => agents_count,
         Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
     };
 
@@ -102,7 +102,8 @@ async fn find_agents(
         200,
         Some(JsonFindResponse {
             data: agents,
-            total_pages: total_agent_pages,
+            total_pages: (total_agent_count / PAGE_SIZE) + 1,
+            total_data: total_agent_count,
         }),
         None,
     )

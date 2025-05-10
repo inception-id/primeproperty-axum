@@ -39,4 +39,5 @@ impl<T> JsonResponse<T> {
 pub struct JsonFindResponse<T> {
     pub data: T,
     pub total_pages: i64,
+    pub total_data: i64,
 }
