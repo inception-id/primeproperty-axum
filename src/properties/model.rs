@@ -1,6 +1,7 @@
 use serde::Serialize;
 
 use super::controllers::{FindPropertyQuery, PropertyWithAgent, AGENT_PAGE_SIZE, CLIENT_PAGE_SIZE};
+use super::enumerates::SoldChannel;
 use crate::agents::AgentRole;
 use crate::traits::Crud;
 use crate::{
@@ -42,6 +43,8 @@ pub struct Property {
     specifications: serde_json::Value,
     facilities: serde_json::Value,
     is_deleted: bool,
+    sold_channel: Option<SoldChannel>,
+    configurations: serde_json::Value,
 }
 
 impl Property {

@@ -1,6 +1,6 @@
 use crate::agents::{Agent, AgentRole};
 use crate::middleware::Session;
-use crate::properties::enumerates::SoldStatus;
+use crate::properties::enumerates::{SoldChannel, SoldStatus};
 use crate::properties::model::Property;
 use crate::schema;
 use crate::traits::Crud;
@@ -66,6 +66,7 @@ pub(crate) struct CreateUpdatePropertyApiPayload {
     building_certificate: String,
     specifications: Specifications,
     facilities: Vec<Facilities>,
+    sold_channel: Option<SoldChannel>,
 }
 
 #[derive(Deserialize, Serialize, Insertable, AsChangeset)]
@@ -89,6 +90,7 @@ pub struct CreateUpdatePropertySqlPayload {
     building_certificate: String,
     specifications: serde_json::Value,
     facilities: serde_json::Value,
+    sold_channel: Option<SoldChannel>,
 }
 
 impl CreateUpdatePropertyApiPayload {
@@ -118,6 +120,7 @@ impl CreateUpdatePropertyApiPayload {
             building_certificate: self.building_certificate.to_lowercase(),
             specifications: serde_json::json!(&self.specifications),
             facilities: serde_json::json!(&self.facilities),
+            sold_channel: self.sold_channel.clone(),
         }
     }
 }
