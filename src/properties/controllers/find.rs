@@ -12,14 +12,15 @@ use crate::{
     properties::model::Property,
 };
 
-pub(crate) const AGENT_PAGE_SIZE: i64 = 28;
-pub(crate) const CLIENT_PAGE_SIZE: i64 = 16;
+pub(crate) const AGENT_PAGE_SIZE: i64 = 20;
+pub(crate) const CLIENT_PAGE_SIZE: i64 = 20;
 #[derive(Deserialize)]
 pub struct FindPropertyQuery {
     pub s: Option<String>,
     pub province: Option<String>,
     pub regency: Option<String>,
     pub page: Option<i64>,
+    pub is_popular: Option<bool>,
 }
 
 pub(crate) type PropertyWithAgent = (Property, String, String, Option<String>);

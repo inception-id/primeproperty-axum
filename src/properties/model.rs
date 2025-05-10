@@ -1,6 +1,9 @@
 use serde::Serialize;
 
-use super::controllers::{FindPropertyQuery, PropertyWithAgent, AGENT_PAGE_SIZE, CLIENT_PAGE_SIZE};
+use super::controllers::{
+    FindPropertyQuery, PropertyWithAgent, UpdateConfigurationsSqlPayload, AGENT_PAGE_SIZE,
+    CLIENT_PAGE_SIZE,
+};
 use super::enumerates::SoldChannel;
 use crate::agents::AgentRole;
 use crate::traits::Crud;
@@ -9,8 +12,8 @@ use crate::{
     schema::{agents, properties},
 };
 use diesel::{
-    BoolExpressionMethods, ExpressionMethods, PgTextExpressionMethods, QueryDsl, QueryResult,
-    Queryable, RunQueryDsl,
+    BoolExpressionMethods, ExpressionMethods, PgJsonbExpressionMethods, PgTextExpressionMethods,
+    QueryDsl, QueryResult, Queryable, RunQueryDsl,
 };
 
 use super::{
@@ -87,6 +90,18 @@ impl Property {
                 .set(properties::is_deleted.eq(true))
                 .get_result(conn),
         }
+    }
+
+    pub(super) fn update_configurations(
+        pool: &DbPool,
+        id: &i32,
+        payload: &UpdateConfigurationsSqlPayload,
+    ) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        diesel::update(properties::table.filter(properties::id.eq(id)))
+            .set(payload)
+            .get_result(conn)
     }
 }
 
@@ -185,6 +200,15 @@ impl Crud for Property {
                 property_query = property_query.limit(page_size);
             }
         };
+
+        match &query.is_popular {
+            Some(is_popular) => {
+                let filter_json = serde_json::json!({ "is_popular": is_popular});
+                property_query =
+                    property_query.filter(properties::configurations.contains(filter_json))
+            }
+            None => {}
+        }
 
         property_query
             .inner_join(agents::table)
