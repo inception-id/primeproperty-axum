@@ -186,6 +186,22 @@ impl Crud for Property {
             None => {}
         }
 
+        match &query.is_popular {
+            Some(is_popular) => {
+                let filter_json = serde_json::json!({ "is_popular": is_popular});
+                property_query =
+                    property_query.filter(properties::configurations.contains(filter_json))
+            }
+            None => {}
+        }
+
+        match &query.is_sold {
+            Some(is_sold) if is_sold == &true => {
+                property_query = property_query.filter(properties::sold_status.eq(SoldStatus::Sold))
+            }
+            _ => {}
+        }
+
         let page_size = match role {
             Some(_) => AGENT_PAGE_SIZE,
             None => CLIENT_PAGE_SIZE,
@@ -200,15 +216,6 @@ impl Crud for Property {
                 property_query = property_query.limit(page_size);
             }
         };
-
-        match &query.is_popular {
-            Some(is_popular) => {
-                let filter_json = serde_json::json!({ "is_popular": is_popular});
-                property_query =
-                    property_query.filter(properties::configurations.contains(filter_json))
-            }
-            None => {}
-        }
 
         property_query
             .inner_join(agents::table)
@@ -283,6 +290,23 @@ impl Crud for Property {
             }
             None => {}
         }
+
+        match &query.is_popular {
+            Some(is_popular) => {
+                let filter_json = serde_json::json!({ "is_popular": is_popular});
+                property_query =
+                    property_query.filter(properties::configurations.contains(filter_json))
+            }
+            None => {}
+        }
+
+        match &query.is_sold {
+            Some(is_sold) if is_sold == &true => {
+                property_query = property_query.filter(properties::sold_status.eq(SoldStatus::Sold))
+            }
+            _ => {}
+        }
+
         property_query.count().get_result(conn)
     }
 }

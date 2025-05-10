@@ -21,6 +21,7 @@ pub struct FindPropertyQuery {
     pub regency: Option<String>,
     pub page: Option<i64>,
     pub is_popular: Option<bool>,
+    pub is_sold: Option<bool>,
 }
 
 pub(crate) type PropertyWithAgent = (Property, String, String, Option<String>);
