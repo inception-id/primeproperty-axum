@@ -1,10 +1,12 @@
-use serde::Serialize;
-
 use super::controllers::{
-    FindPropertyQuery, PropertyWithAgent, UpdateConfigurationsSqlPayload, AGENT_PAGE_SIZE,
-    CLIENT_PAGE_SIZE,
+    FindPropertyQuery, FindPropertySort, PropertyWithAgent, UpdateConfigurationsSqlPayload,
+    AGENT_PAGE_SIZE, CLIENT_PAGE_SIZE,
 };
 use super::enumerates::SoldChannel;
+use super::{
+    controllers::CreateUpdatePropertySqlPayload,
+    enumerates::{BuildingCondition, FurnitureCapacity, PurchaseStatus, SoldStatus},
+};
 use crate::agents::AgentRole;
 use crate::traits::Crud;
 use crate::{
@@ -15,11 +17,7 @@ use diesel::{
     BoolExpressionMethods, ExpressionMethods, PgJsonbExpressionMethods, PgTextExpressionMethods,
     QueryDsl, QueryResult, Queryable, RunQueryDsl,
 };
-
-use super::{
-    controllers::CreateUpdatePropertySqlPayload,
-    enumerates::{BuildingCondition, FurnitureCapacity, PurchaseStatus, SoldStatus},
-};
+use serde::Serialize;
 
 #[derive(Debug, Serialize, Queryable)]
 pub struct Property {
@@ -202,6 +200,24 @@ impl Crud for Property {
             _ => {}
         }
 
+        match &query.purchase_status {
+            Some(purchase_status) => {
+                property_query = property_query.filter(
+                    properties::purchase_status
+                        .eq(purchase_status)
+                        .and(properties::purchase_status.eq(PurchaseStatus::ForSaleOrRent)),
+                )
+            }
+            _ => {}
+        }
+
+        match &query.building_type {
+            Some(build_type) => {
+                property_query = property_query.filter(properties::building_type.eq(build_type))
+            }
+            _ => {}
+        }
+
         let page_size = match role {
             Some(_) => AGENT_PAGE_SIZE,
             None => CLIENT_PAGE_SIZE,
@@ -217,6 +233,19 @@ impl Crud for Property {
             }
         };
 
+        if let Some(sort) = &query.sort {
+            match sort {
+                FindPropertySort::LowestPrice => {
+                    property_query = property_query.order_by(properties::price.asc())
+                }
+                FindPropertySort::HighestPrice => {
+                    property_query = property_query.order_by(properties::price.desc())
+                }
+            }
+        } else {
+            property_query = property_query.order_by(properties::id.desc())
+        }
+
         property_query
             .inner_join(agents::table)
             .select((
@@ -225,7 +254,6 @@ impl Crud for Property {
                 agents::phone_number,
                 agents::profile_picture_url,
             ))
-            .order_by(properties::id.desc())
             .get_results::<(Property, String, String, Option<String>)>(conn)
     }
 
@@ -303,6 +331,24 @@ impl Crud for Property {
         match &query.sold_status {
             Some(sold_status) => {
                 property_query = property_query.filter(properties::sold_status.eq(sold_status))
+            }
+            _ => {}
+        }
+
+        match &query.purchase_status {
+            Some(purchase_status) => {
+                property_query = property_query.filter(
+                    properties::purchase_status
+                        .eq(purchase_status)
+                        .and(properties::purchase_status.eq(PurchaseStatus::ForSaleOrRent)),
+                )
+            }
+            _ => {}
+        }
+
+        match &query.building_type {
+            Some(build_type) => {
+                property_query = property_query.filter(properties::building_type.eq(build_type))
             }
             _ => {}
         }

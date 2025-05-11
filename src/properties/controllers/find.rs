@@ -1,4 +1,7 @@
-use crate::{properties::enumerates::SoldStatus, traits::Crud};
+use crate::{
+    properties::enumerates::{PurchaseStatus, SoldStatus},
+    traits::Crud,
+};
 use axum::{
     extract::{Path, Query, State},
     http::HeaderMap,
@@ -12,6 +15,12 @@ use crate::{
     properties::model::Property,
 };
 
+#[derive(Deserialize)]
+pub enum FindPropertySort {
+    LowestPrice,
+    HighestPrice,
+}
+
 pub(crate) const AGENT_PAGE_SIZE: i64 = 20;
 pub(crate) const CLIENT_PAGE_SIZE: i64 = 20;
 #[derive(Deserialize)]
@@ -22,6 +31,9 @@ pub struct FindPropertyQuery {
     pub page: Option<i64>,
     pub is_popular: Option<bool>,
     pub sold_status: Option<SoldStatus>,
+    pub purchase_status: Option<PurchaseStatus>,
+    pub building_type: Option<String>,
+    pub sort: Option<FindPropertySort>,
 }
 
 pub(crate) type PropertyWithAgent = (Property, String, String, Option<String>);
