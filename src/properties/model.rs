@@ -205,7 +205,7 @@ impl Crud for Property {
                 property_query = property_query.filter(
                     properties::purchase_status
                         .eq(purchase_status)
-                        .and(properties::purchase_status.eq(PurchaseStatus::ForSaleOrRent)),
+                        .or(properties::purchase_status.eq(PurchaseStatus::ForSaleOrRent)),
                 )
             }
             _ => {}
@@ -213,7 +213,8 @@ impl Crud for Property {
 
         match &query.building_type {
             Some(build_type) => {
-                property_query = property_query.filter(properties::building_type.eq(build_type))
+                property_query =
+                    property_query.filter(properties::building_type.eq(build_type.to_lowercase()))
             }
             _ => {}
         }
@@ -340,7 +341,7 @@ impl Crud for Property {
                 property_query = property_query.filter(
                     properties::purchase_status
                         .eq(purchase_status)
-                        .and(properties::purchase_status.eq(PurchaseStatus::ForSaleOrRent)),
+                        .or(properties::purchase_status.eq(PurchaseStatus::ForSaleOrRent)),
                 )
             }
             _ => {}
@@ -348,7 +349,8 @@ impl Crud for Property {
 
         match &query.building_type {
             Some(build_type) => {
-                property_query = property_query.filter(properties::building_type.eq(build_type))
+                property_query =
+                    property_query.filter(properties::building_type.eq(build_type.to_lowercase()))
             }
             _ => {}
         }
