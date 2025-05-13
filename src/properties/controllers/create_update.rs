@@ -97,10 +97,11 @@ impl CreateUpdatePropertyApiPayload {
     fn to_sql_payload(self) -> CreateUpdatePropertySqlPayload {
         let purchase_status_slug = &self.purchase_status.to_slug();
         let building_type_slug = &self.building_type.trim().replace(" ", "-").to_lowercase();
+        let province_slug = &self.province.trim().replace(" ", "-").to_lowercase();
         let regency_slug = &self.regency.trim().replace(" ", "-").to_lowercase();
         let street_slug = &self.street.trim().replace(" ", "-").to_lowercase();
         let site_path =
-            format!("/{purchase_status_slug}/{building_type_slug}/{regency_slug}/{street_slug}");
+            format!("/{purchase_status_slug}/{building_type_slug}/{province_slug}/{regency_slug}/{street_slug}");
         CreateUpdatePropertySqlPayload {
             site_path,
             title: self.title.to_string(),
