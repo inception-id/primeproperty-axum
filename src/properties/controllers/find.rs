@@ -28,6 +28,7 @@ pub struct FindPropertyQuery {
     pub s: Option<String>,
     pub province: Option<String>,
     pub regency: Option<String>,
+    pub street: Option<String>,
     pub page: Option<i64>,
     pub is_popular: Option<bool>,
     pub sold_status: Option<SoldStatus>,
@@ -90,6 +91,13 @@ pub async fn find_one_by_id(
 ) -> AxumResponse<PropertyWithAgent> {
     match Property::find_one_by_id(&pool, &id) {
         Ok(property) => JsonResponse::send(200, Some(property), None),
+        Err(err) => JsonResponse::send(500, None, Some(err.to_string())),
+    }
+}
+
+pub async fn find_site_paths(State(pool): State<DbPool>) -> AxumResponse<Vec<String>> {
+    match Property::find_distinct_site_paths(&pool) {
+        Ok(properties) => JsonResponse::send(200, Some(properties), None),
         Err(err) => JsonResponse::send(500, None, Some(err.to_string())),
     }
 }

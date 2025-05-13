@@ -101,6 +101,15 @@ impl Property {
             .set(payload)
             .get_result(conn)
     }
+
+    pub fn find_distinct_site_paths(pool: &DbPool) -> QueryResult<Vec<String>> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        properties::table
+            .distinct_on(properties::site_path)
+            .select(properties::site_path)
+            .get_results(conn)
+    }
 }
 
 impl Crud for Property {
@@ -180,6 +189,14 @@ impl Crud for Property {
             Some(regency_query) => {
                 property_query =
                     property_query.filter(properties::regency.eq(regency_query.to_lowercase()));
+            }
+            None => {}
+        }
+
+        match &query.street {
+            Some(street_query) => {
+                property_query =
+                    property_query.filter(properties::street.eq(street_query.to_lowercase()));
             }
             None => {}
         }

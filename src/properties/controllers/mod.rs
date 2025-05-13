@@ -17,6 +17,7 @@ pub fn property_routes() -> Router<DbPool> {
     Router::new()
         .route("/", post(create_update::create_property))
         .route("/", get(find::find_many_properties))
+        .route("/site-paths", get(find::find_site_paths))
         .route("/{id}", get(find::find_one_by_id))
         .route(
             "/configurations/{id}",
