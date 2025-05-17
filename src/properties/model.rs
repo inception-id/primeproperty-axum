@@ -110,6 +110,57 @@ impl Property {
             .select(properties::site_path)
             .get_results(conn)
     }
+
+    pub fn find_distinct_building_type_paths(
+        pool: &DbPool,
+    ) -> QueryResult<Vec<(PurchaseStatus, String)>> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        properties::table
+            .distinct_on((properties::purchase_status, properties::building_type))
+            .select((properties::purchase_status, properties::building_type))
+            .get_results(conn)
+    }
+
+    pub fn find_distinct_province_paths(
+        pool: &DbPool,
+    ) -> QueryResult<Vec<(PurchaseStatus, String, String)>> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        properties::table
+            .distinct_on((
+                properties::purchase_status,
+                properties::building_type,
+                properties::province,
+            ))
+            .select((
+                properties::purchase_status,
+                properties::building_type,
+                properties::province,
+            ))
+            .get_results(conn)
+    }
+
+    pub fn find_distinct_regency_paths(
+        pool: &DbPool,
+    ) -> QueryResult<Vec<(PurchaseStatus, String, String, String)>> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        properties::table
+            .distinct_on((
+                properties::purchase_status,
+                properties::building_type,
+                properties::province,
+                properties::regency,
+            ))
+            .select((
+                properties::purchase_status,
+                properties::building_type,
+                properties::province,
+                properties::regency,
+            ))
+            .get_results(conn)
+    }
 }
 
 impl Crud for Property {
