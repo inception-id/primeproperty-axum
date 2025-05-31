@@ -10,12 +10,20 @@ pub mod sql_types {
     pub struct BuildingCondition;
 
     #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "currency_unit"))]
+    pub struct CurrencyUnit;
+
+    #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
     #[diesel(postgres_type(name = "furniture_capacity"))]
     pub struct FurnitureCapacity;
 
     #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
     #[diesel(postgres_type(name = "purchase_status"))]
     pub struct PurchaseStatus;
+
+    #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "rent_time_unit"))]
+    pub struct RentTimeUnit;
 
     #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
     #[diesel(postgres_type(name = "sold_channel"))]
@@ -67,6 +75,8 @@ diesel::table! {
     use super::sql_types::BuildingCondition;
     use super::sql_types::FurnitureCapacity;
     use super::sql_types::SoldChannel;
+    use super::sql_types::CurrencyUnit;
+    use super::sql_types::RentTimeUnit;
 
     properties (id) {
         id -> Int4,
@@ -100,6 +110,8 @@ diesel::table! {
         is_deleted -> Bool,
         sold_channel -> Nullable<SoldChannel>,
         configurations -> Jsonb,
+        currency -> CurrencyUnit,
+        rent_time -> Nullable<RentTimeUnit>,
     }
 }
 
