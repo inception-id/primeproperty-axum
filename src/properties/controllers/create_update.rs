@@ -1,6 +1,6 @@
 use crate::agents::{Agent, AgentRole};
 use crate::middleware::Session;
-use crate::properties::enumerates::{SoldChannel, SoldStatus};
+use crate::properties::enumerates::{Currency, RentTime, SoldChannel, SoldStatus};
 use crate::properties::model::Property;
 use crate::schema;
 use crate::traits::Crud;
@@ -63,10 +63,12 @@ pub(crate) struct CreateUpdatePropertyApiPayload {
     building_type: String,
     building_condition: BuildingCondition,
     building_furniture_capacity: Option<FurnitureCapacity>,
-    building_certificate: String,
+    building_certificate: Option<String>,
     specifications: Specifications,
     facilities: Vec<Facilities>,
     sold_channel: Option<SoldChannel>,
+    currency: Currency,
+    rent_time: Option<RentTime>,
 }
 
 #[derive(Deserialize, Serialize, Insertable, AsChangeset)]
@@ -87,10 +89,12 @@ pub struct CreateUpdatePropertySqlPayload {
     building_type: String,
     building_condition: BuildingCondition,
     building_furniture_capacity: Option<FurnitureCapacity>,
-    building_certificate: String,
+    building_certificate: Option<String>,
     specifications: serde_json::Value,
     facilities: serde_json::Value,
     sold_channel: Option<SoldChannel>,
+    currency: Currency,
+    rent_time: Option<RentTime>,
 }
 
 impl CreateUpdatePropertyApiPayload {
@@ -118,10 +122,15 @@ impl CreateUpdatePropertyApiPayload {
             building_type: self.building_type.to_lowercase(),
             building_condition: self.building_condition.clone(),
             building_furniture_capacity: self.building_furniture_capacity.clone(),
-            building_certificate: self.building_certificate.to_lowercase(),
+            building_certificate: match self.building_certificate {
+                Some(cert) => Some(cert.to_lowercase()),
+                None => None,
+            },
             specifications: serde_json::json!(&self.specifications),
             facilities: serde_json::json!(&self.facilities),
             sold_channel: self.sold_channel.clone(),
+            currency: self.currency.clone(),
+            rent_time: self.rent_time.clone(),
         }
     }
 }

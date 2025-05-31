@@ -2,7 +2,7 @@ use super::controllers::{
     FindPropertyQuery, FindPropertySort, PropertyWithAgent, UpdateConfigurationsSqlPayload,
     AGENT_PAGE_SIZE, CLIENT_PAGE_SIZE,
 };
-use super::enumerates::SoldChannel;
+use super::enumerates::{Currency, RentTime, SoldChannel};
 use super::{
     controllers::CreateUpdatePropertySqlPayload,
     enumerates::{BuildingCondition, FurnitureCapacity, PurchaseStatus, SoldStatus},
@@ -46,6 +46,8 @@ pub struct Property {
     is_deleted: bool,
     sold_channel: Option<SoldChannel>,
     configurations: serde_json::Value,
+    currency: Currency,
+    rent_time: Option<RentTime>,
 }
 
 impl Property {
