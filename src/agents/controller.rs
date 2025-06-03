@@ -115,6 +115,7 @@ pub struct UpdateAgentPayload {
     profile_picture_url: Option<String>,
     fullname: Option<String>,
     phone_number: Option<String>,
+    instagram: Option<String>,
 }
 
 // for agents to update their information themselves

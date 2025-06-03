@@ -48,6 +48,8 @@ diesel::table! {
         phone_number -> Varchar,
         profile_picture_url -> Nullable<Varchar>,
         role -> AgentRole,
+        #[max_length = 255]
+        instagram -> Nullable<Varchar>,
     }
 }
 
