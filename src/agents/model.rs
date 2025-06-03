@@ -22,6 +22,7 @@ pub struct Agent {
     phone_number: String,
     profile_picture_url: Option<String>,
     pub role: AgentRole,
+    instagram: Option<String>,
 }
 
 impl Agent {
