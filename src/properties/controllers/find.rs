@@ -37,7 +37,7 @@ pub struct FindPropertyQuery {
     pub sort: Option<FindPropertySort>,
 }
 
-pub(crate) type PropertyWithAgent = (Property, String, String, Option<String>);
+pub(crate) type PropertyWithAgent = (Property, String, String, Option<String>, Option<String>);
 
 pub async fn find_many_properties(
     State(pool): State<DbPool>,
