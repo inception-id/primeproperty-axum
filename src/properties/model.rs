@@ -62,6 +62,7 @@ impl Property {
                 agents::fullname,
                 agents::phone_number,
                 agents::profile_picture_url,
+                agents::instagram,
             ))
             .get_result(conn)
     }
@@ -324,8 +325,9 @@ impl Crud for Property {
                 agents::fullname,
                 agents::phone_number,
                 agents::profile_picture_url,
+                agents::instagram,
             ))
-            .get_results::<(Property, String, String, Option<String>)>(conn)
+            .get_results::<PropertyWithAgent>(conn)
     }
 
     fn count_find_many_rows(
