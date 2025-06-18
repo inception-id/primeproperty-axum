@@ -56,9 +56,9 @@ async fn main() {
             return;
         }
     };
-
+    println!("Server started at {}", host_addr);
     match axum::serve(listener, app).await {
-        Ok(_) => println!("Server started at {}", host_addr),
+        Ok(_) => {}
         Err(err) => println!("Server failed to start: {}", err),
     }
 }

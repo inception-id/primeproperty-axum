@@ -166,6 +166,10 @@ impl Property {
     }
 }
 
+diesel::define_sql_function! {
+    fn similarity(column: diesel::sql_types::Text, keyword: diesel::sql_types::Text) -> diesel::sql_types::Float
+}
+
 impl Crud for Property {
     type Output = Self;
     type SchemaTable = properties::table;
@@ -204,28 +208,31 @@ impl Crud for Property {
                     )
                     .into_boxed(),
             },
-            None => properties::table
-                .filter(
-                    properties::is_deleted
-                        .eq(false)
-                        .and(properties::sold_status.eq(SoldStatus::Available)),
-                )
-                .into_boxed(),
+            None => match &query.s {
+                Some(_) => properties::table
+                    .distinct_on(properties::site_path)
+                    .filter(
+                        properties::is_deleted
+                            .eq(false)
+                            .and(properties::sold_status.eq(SoldStatus::Available)),
+                    )
+                    .into_boxed(),
+                None => properties::table
+                    .filter(
+                        properties::is_deleted
+                            .eq(false)
+                            .and(properties::sold_status.eq(SoldStatus::Available)),
+                    )
+                    .into_boxed(),
+            },
         };
 
         match &query.s {
             Some(search_query) => match search_query.parse::<i32>() {
                 Ok(id) => property_query = property_query.filter(properties::id.eq(id)),
                 Err(_) => {
-                    property_query = property_query.filter(
-                        properties::title
-                            .ilike(format!("%{}", search_query))
-                            .or(properties::title.ilike(format!("%{}%", search_query)))
-                            .or(properties::title.ilike(format!("{}%", search_query)))
-                            .or(properties::street.ilike(format!("%{}", search_query)))
-                            .or(properties::street.ilike(format!("%{}%", search_query)))
-                            .or(properties::street.ilike(format!("{}%", search_query))),
-                    )
+                    property_query = property_query
+                        .filter(similarity(properties::site_path, search_query).gt(0.1))
                 }
             },
             None => {}
@@ -315,7 +322,18 @@ impl Crud for Property {
                 }
             }
         } else {
-            property_query = property_query.order_by(properties::id.desc())
+            match &query.s {
+                Some(search_query) => match search_query.parse::<i32>() {
+                    Ok(_) => property_query = property_query.order_by(properties::id.desc()),
+                    Err(_) => {
+                        property_query = property_query.order_by((
+                            properties::site_path,
+                            similarity(properties::site_path, search_query).desc(),
+                        ))
+                    }
+                },
+                None => property_query = property_query.order_by(properties::id.desc()),
+            }
         }
 
         property_query
