@@ -166,6 +166,10 @@ impl Property {
     }
 }
 
+diesel::define_sql_function! {
+    fn similarity(column: diesel::sql_types::Text, keyword: diesel::sql_types::Text) -> diesel::sql_types::Float
+}
+
 impl Crud for Property {
     type Output = Self;
     type SchemaTable = properties::table;
@@ -217,15 +221,8 @@ impl Crud for Property {
             Some(search_query) => match search_query.parse::<i32>() {
                 Ok(id) => property_query = property_query.filter(properties::id.eq(id)),
                 Err(_) => {
-                    property_query = property_query.filter(
-                        properties::title
-                            .ilike(format!("%{}", search_query))
-                            .or(properties::title.ilike(format!("%{}%", search_query)))
-                            .or(properties::title.ilike(format!("{}%", search_query)))
-                            .or(properties::street.ilike(format!("%{}", search_query)))
-                            .or(properties::street.ilike(format!("%{}%", search_query)))
-                            .or(properties::street.ilike(format!("{}%", search_query))),
-                    )
+                    property_query = property_query
+                        .filter(similarity(properties::site_path, search_query).gt(0.1))
                 }
             },
             None => {}
@@ -315,7 +312,16 @@ impl Crud for Property {
                 }
             }
         } else {
-            property_query = property_query.order_by(properties::id.desc())
+            match &query.s {
+                Some(search_query) => match search_query.parse::<i32>() {
+                    Ok(_) => property_query = property_query.order_by(properties::id.desc()),
+                    Err(_) => {
+                        property_query = property_query
+                            .order_by(similarity(properties::site_path, search_query).desc())
+                    }
+                },
+                None => property_query = property_query.order_by(properties::id.desc()),
+            }
         }
 
         property_query
