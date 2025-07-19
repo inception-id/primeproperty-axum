@@ -22,7 +22,7 @@ pub enum FindPropertySort {
 }
 
 pub(crate) const AGENT_PAGE_SIZE: i64 = 20;
-pub(crate) const CLIENT_PAGE_SIZE: i64 = 20;
+pub(crate) const CLIENT_PAGE_SIZE: i64 = 40;
 #[derive(Deserialize)]
 pub struct FindPropertyQuery {
     pub s: Option<String>,
