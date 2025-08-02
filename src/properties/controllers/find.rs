@@ -1,4 +1,5 @@
 use crate::{
+    agents::AgentRole,
     properties::enumerates::{PurchaseStatus, SoldStatus},
     traits::Crud,
 };
@@ -6,7 +7,7 @@ use axum::{
     extract::{Path, Query, State},
     http::HeaderMap,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     agents::Agent,
@@ -23,7 +24,7 @@ pub enum FindPropertySort {
 
 pub(crate) const AGENT_PAGE_SIZE: i64 = 20;
 pub(crate) const CLIENT_PAGE_SIZE: i64 = 40;
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 pub struct FindPropertyQuery {
     pub s: Option<String>,
     pub province: Option<String>,
@@ -140,4 +141,33 @@ pub async fn find_site_paths(State(pool): State<DbPool>) -> AxumResponse<Vec<Str
         }
     }
     JsonResponse::send(200, Some(site_paths), None)
+}
+
+#[derive(Debug, Serialize)]
+pub struct AgentWithProperties {
+    agent: Agent,
+    properties: Vec<PropertyWithAgent>,
+}
+
+pub async fn find_many_by_agent_name(
+    State(pool): State<DbPool>,
+    Path(name): Path<String>,
+) -> AxumResponse<AgentWithProperties> {
+    let agent_name = name.replace("-", " ");
+    let agent = match Agent::find_by_name(&pool, &agent_name) {
+        Ok(data) => data,
+        Err(err) => return JsonResponse::send(400, None, Some(err.to_string())),
+    };
+    let properties = match Property::find_many(
+        &pool,
+        &Some(agent.id),
+        &Some(AgentRole::Agent),
+        &FindPropertyQuery::default(),
+    ) {
+        Ok(property) => property,
+        Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
+    };
+
+    let agent_with_properties = AgentWithProperties { agent, properties };
+    JsonResponse::send(200, Some(agent_with_properties), None)
 }

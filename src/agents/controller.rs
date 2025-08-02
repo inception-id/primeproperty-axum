@@ -52,7 +52,7 @@ async fn find_agent_by_supertokens_user_id(
     }
 }
 
-#[derive(Deserialize, Insertable)]
+#[derive(Deserialize, Insertable, Clone)]
 #[diesel(table_name = schema::agents)]
 pub struct CreateAgentPayload {
     supertokens_user_id: String,
@@ -60,6 +60,8 @@ pub struct CreateAgentPayload {
     email: String,
     phone_number: String,
     profile_picture_url: Option<String>,
+    instagram: Option<String>,
+    description: Option<String>,
 }
 
 async fn create_agent(
@@ -71,10 +73,14 @@ async fn create_agent(
 
     match Agent::find_by_email(&pool, &payload.email) {
         Ok(_) => JsonResponse::send(400, None, Some("Email already exists".to_string())),
-        _ => match Agent::create(&pool, &user_id, &payload) {
-            Ok(agent) => JsonResponse::send(201, Some(agent), None),
-            Err(err) => JsonResponse::send(500, None, Some(err.to_string())),
-        },
+        _ => {
+            let mut new_payload = payload.clone();
+            new_payload.fullname = payload.fullname.to_lowercase();
+            match Agent::create(&pool, &user_id, &new_payload) {
+                Ok(agent) => JsonResponse::send(201, Some(agent), None),
+                Err(err) => JsonResponse::send(500, None, Some(err.to_string())),
+            }
+        }
     }
 }
 
@@ -109,13 +115,14 @@ async fn find_agents(
     )
 }
 
-#[derive(Deserialize, AsChangeset)]
+#[derive(Deserialize, AsChangeset, Clone)]
 #[diesel(table_name = schema::agents)]
 pub struct UpdateAgentPayload {
     profile_picture_url: Option<String>,
     fullname: Option<String>,
     phone_number: Option<String>,
     instagram: Option<String>,
+    description: Option<String>,
 }
 
 // for agents to update their information themselves
@@ -127,15 +134,19 @@ async fn update_agent(
 ) -> AxumResponse<Agent> {
     let agent_id = uuid::Uuid::parse_str(&id).expect("Invalid agent id");
     let user_id = Session::extract_session_user_id(&headers);
+    let mut new_payload = payload.clone();
+    if let Some(fullname) = new_payload.fullname {
+        new_payload.fullname = Some(fullname.to_lowercase());
+    }
     if agent_id == user_id {
-        match Agent::update_agent(&pool, &agent_id, &payload) {
+        match Agent::update_agent(&pool, &agent_id, &new_payload) {
             Ok(agent) => JsonResponse::send(200, Some(agent), None),
             Err(err) => JsonResponse::send(500, None, Some(err.to_string())),
         }
     } else {
         match Agent::find_by_user_id(&pool, &user_id) {
             Ok(agent) => match agent.role {
-                AgentRole::Admin => match Agent::update_agent(&pool, &agent_id, &payload) {
+                AgentRole::Admin => match Agent::update_agent(&pool, &agent_id, &new_payload) {
                     Ok(agent) => JsonResponse::send(200, Some(agent), None),
                     Err(err) => JsonResponse::send(500, None, Some(err.to_string())),
                 },
