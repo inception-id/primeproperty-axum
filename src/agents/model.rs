@@ -23,6 +23,7 @@ pub struct Agent {
     profile_picture_url: Option<String>,
     pub role: AgentRole,
     instagram: Option<String>,
+    description: Option<String>,
 }
 
 impl Agent {

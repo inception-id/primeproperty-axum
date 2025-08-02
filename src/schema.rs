@@ -50,6 +50,7 @@ diesel::table! {
         role -> AgentRole,
         #[max_length = 255]
         instagram -> Nullable<Varchar>,
+        description -> Nullable<Varchar>,
     }
 }
 
