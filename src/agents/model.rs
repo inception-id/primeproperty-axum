@@ -13,7 +13,7 @@ use crate::traits::Crud;
 
 #[derive(Debug, Serialize, Queryable)]
 pub struct Agent {
-    id: uuid::Uuid,
+    pub id: uuid::Uuid,
     supertokens_user_id: Option<String>,
     created_at: chrono::NaiveDateTime,
     updated_at: chrono::NaiveDateTime,
@@ -70,6 +70,14 @@ impl Agent {
 
         diesel::delete(agents::table)
             .filter(agents::id.eq(user_id))
+            .get_result(conn)
+    }
+
+    pub fn find_by_name(pool: &DbPool, name: &str) -> QueryResult<Self> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        agents::table
+            .filter(agents::fullname.eq(name))
             .get_result(conn)
     }
 }
