@@ -48,6 +48,8 @@ pub struct Property {
     configurations: serde_json::Value,
     currency: Currency,
     rent_time: Option<RentTime>,
+    description_seo: Option<String>,
+    price_down_payment: Option<i64>,
 }
 
 impl Property {

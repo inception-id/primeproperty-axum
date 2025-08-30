@@ -115,6 +115,9 @@ diesel::table! {
         configurations -> Jsonb,
         currency -> CurrencyUnit,
         rent_time -> Nullable<RentTimeUnit>,
+        #[max_length = 255]
+        description_seo -> Nullable<Varchar>,
+        price_down_payment -> Nullable<Int8>,
     }
 }
 
