@@ -69,6 +69,8 @@ pub(crate) struct CreateUpdatePropertyApiPayload {
     sold_channel: Option<SoldChannel>,
     currency: Currency,
     rent_time: Option<RentTime>,
+    description_seo: Option<String>,
+    price_down_payment: Option<i64>,
 }
 
 #[derive(Deserialize, Serialize, Insertable, AsChangeset)]
@@ -95,6 +97,8 @@ pub struct CreateUpdatePropertySqlPayload {
     sold_channel: Option<SoldChannel>,
     currency: Currency,
     rent_time: Option<RentTime>,
+    description_seo: Option<String>,
+    price_down_payment: Option<i64>,
 }
 
 impl CreateUpdatePropertyApiPayload {
@@ -131,6 +135,8 @@ impl CreateUpdatePropertyApiPayload {
             sold_channel: self.sold_channel.clone(),
             currency: self.currency.clone(),
             rent_time: self.rent_time.clone(),
+            description_seo: self.description_seo.clone(),
+            price_down_payment: self.price_down_payment.clone(),
         }
     }
 }
