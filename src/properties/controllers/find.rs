@@ -16,13 +16,13 @@ use crate::{
     properties::model::Property,
 };
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub enum FindPropertySort {
     LowestPrice,
     HighestPrice,
 }
 
-#[derive(Deserialize, Default)]
+#[derive(Deserialize, Default, Debug)]
 pub struct FindPropertyQuery {
     pub s: Option<String>,
     pub province: Option<String>,
@@ -169,4 +169,29 @@ pub async fn find_many_by_agent_name(
 
     let agent_with_properties = AgentWithProperties { agent, properties };
     JsonResponse::send(200, Some(agent_with_properties), None)
+}
+
+pub async fn find_many_related(
+    State(pool): State<DbPool>,
+    Path(id): Path<i32>,
+) -> AxumResponse<Vec<PropertyWithAgent>> {
+    let property = match Property::find_one_by_id(&pool, &id) {
+        Ok(property) => property,
+        Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
+    };
+
+    let query: FindPropertyQuery = {
+        FindPropertyQuery {
+            street: Some(property.0.street),
+            ..Default::default()
+        }
+    };
+
+    println!("Query: {:?}", query);
+    let property_with_agent = match Property::find_many_related(&pool, &id, &query) {
+        Ok(property_with_agent) => property_with_agent,
+        Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
+    };
+
+    JsonResponse::send(200, Some(property_with_agent), None)
 }
