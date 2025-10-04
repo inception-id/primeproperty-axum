@@ -22,8 +22,6 @@ pub enum FindPropertySort {
     HighestPrice,
 }
 
-pub(crate) const AGENT_PAGE_SIZE: i64 = 20;
-pub(crate) const CLIENT_PAGE_SIZE: i64 = 42;
 #[derive(Deserialize, Default)]
 pub struct FindPropertyQuery {
     pub s: Option<String>,
@@ -31,6 +29,7 @@ pub struct FindPropertyQuery {
     pub regency: Option<String>,
     pub street: Option<String>,
     pub page: Option<i64>,
+    pub limit: Option<i64>,
     pub is_popular: Option<bool>,
     pub sold_status: Option<SoldStatus>,
     pub purchase_status: Option<PurchaseStatus>,
@@ -38,7 +37,7 @@ pub struct FindPropertyQuery {
     pub sort: Option<FindPropertySort>,
 }
 
-pub(crate) type PropertyWithAgent = (Property, String, String, Option<String>, Option<String>);
+pub(crate) type PropertyWithAgent = (Property, Agent);
 
 pub async fn find_many_properties(
     State(pool): State<DbPool>,
@@ -64,22 +63,22 @@ pub async fn find_many_properties(
         Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
     };
 
-    let page_size = match role {
-        Some(_) => AGENT_PAGE_SIZE,
-        None => CLIENT_PAGE_SIZE,
-    };
-
     let total_property_count = match Property::count_find_many_rows(&pool, &user_id, &role, &query)
     {
         Ok(property_with_agent_count) => property_with_agent_count,
         Err(err) => return JsonResponse::send(500, None, Some(err.to_string())),
     };
 
+    let total_pages = match &query.limit {
+        Some(limit) => (total_property_count / limit) + 1,
+        None => 1,
+    };
+
     JsonResponse::send(
         200,
         Some(JsonFindResponse {
             data: property_with_agent,
-            total_pages: (total_property_count / page_size) + 1,
+            total_pages,
             total_data: total_property_count,
         }),
         None,
