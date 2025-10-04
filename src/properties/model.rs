@@ -28,8 +28,8 @@ pub struct Property {
     title: String,
     description: String,
     province: String,
-    regency: String,
-    street: String,
+    pub regency: String,
+    pub street: String,
     gmap_iframe: Option<String>,
     price: i64,
     images: serde_json::Value,
@@ -158,6 +158,60 @@ impl Property {
                 properties::regency,
             ))
             .get_results(conn)
+    }
+
+    pub fn find_many_related(
+        pool: &DbPool,
+        property_id: &i32,
+        query: &FindPropertyQuery,
+    ) -> QueryResult<Vec<PropertyWithAgent>> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        let mut property_query = properties::table
+            .filter(
+                properties::id
+                    .ne(property_id)
+                    .and(properties::is_deleted.eq(false))
+                    .and(properties::sold_status.eq(SoldStatus::Available)),
+            )
+            .into_boxed();
+
+        match &query.regency {
+            Some(regency_query) => {
+                property_query =
+                    property_query.filter(properties::regency.eq(regency_query.to_lowercase()));
+            }
+            None => {}
+        }
+
+        match &query.street {
+            Some(street_query) => {
+                property_query =
+                    property_query.filter(properties::street.eq(street_query.to_lowercase()));
+            }
+            None => {}
+        }
+
+        match &query.limit {
+            Some(limit) => {
+                match &query.page {
+                    Some(page) => {
+                        let offset = (page - 1) * limit;
+                        property_query = property_query.offset(offset).limit(limit.clone());
+                    }
+                    None => {
+                        property_query = property_query.limit(limit.clone());
+                    }
+                };
+            }
+            None => {}
+        }
+
+        property_query
+            .order_by(properties::id.desc())
+            .inner_join(agents::table)
+            .select((properties::all_columns, agents::all_columns))
+            .get_results::<PropertyWithAgent>(conn)
     }
 }
 

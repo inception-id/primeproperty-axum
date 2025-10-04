@@ -17,6 +17,7 @@ pub fn property_routes() -> Router<DbPool> {
         .route("/", get(find::find_many_properties))
         .route("/site-paths", get(find::find_site_paths))
         .route("/agents/{name}", get(find::find_many_by_agent_name))
+        .route("/related/{id}", get(find::find_many_related))
         .route("/{id}", get(find::find_one_by_id))
         .route("/{id}", put(create_update::update_property))
         .route("/{id}", delete(delete::delete_property))
