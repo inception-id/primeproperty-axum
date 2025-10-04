@@ -1,6 +1,5 @@
 use super::controllers::{
     FindPropertyQuery, FindPropertySort, PropertyWithAgent, UpdateConfigurationsSqlPayload,
-    AGENT_PAGE_SIZE, CLIENT_PAGE_SIZE,
 };
 use super::enumerates::{Currency, RentTime, SoldChannel};
 use super::{
@@ -59,13 +58,7 @@ impl Property {
         properties::table
             .filter(properties::id.eq(id))
             .inner_join(agents::table)
-            .select((
-                properties::all_columns,
-                agents::fullname,
-                agents::phone_number,
-                agents::profile_picture_url,
-                agents::instagram,
-            ))
+            .select((properties::all_columns, agents::all_columns))
             .get_result(conn)
     }
 
@@ -299,20 +292,20 @@ impl Crud for Property {
             _ => {}
         }
 
-        let page_size = match role {
-            Some(_) => AGENT_PAGE_SIZE,
-            None => CLIENT_PAGE_SIZE,
-        };
-
-        match &query.page {
-            Some(page) => {
-                let offset = (page - 1) * page_size;
-                property_query = property_query.offset(offset).limit(page_size);
+        match &query.limit {
+            Some(limit) => {
+                match &query.page {
+                    Some(page) => {
+                        let offset = (page - 1) * limit;
+                        property_query = property_query.offset(offset).limit(limit.clone());
+                    }
+                    None => {
+                        property_query = property_query.limit(limit.clone());
+                    }
+                };
             }
-            None => {
-                property_query = property_query.limit(page_size);
-            }
-        };
+            None => {}
+        }
 
         if let Some(sort) = &query.sort {
             match sort {
@@ -340,13 +333,7 @@ impl Crud for Property {
 
         property_query
             .inner_join(agents::table)
-            .select((
-                properties::all_columns,
-                agents::fullname,
-                agents::phone_number,
-                agents::profile_picture_url,
-                agents::instagram,
-            ))
+            .select((properties::all_columns, agents::all_columns))
             .get_results::<PropertyWithAgent>(conn)
     }
 

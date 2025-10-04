@@ -1,4 +1,4 @@
-FROM rust:1.82-slim as builder
+FROM rust:1.86-slim as builder
 
 RUN apt update && \
     apt install -y libpq-dev build-essential && \
@@ -9,7 +9,7 @@ COPY . /app
 
 RUN cargo build --release --all-features
 
-FROM rust:1.82-slim as runner
+FROM rust:1.86-slim as runner
 
 RUN apt update && \
     apt install -y libpq-dev && \
