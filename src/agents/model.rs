@@ -80,6 +80,14 @@ impl Agent {
             .filter(agents::fullname.eq(name))
             .get_result(conn)
     }
+
+    pub fn find_all(pool: &DbPool) -> QueryResult<Vec<Self>> {
+        let conn = &mut pool.get().expect("Couldn't get db connection from pool");
+
+        agents::table
+            .filter(agents::email.ne("admin@primeproindonesia.com"))
+            .get_results(conn)
+    }
 }
 
 impl Crud for Agent {

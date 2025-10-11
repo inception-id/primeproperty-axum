@@ -195,3 +195,10 @@ pub async fn find_many_related(
 
     JsonResponse::send(200, Some(property_with_agent), None)
 }
+
+pub async fn find_all_property_agents(State(pool): State<DbPool>) -> AxumResponse<Vec<Agent>> {
+    match Agent::find_all(&pool) {
+        Ok(agents) => JsonResponse::send(200, Some(agents), None),
+        Err(err) => JsonResponse::send(500, None, Some(err.to_string())),
+    }
+}
