@@ -24,8 +24,12 @@ async fn main() {
     let cors = match app_env {
         Ok(env) if env == "production" => {
             let origins = [
-                "http://example.com".parse::<HeaderValue>().unwrap(),
-                "http://api.example.com".parse::<HeaderValue>().unwrap(),
+                "https://primeproindonesia.com"
+                    .parse::<HeaderValue>()
+                    .unwrap(),
+                "https://agent.primeproindonesia.com"
+                    .parse::<HeaderValue>()
+                    .unwrap(),
             ];
 
             CorsLayer::new().allow_origin(origins)
