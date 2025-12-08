@@ -7,6 +7,7 @@ mod schema;
 mod traits;
 
 use crate::db::build_db_pool;
+use axum::http::HeaderValue;
 use axum::{middleware::from_fn, Router};
 use sentry_tower::{NewSentryLayer, SentryHttpLayer};
 use std::env;
@@ -18,7 +19,23 @@ async fn main() {
     dotenvy::dotenv().ok();
 
     let pool = build_db_pool();
-    let cors = CorsLayer::permissive();
+
+    let app_env = env::var("APP_ENV");
+    let cors = match app_env {
+        Ok(env) if env == "production" => {
+            let origins = [
+                "https://primeproindonesia.com"
+                    .parse::<HeaderValue>()
+                    .unwrap(),
+                "https://agent.primeproindonesia.com"
+                    .parse::<HeaderValue>()
+                    .unwrap(),
+            ];
+
+            CorsLayer::new().allow_origin(origins)
+        }
+        _ => CorsLayer::permissive(),
+    };
 
     let tracing_filter = tracing_subscriber::EnvFilter::new("tower_http::trace::make_span=debug,tower_http::trace::on_response=debug,tower_http::trace::on_request=debug");
     tracing_subscriber::fmt()
@@ -45,7 +62,7 @@ async fn main() {
         .layer(cors)
         .layer(TraceLayer::new_for_http())
         .layer(NewSentryLayer::new_from_top())
-        .layer(SentryHttpLayer::with_transaction());
+        .layer(SentryHttpLayer::new().enable_transaction());
 
     // run our app with hyper, listening globally on env port
     let host_addr = env::var("HOST_ADDRESS").expect("Missing HOST_ADDRESS");
