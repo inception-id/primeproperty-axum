@@ -20,22 +20,7 @@ async fn main() {
 
     let pool = build_db_pool();
 
-    let app_env = env::var("APP_ENV");
-    let cors = match app_env {
-        Ok(env) if env == "production" => {
-            let origins = [
-                "https://primeproindonesia.com"
-                    .parse::<HeaderValue>()
-                    .unwrap(),
-                "https://agent.primeproindonesia.com"
-                    .parse::<HeaderValue>()
-                    .unwrap(),
-            ];
-
-            CorsLayer::new().allow_origin(origins)
-        }
-        _ => CorsLayer::permissive(),
-    };
+    let cors = CorsLayer::permissive();
 
     let tracing_filter = tracing_subscriber::EnvFilter::new("tower_http::trace::make_span=debug,tower_http::trace::on_response=debug,tower_http::trace::on_request=debug");
     tracing_subscriber::fmt()
