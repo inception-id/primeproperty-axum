@@ -58,8 +58,8 @@ async fn main() {
         .nest("/leads", leads::lead_routes())
         .nest("/properties", properties::property_routes())
         .with_state(pool)
-        .layer(from_fn(middleware::Session::middleware))
         .layer(cors)
+        .layer(from_fn(middleware::Session::middleware))
         .layer(TraceLayer::new_for_http())
         .layer(NewSentryLayer::new_from_top())
         .layer(SentryHttpLayer::new().enable_transaction());
