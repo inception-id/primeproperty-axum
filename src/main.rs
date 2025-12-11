@@ -36,7 +36,6 @@ async fn main() {
                 .allow_origin(origins) // Pass the list of origins
                 .allow_methods(Any) // Allow any HTTP method (GET, POST, etc.)
                 .allow_headers(Any) // Allow any headers in the request
-                .allow_credentials(true)
         }
         _ => CorsLayer::permissive(),
     };
