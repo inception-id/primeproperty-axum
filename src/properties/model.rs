@@ -106,6 +106,7 @@ impl Property {
         properties::table
             .distinct_on(properties::site_path)
             .select(properties::site_path)
+            .order(properties::site_path.asc())
             .get_results(conn)
     }
 
@@ -117,6 +118,10 @@ impl Property {
         properties::table
             .distinct_on((properties::purchase_status, properties::building_type))
             .select((properties::purchase_status, properties::building_type))
+            .order((
+                properties::purchase_status.asc(),
+                properties::building_type.asc(),
+            ))
             .get_results(conn)
     }
 
@@ -135,6 +140,11 @@ impl Property {
                 properties::purchase_status,
                 properties::building_type,
                 properties::province,
+            ))
+            .order((
+                properties::purchase_status.asc(),
+                properties::building_type.asc(),
+                properties::province.asc(),
             ))
             .get_results(conn)
     }
@@ -156,6 +166,12 @@ impl Property {
                 properties::building_type,
                 properties::province,
                 properties::regency,
+            ))
+            .order((
+                properties::purchase_status.asc(),
+                properties::building_type.asc(),
+                properties::province.asc(),
+                properties::regency.asc(),
             ))
             .get_results(conn)
     }

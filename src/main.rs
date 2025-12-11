@@ -11,6 +11,7 @@ use axum::http::HeaderValue;
 use axum::{middleware::from_fn, Router};
 use sentry_tower::{NewSentryLayer, SentryHttpLayer};
 use std::env;
+use tower_http::cors::Any;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 
@@ -19,8 +20,26 @@ async fn main() {
     dotenvy::dotenv().ok();
 
     let pool = build_db_pool();
+    let origins = [
+        "https://primeproindonesia.com"
+            .parse::<HeaderValue>()
+            .unwrap(),
+        "https://agent.primeproindonesia.com"
+            .parse::<HeaderValue>()
+            .unwrap(),
+    ];
 
-    let cors = CorsLayer::permissive();
+    let app_env = env::var("APP_ENV");
+    let cors = match app_env {
+        Ok(env) if env == "production" => {
+            CorsLayer::new()
+                .allow_origin(origins) // Pass the list of origins
+                .allow_methods(Any) // Allow any HTTP method (GET, POST, etc.)
+                .allow_headers(Any) // Allow any headers in the request
+                .allow_credentials(true)
+        }
+        _ => CorsLayer::permissive(),
+    };
 
     let tracing_filter = tracing_subscriber::EnvFilter::new("tower_http::trace::make_span=debug,tower_http::trace::on_response=debug,tower_http::trace::on_request=debug");
     tracing_subscriber::fmt()
